@@ -7,12 +7,12 @@
 //    it under the terms of the GNU Lesser General Public License as
 //    published by the Free Software Foundation; either version 3 of the
 //    License, or (at your option) any later version.
-//    
+//
 //    This library is distributed in the hope that it will be useful,
 //    but WITHOUT ANY WARRANTY; without even the implied warranty of
 //    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 //    Lesser General Public License for more details.
-//    
+//
 //    You should have received a copy of the GNU Lesser General Public
 //    License along with this library; if not, see <http://www.gnu.org/licenses/>.
 //
@@ -42,13 +42,141 @@ constexpr u8 levels[6]{ 8, 1, 2, 6, 4, 64 };
 u16 original_console_state;
 u16 original_console_error_state;
 
+HINSTANCE hinst;
+HWND      hwnd;
+
+LRESULT CALLBACK process_messages(HWND hwnd, u32 msg, WPARAM wparam, LPARAM lparam)
+{
+    switch (msg)
+    {
+    case WM_ERASEBKGND: return 1;
+    case WM_CLOSE:
+        // TODO Close event
+        LOG_TRACE("WM_CLOSE");
+        return 0;
+    case WM_DESTROY:
+        LOG_TRACE("WM_DESTROY");
+        PostQuitMessage(0);
+        return 0;
+    case WM_SIZE:
+    {
+        //        RECT r;
+        //        GetClientRect(hwnd, &r);
+        //        s32 w = r.right - r.left;
+        //        s32 h = r.bottom - r.top;
+
+        // Resize event
+    }
+    break;
+    case WM_KEYDOWN:
+    case WM_SYSKEYDOWN:
+    case WM_KEYUP:
+    case WM_SYSKEYUP:
+    {
+        //        b8 pressed = (msg == WM_KEYDOWN || msg == WM_SYSKEYDOWN);
+    }
+    break;
+    case WM_MOUSEMOVE:
+    {
+        //        s32 x = GET_X_LPARAM(lparam);
+        //        s32 y = GET_Y_LPARAM(lparam);
+    }
+    break;
+    case WM_MOUSEWHEEL:
+    {
+        //        s32 z_delta = GET_WHEEL_DELTA_WPARAM(wparam);
+        //        if(z_delta != 0)
+        //        {
+        //            z_delta = (z_delta < 0) ? -1 : 1;
+        //        }
+    }
+    break;
+    case WM_LBUTTONDOWN:
+    case WM_MBUTTONDOWN:
+    case WM_RBUTTONDOWN:
+    case WM_LBUTTONUP:
+    case WM_MBUTTONUP:
+    case WM_RBUTTONUP:
+    {
+        //        b8 pressed = (msg == WM_LBUTTONDOWN || msg == WM_MBUTTONDOWN || msg == WM_RBUTTONDOWN);
+    }
+    break;
+
+    default: break;
+    }
+
+    return DefWindowProcA(hwnd, msg, wparam, lparam);
+}
+
+bool create_window(const char* app_name, i32 x, i32 y, i32 width, i32 height)
+{
+    hinst = GetModuleHandleA(nullptr);
+    const HICON icon{ LoadIcon(hinst, IDI_APPLICATION) };
+    WNDCLASSA   wc{};
+    wc.style         = CS_DBLCLKS;
+    wc.lpfnWndProc   = process_messages;
+    wc.cbClsExtra    = 0;
+    wc.cbWndExtra    = 0;
+    wc.hInstance     = hinst;
+    wc.hIcon         = icon;
+    wc.hCursor       = LoadCursor(nullptr, IDC_ARROW);
+    wc.hbrBackground = nullptr; // transparent bg
+    wc.lpszClassName = "skyborn_window_class";
+
+    if (!RegisterClassA(&wc))
+    {
+        LOG_FATAL("Window registration failed");
+        return false;
+    }
+
+    const i32 clientx{ x };
+    const i32 clienty{ y };
+    const i32 client_width{ width };
+    const i32 client_height{ height };
+
+    i32 winx{ clientx };
+    i32 winy{ clienty };
+    i32 win_width{ client_width };
+    i32 win_height{ client_height };
+
+    u32           win_style{ WS_OVERLAPPED | WS_SYSMENU | WS_CAPTION };
+    constexpr u32 win_ex_style{ WS_EX_APPWINDOW };
+
+    win_style |= WS_MAXIMIZEBOX;
+    win_style |= WS_MINIMIZEBOX;
+    win_style |= WS_THICKFRAME;
+
+    RECT border_rect{ 0, 0, 0, 0 };
+    AdjustWindowRectEx(&border_rect, win_style, false, win_ex_style);
+
+    winx += border_rect.left;
+    winy += border_rect.top;
+    win_width += border_rect.right - border_rect.left;
+    win_height += border_rect.bottom - border_rect.top;
+
+    const HWND handle{ CreateWindowExA(win_ex_style, "skyborn_window_class", app_name, win_style, winx, winy, win_width,
+                                       win_height, nullptr, nullptr, hinst, nullptr) };
+
+    if (!handle)
+    {
+        LOG_FATAL("Window creation failed");
+        return false;
+    }
+    hwnd = handle;
+
+    constexpr bool should_activate{ true }; // False for window with no input
+    constexpr i32  show_win_command_flags{ should_activate ? SW_SHOW : SW_SHOWNOACTIVATE };
+    ShowWindow(hwnd, show_win_command_flags);
+
+    return true;
+}
+
 } // anonymous namespace
 
 bool initialize()
 {
-
     // Store original console info
-    const HANDLE console_handle{ GetStdHandle(STD_OUTPUT_HANDLE) };
+    const HANDLE               console_handle{ GetStdHandle(STD_OUTPUT_HANDLE) };
     CONSOLE_SCREEN_BUFFER_INFO console_info{};
     GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &console_info);
     original_console_state = console_info.wAttributes;
@@ -56,16 +184,49 @@ bool initialize()
     original_console_error_state = console_info.wAttributes;
 
     // Logger module
-    if(!logger::initialize()) return false;
-    
+    if (!logger::initialize())
+        return false;
+    LOG_INFO("Skyborn starting up");
+
+    create_window("Skyborn", 100, 100, 1920, 1080);
+
+
     return true;
 }
 
 void shutdown()
 {
-    logger::shutdown();
+    LOG_INFO("Skyborn shutting down");
 
+    if (hwnd)
+    {
+        DestroyWindow(hwnd);
+        hwnd = nullptr;
+    }
+
+    logger::shutdown();
     reset_console();
+}
+
+void run()
+{
+    while (true)
+    {
+        if (!pump_messages())
+            break;
+    }
+}
+
+bool pump_messages()
+{
+    MSG message;
+    while (PeekMessageA(&message, nullptr, 0, 0, PM_REMOVE))
+    {
+        TranslateMessage(&message);
+        DispatchMessageA(&message);
+    }
+
+    return true;
 }
 
 void write_message(std::string_view msg, u8 color)

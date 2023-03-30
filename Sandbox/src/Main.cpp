@@ -44,6 +44,8 @@ int main(int argc, char* argv[])
     LOG_ERROR("Test message");
     LOG_FATAL("Test message");
 
+    platform::run();
+
     platform::shutdown();
 
     return 0;

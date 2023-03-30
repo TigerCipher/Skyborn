@@ -35,6 +35,9 @@ namespace sky::platform
 
 SAPI bool initialize();
 SAPI void shutdown();
+SAPI void run(); // temp
+
+bool pump_messages();
 
 void write_message(std::string_view msg, u8 color);
 void write_error(std::string_view msg, u8 color);
