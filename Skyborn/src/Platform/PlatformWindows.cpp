@@ -23,6 +23,7 @@
 // ------------------------------------------------------------------------------
 
 #include "Platform.h"
+#include "Debug/Logger.h"
 
 #if SKY_PLATFORM_WINDOWS
 
@@ -38,9 +39,36 @@ namespace
 
 constexpr u8 levels[6]{ 8, 1, 2, 6, 4, 64 };
 
+u16 original_console_state;
+u16 original_console_error_state;
+
 } // anonymous namespace
 
-void write_console(std::string_view msg, u8 color)
+bool initialize()
+{
+
+    // Store original console info
+    const HANDLE console_handle{ GetStdHandle(STD_OUTPUT_HANDLE) };
+    CONSOLE_SCREEN_BUFFER_INFO console_info{};
+    GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &console_info);
+    original_console_state = console_info.wAttributes;
+    GetConsoleScreenBufferInfo(GetStdHandle(STD_ERROR_HANDLE), &console_info);
+    original_console_error_state = console_info.wAttributes;
+
+    // Logger module
+    if(!logger::initialize()) return false;
+    
+    return true;
+}
+
+void shutdown()
+{
+    logger::shutdown();
+
+    reset_console();
+}
+
+void write_message(std::string_view msg, u8 color)
 {
     assert(color < 6);
     const HANDLE console_handle{ GetStdHandle(STD_OUTPUT_HANDLE) };
@@ -62,6 +90,12 @@ void write_error(std::string_view msg, u8 color)
     const u64     len{ msg.length() };
     const LPDWORD written{ nullptr };
     WriteConsoleA(console_handle, msg.data(), (DWORD) len, written, nullptr);
+}
+
+void reset_console()
+{
+    SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), original_console_state);
+    SetConsoleTextAttribute(GetStdHandle(STD_ERROR_HANDLE), original_console_error_state);
 }
 
 } // namespace sky::platform
