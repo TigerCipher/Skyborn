@@ -1,0 +1,38 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.4.33213.308
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Skyborn", "Skyborn\Skyborn.vcxproj", "{BD513D32-655B-44A7-A339-10BC6022919F}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Misc", "Misc", "{215B5F39-9CB6-4BB0-BF1E-0F64A11C28FC}"
+	ProjectSection(SolutionItems) = preProject
+		.clang-format = .clang-format
+		.gitignore = .gitignore
+		README.md = README.md
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Sandbox", "Sandbox\Sandbox.vcxproj", "{A2A605C1-49DD-4AA7-B4EF-AB69D0C0C7AF}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{BD513D32-655B-44A7-A339-10BC6022919F}.Debug|x64.ActiveCfg = Debug|x64
+		{BD513D32-655B-44A7-A339-10BC6022919F}.Debug|x64.Build.0 = Debug|x64
+		{BD513D32-655B-44A7-A339-10BC6022919F}.Release|x64.ActiveCfg = Release|x64
+		{BD513D32-655B-44A7-A339-10BC6022919F}.Release|x64.Build.0 = Release|x64
+		{A2A605C1-49DD-4AA7-B4EF-AB69D0C0C7AF}.Debug|x64.ActiveCfg = Debug|x64
+		{A2A605C1-49DD-4AA7-B4EF-AB69D0C0C7AF}.Debug|x64.Build.0 = Debug|x64
+		{A2A605C1-49DD-4AA7-B4EF-AB69D0C0C7AF}.Release|x64.ActiveCfg = Release|x64
+		{A2A605C1-49DD-4AA7-B4EF-AB69D0C0C7AF}.Release|x64.Build.0 = Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {934D6BD5-9233-4A04-BA33-BC806EA27F0A}
+	EndGlobalSection
+EndGlobal

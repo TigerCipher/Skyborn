@@ -1,0 +1,6 @@
+/bin
+/obj
+/.vs
+/x64
+*.filters
+*.user
