@@ -77,6 +77,8 @@ bool create(scope<game, memory_tag::game> game)
     //LOG_ERROR("Test message");
     //LOG_FATAL("Test message");
 
+    LOG_INFOF("Skyborn Version {} finished initializing", SKY_VERSION);
+
     return true;
 }
 bool run()

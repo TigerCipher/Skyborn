@@ -75,8 +75,9 @@ using f64 = double;
 
 // Macro helpers / Misc
 
-#define STRINGIFY(x) #x
-#define BIT(x)       (1 << (x))
+#define STRINGIFY_(x) #x
+#define STRINGIFY(x)  STRINGIFY_(x)
+#define BIT(x)        (1 << (x))
 #define SKY_DELETE(x)                                                                                                            \
     delete (x);                                                                                                                  \
     (x) = nullptr;
@@ -111,7 +112,6 @@ using f64 = double;
 
 template<typename T, typename... Args>
 concept constructible_from_args = std::constructible_from<T, Args...>;
-
 
 
 constexpr auto operator""_KB(const u64 x)

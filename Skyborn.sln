@@ -9,6 +9,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Misc", "Misc", "{215B5F39-9
 	ProjectSection(SolutionItems) = preProject
 		.clang-format = .clang-format
 		.gitignore = .gitignore
+		increment_build.ps1 = increment_build.ps1
 		README.md = README.md
 	EndProjectSection
 EndProject

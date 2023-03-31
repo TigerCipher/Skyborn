@@ -72,7 +72,7 @@ SAPI void shutdown();
 
 SAPI void* allocate(u64 size, memory_tag::tag tag);          // malloc
 SAPI void  free(void* block, u64 size, memory_tag::tag tag); // free
-SAPI void* zero_memory(void* block, u64 size);               // ZeroMemory
+SAPI void* zero_memory(void* block, u64 size);               // memset(block, 0, size)
 SAPI void* copy(void* dest, const void* src, u64 size);      // memcpy
 SAPI void* set(void* dest, i32 value, u64 size);             // memset
 
