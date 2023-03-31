@@ -31,12 +31,12 @@ namespace sky::app
 
 namespace
 {
-scope<game> game_instance{ nullptr };
+scope<game, memory_tag::game> game_instance{ nullptr };
 bool        running{ false };
 bool        suspended{ false };
 } // anonymous namespace
 
-bool create(scope<game> game)
+bool create(scope<game, memory_tag::game> game)
 {
     assert(!game_instance);
     if (game_instance)

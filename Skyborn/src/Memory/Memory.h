@@ -26,10 +26,10 @@
 
 #include <string>
 
-#include "Common.h"
+#include "Defines.h"
 
 
-namespace sky::memory
+namespace sky
 {
 struct memory_tag
 {
@@ -55,6 +55,8 @@ struct memory_tag
         count
     };
 };
+namespace memory
+{
 
 //void increase_memory_count(size_t size);
 //void decrease_memory_count(size_t size);
@@ -74,32 +76,69 @@ SAPI void* zero_memory(void* block, u64 size);               // ZeroMemory
 SAPI void* copy(void* dest, const void* src, u64 size);      // memcpy
 SAPI void* set(void* dest, i32 value, u64 size);             // memset
 
+SAPI void* new_alloc(u64 size, memory_tag::tag tag);
+SAPI void  del(void* block, u64 size, memory_tag::tag tag);
+
 SAPI std::string get_usage_str();
 
 
-template<typename T>
-class sky_allocator
+template<typename T, memory_tag::tag Tag = memory_tag::unknown>
+class ref_allocator
 {
 public:
-    using value_type         = T;
-    sky_allocator() noexcept = default;
+    using value_type = T;
 
-    template<typename U>
-    sky_allocator(const sky_allocator<U>&) noexcept
+    template<typename Other>
+    struct rebind
+    {
+        using other = ref_allocator<Other, Tag>;
+    };
+
+    ref_allocator() noexcept = default;
+
+    template<typename Other>
+    ref_allocator(const ref_allocator<Other, Tag>&) noexcept
     {}
 
-    T* allocate(size_t size)
-    {
-        //increase_memory_count(size * sizeof(T));
-        return (T*) memory::allocate(size * sizeof(T), memory_tag::unknown);
-    }
+    T* allocate(size_t size) { return (T*) new_alloc(size * sizeof(T), Tag); }
 
-    void deallocate(T* ptr, size_t size) noexcept
+    void deallocate(T* ptr, size_t size) noexcept { del(ptr, sizeof(T) * size, Tag); }
+};
+
+template<typename T, typename Deleter, memory_tag::tag Tag = memory_tag::unknown>
+class scope_allocator
+{
+public:
+    using value_type = T;
+    using pointer    = T*;
+
+    template<typename Other>
+    struct rebind
     {
-        //decrease_memory_count(size * sizeof(T));
-        memory::free(ptr, sizeof(T) * size, memory_tag::unknown);
+        using other = scope_allocator<Other, Deleter, Tag>;
+    };
+
+    scope_allocator() noexcept = default;
+
+    template<typename Other>
+    scope_allocator(const scope_allocator<Other, Deleter, Tag>&) noexcept
+    {}
+
+    pointer allocate(size_t size) { return (pointer) new_alloc(size * sizeof(T), Tag); }
+
+    void deallocate(pointer ptr, size_t size) noexcept { del(ptr, size * sizeof(T), Tag); }
+};
+
+template<typename T, memory_tag::tag Tag>
+struct scope_deleter
+{
+    void operator()(T* ptr) const noexcept
+    {
+        scope_allocator<T, scope_deleter, Tag> alloc{};
+        std::allocator_traits<decltype(alloc)>::destroy(alloc, ptr);
+        alloc.deallocate(ptr, 1);
     }
 };
 
-
-} // namespace sky::memory
+} // namespace memory
+} // namespace sky

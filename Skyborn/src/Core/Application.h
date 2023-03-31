@@ -61,7 +61,7 @@ private:
     application_desc m_desc{};
 };
 
-SAPI bool create(scope<game> game);
+SAPI bool create(scope<game, memory_tag::game> game);
 SAPI bool run();
 
 }

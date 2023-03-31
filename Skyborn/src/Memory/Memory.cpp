@@ -36,10 +36,26 @@ constexpr u64 gib{ 1_GB };
 constexpr u64 mib{ 1_MB };
 constexpr u64 kib{ 1_KB };
 
+// clang-format off
 constexpr const char* tag_strings[memory_tag::count]{
-    "UNKNOWN    ", "ARRAY      ", "DARRAY     ", "DICTIONARY ", "RING_QUEUE ", "BST        ", "STRING     ", "APP        ",
-    "JOB        ", "TEXTURE    ", "MATERIAL   ", "RENDERER   ", "GAME       ", "ENTITY     ", "ENTITY_NODE", "SCENE      ",
+    "UNKNOWN    ",
+    "ARRAY      ",
+    "DARRAY     ",
+    "DICTIONARY ",
+    "RING_QUEUE ",
+    "BST        ",
+    "STRING     ",
+    "APP        ",
+    "JOB        ",
+    "TEXTURE    ", 
+    "MATERIAL   ", 
+    "RENDERER   ", 
+    "GAME       ", 
+    "ENTITY     ", 
+    "ENTITY_NODE", 
+    "SCENE      ",
 };
+// clang-format on
 
 static_assert(_countof(tag_strings) == memory_tag::count);
 
@@ -47,6 +63,7 @@ struct memory_stats
 {
     u64 total_allocated{};
     u64 tagged_allocations[memory_tag::count]{};
+    u32 allocations{};
 } stats;
 
 } // anonymous namespace
@@ -67,12 +84,13 @@ void* allocate(u64 size, memory_tag::tag tag)
 
     stats.total_allocated += size;
     stats.tagged_allocations[tag] += size;
+    ++stats.allocations;
 
     void* block{ platform::allocate(size) }; // TODO: Alignment
 
     zero_memory(block, size);
 
-    LOG_TRACE(std::format("Allocated a block of {} bytes", size));
+    LOG_TRACEF("Allocated a block of {} bytes, tagged as {}", size, tag_strings[tag]);
 
     return block;
 }
@@ -86,10 +104,11 @@ void free(void* block, u64 size, memory_tag::tag tag)
 
     stats.total_allocated -= size;
     stats.tagged_allocations[tag] -= size;
+    --stats.allocations;
 
     platform::free(block); // TODO: Alignment
 
-    LOG_TRACE(std::format("Deallocated a block of {} bytes", size));
+    LOG_TRACEF("Deallocated a block of {} bytes, tagged as {}", size, tag_strings[tag]);
 }
 
 void* zero_memory(void* block, u64 size)
@@ -107,9 +126,41 @@ void* set(void* dest, i32 value, u64 size)
     return memset(dest, value, size);
 }
 
+void* new_alloc(u64 size, memory_tag::tag tag)
+{
+    if (tag == memory_tag::unknown)
+    {
+        LOG_WARN("memory::new_alloc was called using an unknown tag");
+    }
+
+    stats.total_allocated += size;
+    stats.tagged_allocations[tag] += size;
+    ++stats.allocations;
+
+    void* block{ operator new(size) };
+    zero_memory(block, size);
+    LOG_TRACEF("Allocated a block of {} bytes, tagged as {}", size, tag_strings[tag]);
+    return block;
+}
+
+void del(void* block, u64 size, memory_tag::tag tag)
+{
+    if (tag == memory_tag::unknown)
+    {
+        LOG_WARN("memory::del was called using an unknown tag");
+    }
+
+    stats.total_allocated -= size;
+    stats.tagged_allocations[tag] -= size;
+    --stats.allocations;
+
+    operator delete(block);
+    LOG_TRACEF("Deallocated a block of {} bytes, tagged as {}", size, tag_strings[tag]);
+}
+
 std::string get_usage_str()
 {
-    std::string str{ "System memory use (tagged):\n" };
+    std::string str{ std::format("System memory use (tagged):\n{} Total Allocations\n", stats.allocations) };
 
     u64 offset{ str.length() };
     for (u32 i{ 0 }; i < memory_tag::count; ++i)

@@ -86,8 +86,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="src\Defines.h" />
     <ClInclude Include="src\Common.h" />
-    <ClInclude Include="src\CommonHeaders.h" />
     <ClInclude Include="src\Core\Application.h" />
     <ClInclude Include="src\Debug\Logger.h" />
     <ClInclude Include="src\Memory\Memory.h" />

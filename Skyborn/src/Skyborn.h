@@ -24,18 +24,18 @@
 
 #pragma once
 
-#include "Common.h"
+#include "Defines.h"
 #include "Debug/Logger.h"
 #include "Core/Application.h"
 #include "Memory/Memory.h"
 
-extern scope<sky::app::game> create_game();
+extern scope<sky::app::game, sky::memory_tag::game> create_game();
 
 // Entry point
 int main()
 {
     sky::memory::initialize();
-    scope<sky::app::game> game{ create_game() };
+    scope<sky::app::game, sky::memory_tag::game> game{ create_game() };
     if (!game)
     {
         LOG_FATAL("Failed to create game");

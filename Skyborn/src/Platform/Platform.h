@@ -26,7 +26,7 @@
 
 #include <string_view>
 
-#include "Common.h"
+#include "Defines.h"
 
 namespace sky::platform
 {
