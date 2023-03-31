@@ -63,7 +63,9 @@ public:
         u64 front{ m_arr.front() };
         u64 at1{ m_arr[1] };
 
+        LOG_DEBUGF("Arr size: {}, capacity: {}", m_arr.size(), m_arr.capacity());
         u64 old_3{ *m_arr.erase_unordered(3) };
+        LOG_DEBUGF("Arr size: {}, capacity: {}", m_arr.size(), m_arr.capacity());
 
         LOG_DEBUGF("Top/Back {} Front {} 1: {}.. 3: {}", top, front, at1, old_3);
         idx = 0;

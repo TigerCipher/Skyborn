@@ -25,6 +25,7 @@
 #include "Application.h"
 #include "Debug/Logger.h"
 #include "Platform/Platform.h"
+#include "Event.h"
 
 namespace sky::app
 {
@@ -32,8 +33,8 @@ namespace sky::app
 namespace
 {
 scope<game, memory_tag::game> game_instance{ nullptr };
-bool        running{ false };
-bool        suspended{ false };
+bool                          running{ false };
+bool                          suspended{ false };
 } // anonymous namespace
 
 bool create(scope<game, memory_tag::game> game)
@@ -53,6 +54,12 @@ bool create(scope<game, memory_tag::game> game)
     // Logger module
     if (!logger::initialize())
         return false;
+
+    if (!events::initialize())
+    {
+        LOG_FATAL("Event system failed to initialize. Aborting...");
+        return false;
+    }
 
     if (!platform::initialize(name, pos_x, pos_y, width, height))
     {
@@ -105,6 +112,7 @@ bool run()
         }
     }
 
+    events::shutdown();
     platform::shutdown();
     logger::shutdown();
     return true;

@@ -23,6 +23,7 @@
 //  ------------------------------------------------------------------------------
 
 #include "Event.h"
+#include "Utl/Vector.h"
 
 namespace sky::events
 {
@@ -42,11 +43,86 @@ struct registered_event
 
 struct event_code_entry
 {
-    registered_event* events;
+    utl::vector<registered_event> events{};
 };
 
 event_code_entry registered[max_message_codes];
 
 } // anonymous namespace
+
+bool initialize()
+{
+    if(is_initialized) return false;
+
+    is_initialized = true;
+    return true;
+}
+
+void shutdown()
+{
+    for (u16 i{ 0 }; i < max_message_codes; ++i)
+    {
+        if(!registered[i].events.empty())
+        {
+            registered[i].events.clear();
+        }
+    }
+}
+
+bool register_event(u16 code, void* listener, func_on_event on_event)
+{
+    assert(is_initialized);
+    if(!is_initialized) return false;
+
+    const u64 register_count{ registered[code].events.size() };
+    for (u64 i{ 0 }; i < register_count; ++i)
+    {
+        if(registered[code].events[i].listener == listener)
+        {
+            // warn
+            return false;
+        }
+    }
+
+    const registered_event evt{ listener, on_event };
+    registered[code].events.push_back(evt);
+    return true;
+}
+
+bool unregister_event(u16 code, void* listener, func_on_event on_event)
+{
+    assert(is_initialized);
+    if(!is_initialized) return false;
+
+    utl::vector<registered_event>& events{registered[code].events};
+    for (u64 i{ 0 }; i < events.size(); ++i)
+    {
+        if(const auto [lsn, callback]{events[i]}; lsn == listener && callback == on_event)
+        {
+            events.erase_unordered(i);
+            return true;
+        }
+    }
+
+    return false;
+}
+
+bool fire(u16 code, void* sender, context ctx)
+{
+    assert(is_initialized);
+    if(!is_initialized) return false;
+
+    utl::vector<registered_event>& events{ registered[code].events };
+    for (u64 i{ 0 }; i < events.size(); ++i)
+    {
+        if(const auto [listener, callback]{events[i]}; callback(code, sender, listener, ctx))
+        {
+            // If a listener "handled" an event, don't let remaining listeners handle as well
+            return true;
+        }
+    }
+
+    return false;
+}
 
 } // namespace sky::events
