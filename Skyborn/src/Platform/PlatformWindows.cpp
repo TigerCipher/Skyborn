@@ -173,7 +173,7 @@ bool create_window(const char* app_name, i32 x, i32 y, i32 width, i32 height)
 
 } // anonymous namespace
 
-bool initialize()
+bool initialize(std::string_view app_name, i32 x, i32 y, i32 width, i32 height)
 {
     // Store original console info
     const HANDLE               console_handle{ GetStdHandle(STD_OUTPUT_HANDLE) };
@@ -188,7 +188,7 @@ bool initialize()
         return false;
     LOG_INFO("Skyborn starting up");
 
-    create_window("Skyborn", 100, 100, 1920, 1080);
+    create_window(app_name.data(), x, y, width, height);
 
 
     return true;
@@ -208,14 +208,6 @@ void shutdown()
     reset_console();
 }
 
-void run()
-{
-    while (true)
-    {
-        if (!pump_messages())
-            break;
-    }
-}
 
 bool pump_messages()
 {

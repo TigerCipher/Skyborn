@@ -16,7 +16,7 @@
 //    You should have received a copy of the GNU Lesser General Public
 //    License along with this library; if not, see <http://www.gnu.org/licenses/>.
 //
-// File Name: Platform.h
+// File Name: Application.h
 // Date File Created: 03/30/2023
 // Author: Matt
 //
@@ -24,22 +24,44 @@
 
 #pragma once
 
-#include <string_view>
+#include <string>
+#include <utility>
 
 #include "Common.h"
 
-namespace sky::platform
+namespace sky::app
 {
 
-//bool startup(std::string_view app_name, i32 x, i32 y, i32 width, i32 height);
+struct application_desc
+{
+    i16 pos_x{};
+    i16 pos_y{};
+    i16 width{};
+    i16 height{};
 
-bool initialize(std::string_view app_name, i32 x, i32 y, i32 width, i32 height);
-void shutdown();
+    std::string name{};
+};
 
-bool pump_messages();
 
-void write_message(std::string_view msg, u8 color);
-void write_error(std::string_view msg, u8 color);
-void reset_console();
+SAPI class game
+{
+public:
+    explicit game(application_desc desc) : m_desc{ std::move(desc) }{}
+    virtual ~game() = default;
+
+    virtual bool initialize() = 0;
+    virtual bool update(f32 delta) = 0;
+    virtual bool render(f32 delta) = 0;
+
+    virtual void on_resize(i32 width, i32 height) = 0;
+
+    [[nodiscard]] constexpr const application_desc& desc() const { return m_desc; }
+
+private:
+    application_desc m_desc{};
+};
+
+SAPI bool create(scope<game> game);
+SAPI bool run();
 
 }
