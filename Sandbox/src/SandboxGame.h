@@ -28,25 +28,53 @@
 #include "Core/Application.h"
 #include "Debug/Logger.h"
 #include "Memory/Memory.h"
+#include "Utl/Array.h"
 
 class sandbox_game : public sky::app::game
 {
 public:
     explicit sandbox_game(sky::app::application_desc desc) : game{ std::move(desc) } {}
-    ~sandbox_game() override {  }
+    ~sandbox_game() override {}
 
     bool initialize() override
     {
-        m_test = (test*)sky::memory::allocate(sizeof(test), sky::memory_tag::game);
+        m_test = (test*) sky::memory::allocate(sizeof(test), sky::memory_tag::game);
         //m_test          = (test*) sky::memory::operator new(sizeof(test), sky::memory::memory_tag::game);
-        m_test->data = 2.45543;
-        m_test->offset = 32;
+        m_test->data    = 2.45543;
+        m_test->offset  = 32;
         m_test->padding = 8;
-        m_test->id = 12344352;
+        m_test->id      = 12344352;
 
 
-        m_test_ref = create_ref<test2, sky::memory_tag::game>(32, 4, 2, 23.44, "Test2");
+        m_test_ref   = create_ref<test2, sky::memory_tag::game>(32, 4, 2, 23.44, "Test2");
         m_test_scope = create_scope<test2, sky::memory_tag::entity>(32, 32, 32, 4.34, "Test Scope");
+        sky::utl::array<u64> m_arr{};
+        m_arr.push_back(3);
+        m_arr.push_back(4);
+        m_arr.push_back(5);
+        m_arr.push_back(6);
+
+        u32 idx{};
+        for (u64 i : m_arr)
+        {
+            LOG_DEBUGF("{}: {}", idx, i);
+            ++idx;
+        }
+
+        u64 top{ m_arr.back() };
+        u64 front{ m_arr.front() };
+        u64 at1{ m_arr[1] };
+
+        u64 old_3{ *m_arr.erase_unordered(3) };
+
+        LOG_DEBUGF("Top/Back {} Front {} 1: {}.. 3: {}", top, front, at1, old_3);
+        idx = 0;
+        for (u64 i : m_arr)
+        {
+            LOG_DEBUGF("{}: {}", idx, i);
+            ++idx;
+        }
+
 
         LOG_TRACE(sky::memory::get_usage_str());
         LOG_TRACE(std::format("Expected {} bytes", sizeof(test)));
@@ -54,6 +82,7 @@ public:
         sky::memory::free(m_test, sizeof(test), sky::memory_tag::game);
         m_test_ref.reset();
         m_test_scope.reset();
+
 
         LOG_DEBUG("Sandbox game initialize");
         return true;
@@ -81,15 +110,15 @@ private:
 
     struct test2
     {
-        u64 offset{};
-        u64 padding{};
-        u32 id{};
-        f64 data{};
+        u64         offset{};
+        u64         padding{};
+        u32         id{};
+        f64         data{};
         std::string name{};
     };
 
     test* m_test{};
 
-    ref<test2, sky::memory_tag::game> m_test_ref{};
+    ref<test2, sky::memory_tag::game>     m_test_ref{};
     scope<test2, sky::memory_tag::entity> m_test_scope{};
 };
