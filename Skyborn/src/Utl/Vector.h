@@ -35,25 +35,25 @@ namespace sky::utl
 // u64 stride = the size of T
 // T* elements
 template<typename T, bool Destruct = false>
-class array
+class vector
 {
 public:
-    array() = default;
+    vector() = default;
 
-    constexpr explicit array(u64 count) { resize(count); }
+    constexpr explicit vector(u64 count) { resize(count); }
 
-    constexpr explicit array(u64 count, const T& value) { resize(count, value); }
+    constexpr explicit vector(u64 count, const T& value) { resize(count, value); }
 
 
     // copy ctor
-    constexpr array(const array& o) { *this = o; }
+    constexpr vector(const vector& o) { *this = o; }
 
     // move ctor
-    constexpr array(array&& o) noexcept : m_capacity(o.m_capacity), m_size(o.m_size), m_data(o.m_data) { o.reset(); }
+    constexpr vector(vector&& o) noexcept : m_capacity(o.m_capacity), m_size(o.m_size), m_data(o.m_data) { o.reset(); }
 
-    ~array() { destroy(); }
+    ~vector() { destroy(); }
 
-    constexpr array& operator=(const array& o)
+    constexpr vector& operator=(const vector& o)
     {
         assert(this != std::addressof(o));
         if (this != std::addressof(o))
@@ -70,7 +70,7 @@ public:
         return *this;
     }
 
-    constexpr array& operator=(array&& o) noexcept
+    constexpr vector& operator=(vector&& o) noexcept
     {
         assert(this != std::addressof(o));
         if (this != std::addressof(o))
@@ -85,7 +85,9 @@ public:
     constexpr void push_back(const T& value) { emplace_back(value); }
 
     constexpr void push_back(T&& value) { emplace_back(std::move(value)); }
-    // Inserts items to the end of the array
+
+
+    // Inserts items to the end of the vector
     template<typename... Params>
     constexpr decltype(auto) emplace_back(Params&&... p)
     {
@@ -218,7 +220,7 @@ public:
         m_size = 0;
     }
 
-    constexpr void swap(array& o) noexcept
+    constexpr void swap(vector& o) noexcept
     {
         if (this == std::addressof(o))
             return;
@@ -229,13 +231,16 @@ public:
 
     constexpr T* data() { return m_data; }
 
-    constexpr T* const data() const { return m_data; }
+    // The T* vector
+    [[nodiscard]] constexpr T* const data() const { return m_data; }
 
-    constexpr bool empty() const { return m_size == 0; }
+    [[nodiscard]] constexpr bool empty() const { return m_size == 0; }
 
-    constexpr u64 size() const { return m_size; }
+    // The number of elements currently being contained
+    [[nodiscard]] constexpr u64 size() const { return m_size; }
 
-    constexpr u64 capacity() const { return m_capacity; }
+    // The number of elements that can be contained
+    [[nodiscard]] constexpr u64 capacity() const { return m_capacity; }
 
     constexpr T& operator[](u64 index)
     {
@@ -255,7 +260,7 @@ public:
         return m_data[0];
     }
 
-    constexpr const T& front() const
+    [[nodiscard]] constexpr const T& front() const
     {
         assert(m_data && m_size);
         return m_data[0];
@@ -267,7 +272,7 @@ public:
         return m_data[m_size - 1];
     }
 
-    constexpr const T& back() const
+    [[nodiscard]] constexpr const T& back() const
     {
         assert(m_data && m_size);
         return m_data[m_size - 1];
@@ -275,7 +280,7 @@ public:
 
     constexpr T* begin() { return std::addressof(m_data[0]); }
 
-    constexpr const T* begin() const { return std::addressof(m_data[0]); }
+    [[nodiscard]] constexpr const T* begin() const { return std::addressof(m_data[0]); }
 
     constexpr T* end()
     {
@@ -283,14 +288,14 @@ public:
         return std::addressof(m_data[m_size]);
     }
 
-    constexpr const T* end() const
+    [[nodiscard]] constexpr const T* end() const
     {
         assert(!(m_data == nullptr && m_size > 0));
         return std::addressof(m_data[m_size]);
     }
 
 private:
-    constexpr void move(array& o)
+    constexpr void move(vector& o)
     {
         m_capacity = o.m_capacity;
         m_size     = o.m_size;

@@ -26,9 +26,7 @@
 
 #include "Common.h"
 #include "Core/Application.h"
-#include "Debug/Logger.h"
-#include "Memory/Memory.h"
-#include "Utl/Array.h"
+#include "Utl/Vector.h"
 
 class sandbox_game : public sky::app::game
 {
@@ -38,7 +36,7 @@ public:
 
     bool initialize() override
     {
-        m_test = (test*) sky::memory::allocate(sizeof(test), sky::memory_tag::game);
+        m_test = (test*) sky::memory::allocate(sizeof(test), sky::memory_tag::entity_node);
         //m_test          = (test*) sky::memory::operator new(sizeof(test), sky::memory::memory_tag::game);
         m_test->data    = 2.45543;
         m_test->offset  = 32;
@@ -46,9 +44,9 @@ public:
         m_test->id      = 12344352;
 
 
-        m_test_ref   = create_ref<test2, sky::memory_tag::game>(32, 4, 2, 23.44, "Test2");
+        m_test_ref   = create_ref<test2, sky::memory_tag::scene>(32, 4, 2, 23.44, "Test2");
         m_test_scope = create_scope<test2, sky::memory_tag::entity>(32, 32, 32, 4.34, "Test Scope");
-        sky::utl::array<u64> m_arr{};
+        sky::utl::vector<u64> m_arr{};
         m_arr.push_back(3);
         m_arr.push_back(4);
         m_arr.push_back(5);
@@ -76,13 +74,15 @@ public:
         }
 
 
+        LOG_TRACE("Before deallocations:");
         LOG_TRACE(sky::memory::get_usage_str());
-        LOG_TRACE(std::format("Expected {} bytes", sizeof(test)));
 
-        sky::memory::free(m_test, sizeof(test), sky::memory_tag::game);
+        sky::memory::free(m_test, sizeof(test), sky::memory_tag::entity_node);
         m_test_ref.reset();
         m_test_scope.reset();
 
+        LOG_TRACE("After deallocations (except for the vector and game ptr):");
+        LOG_TRACE(sky::memory::get_usage_str());
 
         LOG_DEBUG("Sandbox game initialize");
         return true;
@@ -119,6 +119,6 @@ private:
 
     test* m_test{};
 
-    ref<test2, sky::memory_tag::game>     m_test_ref{};
+    ref<test2, sky::memory_tag::scene>     m_test_ref{};
     scope<test2, sky::memory_tag::entity> m_test_scope{};
 };
