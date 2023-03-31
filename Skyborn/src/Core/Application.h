@@ -43,7 +43,7 @@ struct application_desc
 };
 
 
-SAPI class game
+class game
 {
 public:
     explicit game(application_desc desc) : m_desc{ std::move(desc) }{}

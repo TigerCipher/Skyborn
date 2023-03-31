@@ -37,7 +37,30 @@ namespace sky::platform
 namespace
 {
 
-constexpr u8 levels[6]{ 8, 1, 2, 6, 4, 64 };
+enum colors : u8
+{
+    black = 0,
+    dark_blue,
+    dark_green,
+    light_blue,
+    red,
+    dark_purple,
+    gold,
+    light_gray,
+    gray,
+    blue,
+    green,
+    light_red,
+    purple,
+    yellow,
+    white,
+    red_bg_white_fg = 79,
+    light_blue_bg_black_fg = 144,
+    light_blue_bg_white_fg = 159,
+};
+
+// trace, debug, info, warn, error, fatal
+constexpr u8 levels[6]{ gray, light_gray, green, gold, red, red_bg_white_fg };
 
 u16 original_console_state;
 u16 original_console_error_state;
@@ -182,6 +205,14 @@ bool initialize(std::string_view app_name, i32 x, i32 y, i32 width, i32 height)
     original_console_state = console_info.wAttributes;
     GetConsoleScreenBufferInfo(GetStdHandle(STD_ERROR_HANDLE), &console_info);
     original_console_error_state = console_info.wAttributes;
+
+    //for (u16 i{ 1 }; i < 255; ++i)
+    //{
+    //    SetConsoleTextAttribute(console_handle, i);
+    //    std::string str{ std::format("[{}]: Is this color\n", i) };
+    //    const LPDWORD written{ nullptr };
+    //    WriteConsoleA(console_handle, str.c_str(), (DWORD) str.length(), written, nullptr);
+    //}
 
     // Logger module
     if (!logger::initialize())

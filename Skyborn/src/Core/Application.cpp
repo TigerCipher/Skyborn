@@ -66,6 +66,13 @@ bool create(scope<game> game)
 
     LOG_INFO("Game initialized");
 
+        LOG_TRACE("Test message");
+        LOG_DEBUG("Test message");
+        LOG_INFO("Test message");
+        LOG_WARN("Test message");
+        LOG_ERROR("Test message");
+        LOG_FATAL("Test message");
+
     return true;
 }
 bool run()

@@ -22,41 +22,44 @@
 //
 // ------------------------------------------------------------------------------
 
-#include "Common.h"
+#include "Skyborn.h"
 #include "SandboxGame.h"
-#include "Debug/Logger.h"
-#include "Core/Application.h"
 
 #pragma comment(lib, "Skyborn.lib")
 
 
 using namespace sky;
 
-int main(int argc, char* argv[])
+scope<app::game> create_game()
 {
-    //platform::write_message("[WARNING] Just a test\n", 5);
-
-    //logger::message(logger::log_level::debug, "Just a test with {} formatting. I have {} noses", "fancy", 3);
-    LOG_TRACE("Test message");
-    LOG_DEBUG("Test message");
-    LOG_INFO("Test message");
-    LOG_WARN("Test message");
-    LOG_ERROR("Test message");
-    LOG_FATAL("Test message");
-
-    scope<sandbox_game> game{ create_scope<sandbox_game>(app::application_desc{ 100, 100, 1920, 1080, "Skyborn Sandbox" }) };
-
-    if(!app::create(std::move(game)))
-    {
-        LOG_FATAL("Failed to create application");
-        return 1;
-    }
-
-    if(!app::run())
-    {
-        LOG_FATAL("Application failed to shutdown properly");
-        return 2;
-    }
-
-    return 0;
+    return create_scope<sandbox_game>(app::application_desc{ 300, 300, 1280, 720, "Skyborn Sandbox" });
 }
+
+//int main(int argc, char* argv[])
+//{
+//    //platform::write_message("[WARNING] Just a test\n", 5);
+//
+//    //logger::message(logger::log_level::debug, "Just a test with {} formatting. I have {} noses", "fancy", 3);
+//    LOG_TRACE("Test message");
+//    LOG_DEBUG("Test message");
+//    LOG_INFO("Test message");
+//    LOG_WARN("Test message");
+//    LOG_ERROR("Test message");
+//    LOG_FATAL("Test message");
+//
+//    scope<sandbox_game> game{ create_scope<sandbox_game>(app::application_desc{ 100, 100, 1920, 1080, "Skyborn Sandbox" }) };
+//
+//    if(!app::create(std::move(game)))
+//    {
+//        LOG_FATAL("Failed to create application");
+//        return 1;
+//    }
+//
+//    if(!app::run())
+//    {
+//        LOG_FATAL("Application failed to shutdown properly");
+//        return 2;
+//    }
+//
+//    return 0;
+//}
