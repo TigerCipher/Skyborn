@@ -51,4 +51,6 @@ int main()
         LOG_FATAL("Application failed to shutdown properly");
         return 2;
     }
+
+    return 0;
 }
