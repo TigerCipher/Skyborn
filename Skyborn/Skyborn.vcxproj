@@ -89,12 +89,14 @@
     <ClInclude Include="src\Common.h" />
     <ClInclude Include="src\Core\Application.h" />
     <ClInclude Include="src\Debug\Logger.h" />
+    <ClInclude Include="src\Memory\Memory.h" />
     <ClInclude Include="src\Platform\Platform.h" />
     <ClInclude Include="src\Skyborn.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Core\Application.cpp" />
     <ClCompile Include="src\Debug\Logger.cpp" />
+    <ClCompile Include="src\Memory\Memory.cpp" />
     <ClCompile Include="src\Platform\PlatformWindows.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

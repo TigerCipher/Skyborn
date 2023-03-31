@@ -50,6 +50,10 @@ bool create(scope<game> game)
     running   = true;
     suspended = false;
 
+    // Logger module
+    if (!logger::initialize())
+        return false;
+
     if (!platform::initialize(name, pos_x, pos_y, width, height))
     {
         LOG_FATAL("Platform startup failed");
@@ -66,12 +70,12 @@ bool create(scope<game> game)
 
     LOG_INFO("Game initialized");
 
-        LOG_TRACE("Test message");
-        LOG_DEBUG("Test message");
-        LOG_INFO("Test message");
-        LOG_WARN("Test message");
-        LOG_ERROR("Test message");
-        LOG_FATAL("Test message");
+    //LOG_TRACE("Test message");
+    //LOG_DEBUG("Test message");
+    //LOG_INFO("Test message");
+    //LOG_WARN("Test message");
+    //LOG_ERROR("Test message");
+    //LOG_FATAL("Test message");
 
     return true;
 }
@@ -100,6 +104,7 @@ bool run()
     }
 
     platform::shutdown();
+    logger::shutdown();
     return true;
 }
 } // namespace sky::app

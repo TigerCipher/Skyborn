@@ -42,4 +42,7 @@ void write_message(std::string_view msg, u8 color);
 void write_error(std::string_view msg, u8 color);
 void reset_console();
 
+void* allocate(u64 size, bool aligned = false);
+void free(void* block, bool aligned = false);
+
 }

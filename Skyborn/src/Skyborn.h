@@ -27,12 +27,14 @@
 #include "Common.h"
 #include "Debug/Logger.h"
 #include "Core/Application.h"
+#include "Memory/Memory.h"
 
 extern scope<sky::app::game> create_game();
 
 // Entry point
 int main()
 {
+    sky::memory::initialize();
     scope<sky::app::game> game{ create_game() };
     if (!game)
     {
@@ -51,6 +53,8 @@ int main()
         LOG_FATAL("Application failed to shutdown properly");
         return 2;
     }
+
+    sky::memory::shutdown();
 
     return 0;
 }

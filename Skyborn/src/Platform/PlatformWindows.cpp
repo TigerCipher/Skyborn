@@ -54,7 +54,7 @@ enum colors : u8
     purple,
     yellow,
     white,
-    red_bg_white_fg = 79,
+    red_bg_white_fg        = 79,
     light_blue_bg_black_fg = 144,
     light_blue_bg_white_fg = 159,
 };
@@ -214,9 +214,6 @@ bool initialize(std::string_view app_name, i32 x, i32 y, i32 width, i32 height)
     //    WriteConsoleA(console_handle, str.c_str(), (DWORD) str.length(), written, nullptr);
     //}
 
-    // Logger module
-    if (!logger::initialize())
-        return false;
     LOG_INFO("Skyborn starting up");
 
     create_window(app_name.data(), x, y, width, height);
@@ -235,7 +232,6 @@ void shutdown()
         hwnd = nullptr;
     }
 
-    logger::shutdown();
     reset_console();
 }
 
@@ -280,6 +276,16 @@ void reset_console()
 {
     SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), original_console_state);
     SetConsoleTextAttribute(GetStdHandle(STD_ERROR_HANDLE), original_console_error_state);
+}
+
+void* allocate(u64 size, bool aligned /*= false*/)
+{
+    return malloc(size);
+}
+
+void free(void* block, bool aligned /*= false*/)
+{
+    if(block) free(block);
 }
 
 } // namespace sky::platform

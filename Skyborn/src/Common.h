@@ -7,12 +7,12 @@
 //    it under the terms of the GNU Lesser General Public License as
 //    published by the Free Software Foundation; either version 3 of the
 //    License, or (at your option) any later version.
-//    
+//
 //    This library is distributed in the hope that it will be useful,
 //    but WITHOUT ANY WARRANTY; without even the implied warranty of
 //    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 //    Lesser General Public License for more details.
-//    
+//
 //    You should have received a copy of the GNU Lesser General Public
 //    License along with this library; if not, see <http://www.gnu.org/licenses/>.
 //
@@ -133,18 +133,18 @@ constexpr ref<T> create_ref(Args&&... args)
     return std::make_shared<T>(std::forward<Args>(args)...);
 }
 
-inline auto operator""_KB(const size_t x)
+constexpr auto operator""_KB(const u64 x)
 {
     return x * 1024u;
 }
 
-inline auto operator""_MB(const size_t x)
+constexpr auto operator""_MB(const u64 x)
 {
     // x * 1024 * 1024
     return x * 1048576u;
 }
 
-inline auto operator""_GB(const size_t x)
+constexpr auto operator""_GB(const u64 x)
 {
     // x * 1024 * 1024 * 1024
     return x * 1073741824u;
