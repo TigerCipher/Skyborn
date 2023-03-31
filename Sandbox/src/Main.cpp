@@ -36,7 +36,8 @@ scope<app::game, memory_tag::game> create_game()
     {
         create_scope<sandbox_game, memory_tag::game>(app::application_desc{ 300, 300, 1280, 720, "Skyborn Sandbox" })
     };
-    return std::unique_ptr<app::game, memory::scope_deleter<app::game, memory_tag::game>>{ ptr.release(), memory::scope_deleter<app::game, memory_tag::game>{}};
+    //return std::unique_ptr<app::game, memory::scope_deleter<app::game, memory_tag::game>>{ ptr.release(), memory::scope_deleter<app::game, memory_tag::game>{}};
+    return SCOPE_CAST(app::game, memory_tag::game, ptr);
 }
 
 //int main(int argc, char* argv[])

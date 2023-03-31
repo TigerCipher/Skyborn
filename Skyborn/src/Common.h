@@ -67,3 +67,5 @@ constexpr scope<T, Tag> create_scope(Args&&... args)
 {
     return allocate_unique<T>(sky::memory::scope_allocator<T, sky::memory::scope_deleter<T, Tag>, Tag>{}, std::forward<Args>(args)...);
 }
+
+#define SCOPE_CAST(parent, tag, ptr) std::unique_ptr<parent, memory::scope_deleter<parent, tag>>{ ptr.release(), memory::scope_deleter<parent, tag>{} }

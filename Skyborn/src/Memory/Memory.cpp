@@ -189,6 +189,30 @@ std::string get_usage_str()
         str += std::format("  {}: {:.2f} {}\n", tag_strings[i], amount, unit);
     }
 
+    char      unit[4]{ "XiB" };
+    const u64 total{ stats.total_allocated };
+    f32       amount;
+    if (total >= gib)
+    {
+        unit[0] = 'G';
+        amount  = (f32) total / (f32) gib;
+    } else if (total >= mib)
+    {
+        unit[0] = 'M';
+        amount  = (f32) total / (f32) mib;
+    } else if (total >= kib)
+    {
+        unit[0] = 'K';
+        amount  = (f32) total / (f32) kib;
+    } else
+    {
+        unit[0] = 'B';
+        unit[1] = '\0';
+        amount  = (f32) total;
+    }
+
+    str += std::format("Total: {:.2f} {}\n", amount, unit);
+
     return str;
 }
 
