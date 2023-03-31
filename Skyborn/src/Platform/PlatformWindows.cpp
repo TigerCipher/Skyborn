@@ -285,7 +285,7 @@ void* allocate(u64 size, bool aligned /*= false*/)
 
 void free(void* block, bool aligned /*= false*/)
 {
-    if(block) free(block);
+    std::free(block);
 }
 
 } // namespace sky::platform

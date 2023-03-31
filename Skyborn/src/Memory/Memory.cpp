@@ -36,23 +36,9 @@ constexpr u64 gib{ 1_GB };
 constexpr u64 mib{ 1_MB };
 constexpr u64 kib{ 1_KB };
 
-constexpr const char* tag_strings[memory_tag::count] {
-    "UNKNOWN    ",
-    "ARRAY      ",
-    "DARRAY     ",
-    "DICTIONARY ",
-    "RING_QUEUE ",
-    "BST        ",
-    "STRING     ",
-    "APP        ",
-    "JOB        ",
-    "TEXTURE    ",
-    "MATERIAL   ",
-    "RENDERER   ",
-    "GAME       ",
-    "ENTITY     ",
-    "ENTITY_NODE",
-    "SCENE      ",
+constexpr const char* tag_strings[memory_tag::count]{
+    "UNKNOWN    ", "ARRAY      ", "DARRAY     ", "DICTIONARY ", "RING_QUEUE ", "BST        ", "STRING     ", "APP        ",
+    "JOB        ", "TEXTURE    ", "MATERIAL   ", "RENDERER   ", "GAME       ", "ENTITY     ", "ENTITY_NODE", "SCENE      ",
 };
 
 static_assert(_countof(tag_strings) == memory_tag::count);
@@ -65,9 +51,12 @@ struct memory_stats
 
 } // anonymous namespace
 
+//void increase_memory_count(size_t size) {}
+//void decrease_memory_count(size_t size) {}
 void initialize() {}
 
 void shutdown() {}
+
 
 void* allocate(u64 size, memory_tag::tag tag)
 {
@@ -83,6 +72,8 @@ void* allocate(u64 size, memory_tag::tag tag)
 
     zero_memory(block, size);
 
+    LOG_TRACE(std::format("Allocated a block of {} bytes", size));
+
     return block;
 }
 
@@ -97,6 +88,8 @@ void free(void* block, u64 size, memory_tag::tag tag)
     stats.tagged_allocations[tag] -= size;
 
     platform::free(block); // TODO: Alignment
+
+    LOG_TRACE(std::format("Deallocated a block of {} bytes", size));
 }
 
 void* zero_memory(void* block, u64 size)

@@ -56,12 +56,17 @@ struct memory_tag
     };
 };
 
+//void increase_memory_count(size_t size);
+//void decrease_memory_count(size_t size);
+
+
 SAPI void initialize();
 SAPI void shutdown();
 
 // It's entirely possible there will be situations I don't just want to use smart pointers or new/delete. But rather than just pure C functions, I think
 // it might be best to work towards custom allocators. Plus this way we can track memory leaks, easier than we could with new/delete
 // But... in most cases I imagine I'll be using smart pointers
+
 
 SAPI void* allocate(u64 size, memory_tag::tag tag);          // malloc
 SAPI void  free(void* block, u64 size, memory_tag::tag tag); // free
@@ -70,5 +75,31 @@ SAPI void* copy(void* dest, const void* src, u64 size);      // memcpy
 SAPI void* set(void* dest, i32 value, u64 size);             // memset
 
 SAPI std::string get_usage_str();
+
+
+template<typename T>
+class sky_allocator
+{
+public:
+    using value_type         = T;
+    sky_allocator() noexcept = default;
+
+    template<typename U>
+    sky_allocator(const sky_allocator<U>&) noexcept
+    {}
+
+    T* allocate(size_t size)
+    {
+        //increase_memory_count(size * sizeof(T));
+        return (T*) memory::allocate(size * sizeof(T), memory_tag::unknown);
+    }
+
+    void deallocate(T* ptr, size_t size) noexcept
+    {
+        //decrease_memory_count(size * sizeof(T));
+        memory::free(ptr, sizeof(T) * size, memory_tag::unknown);
+    }
+};
+
 
 } // namespace sky::memory

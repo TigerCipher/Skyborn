@@ -24,6 +24,7 @@
 
 #pragma once
 
+#include "CommonHeaders.h"
 #include "Core/Application.h"
 #include "Debug/Logger.h"
 #include "Memory/Memory.h"
@@ -36,13 +37,20 @@ public:
     bool initialize() override
     {
         m_test = (test*)sky::memory::allocate(sizeof(test), sky::memory::memory_tag::game);
+        //m_test          = (test*) sky::memory::operator new(sizeof(test), sky::memory::memory_tag::game);
         m_test->data = 2.45543;
         m_test->offset = 32;
         m_test->padding = 8;
         m_test->id = 12344352;
-        LOG_TRACE(sky::memory::get_usage_str());
 
-        //sky::memory::free(m_test, sizeof(test), sky::memory::memory_tag::game);
+
+        m_test_ref = create_ref<test>(32, 4, 2, 23.44);
+
+        LOG_TRACE(sky::memory::get_usage_str());
+        LOG_TRACE(std::format("Expected {} bytes", sizeof(test)));
+
+        sky::memory::free(m_test, sizeof(test), sky::memory::memory_tag::game);
+        m_test_ref.reset();
 
         LOG_DEBUG("Sandbox game initialize");
         return true;
@@ -69,4 +77,6 @@ private:
     };
 
     test* m_test{};
+
+    ref<test> m_test_ref{};
 };
