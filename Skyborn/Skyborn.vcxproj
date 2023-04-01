@@ -93,6 +93,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="src\Core\Event.h" />
+    <ClInclude Include="src\Core\Input.h" />
     <ClInclude Include="src\Defines.h" />
     <ClInclude Include="src\Common.h" />
     <ClInclude Include="src\Core\Application.h" />
@@ -106,6 +107,7 @@
   <ItemGroup>
     <ClCompile Include="src\Core\Application.cpp" />
     <ClCompile Include="src\Core\Event.cpp" />
+    <ClCompile Include="src\Core\Input.cpp" />
     <ClCompile Include="src\Debug\Logger.cpp" />
     <ClCompile Include="src\Memory\Memory.cpp" />
     <ClCompile Include="src\Platform\PlatformWindows.cpp" />

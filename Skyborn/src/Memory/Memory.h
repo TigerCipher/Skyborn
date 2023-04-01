@@ -189,11 +189,10 @@ constexpr scope<T, Tag> create_scope(Args&&... args)
     return allocate_unique<T>(sky::memory::scope_allocator<T, Tag>{}, std::forward<Args>(args)...);
 }
 
-//template<typename P, sky::memory_tag::tag Tag>
 
 
 #define SCOPE_CAST(parent, tag, ptr)                                                                                             \
-    scope<parent, tag>                                                                                                      \
+    scope<parent, tag>                                                                                                           \
     {                                                                                                                            \
         ptr.release()                                                                                                            \
     }

@@ -26,6 +26,7 @@
 #include "Debug/Logger.h"
 #include "Platform/Platform.h"
 #include "Event.h"
+#include "Input.h"
 
 namespace sky::app
 {
@@ -53,6 +54,9 @@ bool create(scope<game, memory_tag::game> game)
 
     // Logger module
     if (!logger::initialize())
+        return false;
+
+    if (!input::initialize())
         return false;
 
     if (!events::initialize())
@@ -109,10 +113,13 @@ bool run()
                 running = false;
                 break;
             }
+
+            input::update(0.0);
         }
     }
 
     events::shutdown();
+    input::shutdown();
     platform::shutdown();
     logger::shutdown();
     return true;
