@@ -1,4 +1,4 @@
-//  ------------------------------------------------------------------------------
+﻿//  ------------------------------------------------------------------------------
 // 
 //  Skyborn
 //     Copyright 2023 Matthew Rogers
@@ -16,19 +16,42 @@
 //     You should have received a copy of the GNU Lesser General Public
 //     License along with this library; if not, see <http://www.gnu.org/licenses/>.
 // 
-//  File Name: Version.h
-//  Date File Created: 03/31/2023
+//  File Name: Clock.h
+//  Date File Created: 04/01/2023
 //  Author: Matt
 // 
 //  ------------------------------------------------------------------------------
 
 #pragma once
-#include "Defines.h"
 
-#define VERSION_MAJOR 0
-#define VERSION_MINOR 0
-#define VERSION_PATCH 0
-#define VERSION_BUILD 21
+#include "Common.h"
 
-#define SKY_VERSION STRINGIFY(VERSION_MAJOR) "." STRINGIFY(VERSION_MINOR) "." STRINGIFY(VERSION_PATCH) "." STRINGIFY(VERSION_BUILD)
+namespace sky::core
+{
 
+class clock
+{
+public:
+    constexpr clock() = default; // Could make the ctor call start(), but I think I prefer to have more explicit control over starting the clock
+
+    // Starts clock and resets elapsed time
+    void start();
+
+    // Stops clock and resets start time but not elapsed time
+    void stop();
+
+    // Resets start and elapsed time to 0
+    void reset();
+
+    // Updates the clock. Should be called before checking elapsed time
+    void update();
+
+    // update() should be called first. This retrieves the elapsed time (current time - start_time)
+    [[nodiscard]] constexpr f64 elapsed() const { return m_elapsed; }
+
+private:
+    f64 m_start_time{};
+    f64 m_elapsed{};
+};
+
+}

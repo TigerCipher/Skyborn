@@ -96,12 +96,18 @@
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="src\Core\Clock.h" />
     <ClInclude Include="src\Core\Event.h" />
     <ClInclude Include="src\Core\Input.h" />
     <ClInclude Include="src\Defines.h" />
     <ClInclude Include="src\Common.h" />
     <ClInclude Include="src\Core\Application.h" />
     <ClInclude Include="src\Debug\Logger.h" />
+    <ClInclude Include="src\Graphics\GraphicsBackend.h" />
+    <ClInclude Include="src\Graphics\GraphicsFrontend.h" />
+    <ClInclude Include="src\Graphics\GraphicsInterface.h" />
+    <ClInclude Include="src\Graphics\Vulkan\VulkanBackend.h" />
+    <ClInclude Include="src\Graphics\Vulkan\VulkanInterface.h" />
     <ClInclude Include="src\Memory\Memory.h" />
     <ClInclude Include="src\Platform\Platform.h" />
     <ClInclude Include="src\Skyborn.h" />
@@ -110,9 +116,13 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Core\Application.cpp" />
+    <ClCompile Include="src\Core\Clock.cpp" />
     <ClCompile Include="src\Core\Event.cpp" />
     <ClCompile Include="src\Core\Input.cpp" />
     <ClCompile Include="src\Debug\Logger.cpp" />
+    <ClCompile Include="src\Graphics\GraphicsBackend.cpp" />
+    <ClCompile Include="src\Graphics\GraphicsFrontend.cpp" />
+    <ClCompile Include="src\Graphics\Vulkan\VulkanBackend.cpp" />
     <ClCompile Include="src\Memory\Memory.cpp" />
     <ClCompile Include="src\Platform\PlatformWindows.cpp" />
   </ItemGroup>

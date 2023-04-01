@@ -16,39 +16,41 @@
 //     You should have received a copy of the GNU Lesser General Public
 //     License along with this library; if not, see <http://www.gnu.org/licenses/>.
 //
-//  File Name: SandboxGame.h
-//  Date File Created: 03/30/2023
+//  File Name: GraphicsBackend.cpp
+//  Date File Created: 04/01/2023
 //  Author: Matt
 //
 //  ------------------------------------------------------------------------------
 
-#pragma once
+#include "GraphicsBackend.h"
+#include "Vulkan/VulkanBackend.h"
 
-#include "Common.h"
-#include "Core/Application.h"
-#include "Utl/Vector.h"
-
-class sandbox_game : public sky::app::game
+namespace sky::graphics
 {
-public:
-    explicit sandbox_game(sky::app::application_desc desc) : game{ std::move(desc) } {}
-    ~sandbox_game() override = default;
 
-    bool initialize() override
+bool create_backend(graphics_backend_api::type api, graphics_backend* out_backend)
+{
+    if (api == graphics_backend_api::vulkan)
     {
-        LOG_DEBUG("Sandbox game initialize");
+        out_backend->initialize  = vk::initialize;
+        out_backend->shutdown    = vk::shutdown;
+        out_backend->begin_frame = vk::begin_frame;
+        out_backend->end_frame   = vk::end_frame;
+        out_backend->resized     = vk::on_resized;
         return true;
     }
-    bool update(f32 delta) override
-    {
-        //LOG_DEBUG("Sandbox game update");
-        return true;
-    }
-    bool render(f32 delta) override
-    {
-        //LOG_DEBUG("Sandbox game render");
-        return true;
-    }
-    void on_resize(i32 width, i32 height) override { LOG_DEBUG("Sandbox game on_resize"); }
 
-};
+    return false;
+}
+
+void destroy_backend(graphics_backend* gfx_backend)
+{
+    gfx_backend->initialize  = nullptr;
+    gfx_backend->shutdown    = nullptr;
+    gfx_backend->begin_frame = nullptr;
+    gfx_backend->end_frame   = nullptr;
+    gfx_backend->resized     = nullptr;
+}
+
+
+} // namespace sky::graphics::backend

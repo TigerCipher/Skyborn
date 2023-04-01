@@ -27,6 +27,8 @@
 #include "Platform/Platform.h"
 #include "Event.h"
 #include "Input.h"
+#include "Clock.h"
+#include "Graphics/GraphicsFrontend.h"
 
 namespace sky::app
 {
@@ -36,6 +38,7 @@ namespace
 scope<game, memory_tag::game> game_instance{ nullptr };
 bool                          running{ false };
 bool                          suspended{ false };
+core::clock                   clock{};
 
 bool on_event(u16 code, void* sender, void* listener, events::context ctx)
 {
@@ -113,6 +116,12 @@ bool create(scope<game, memory_tag::game> game)
 
     LOG_INFO("Platform initialized");
 
+    if (!graphics::initialize(game_instance->desc().name.c_str()))
+    {
+        LOG_FATAL("Failed to initialize graphics frontend. Aborting...");
+        return false;
+    }
+
     if (!game_instance->initialize())
     {
         LOG_FATAL("Game failed to initialize");
@@ -134,27 +143,65 @@ bool create(scope<game, memory_tag::game> game)
 }
 bool run()
 {
+    clock.start();
+    clock.update();
+    f64 last_time{ clock.elapsed() };
+
+    f64           running_time{};
+    constexpr f64 target_frame_seconds{ 1.0 / 60.0 };
+    u8            frame_count{};
+
+
+    LOG_DEBUG(memory::get_usage_str());
     while (running)
     {
         if (!platform::pump_messages())
             running = false;
         if (!suspended)
         {
-            if (!game_instance->update(0.0f))
+            clock.update();
+            const f64 current_time{ clock.elapsed() };
+            const f64 delta{ current_time - last_time };
+            const f64 frame_start_time{ platform::get_time() };
+
+            if (!game_instance->update((f32) delta))
             {
                 LOG_FATAL("Game tick failed, aborting");
                 running = false;
                 break;
             }
 
-            if (!game_instance->render(0.0f))
+            if (!game_instance->render((f32) delta))
             {
                 LOG_FATAL("Game render failed, aborting");
                 running = false;
                 break;
             }
 
-            input::update(0.0);
+            graphics::render_packet packet{(f32)delta};
+            graphics::draw_frame(&packet);
+
+            const f64 frame_end_time{ platform::get_time() };
+            const f64 frame_elapsed_time{ frame_end_time - frame_start_time };
+            running_time += frame_elapsed_time;
+
+            if (const f64 remaining_seconds{ target_frame_seconds - frame_elapsed_time }; remaining_seconds > 0.0)
+            {
+                const u64 remaining_ms{ (u64) remaining_seconds * 1000 };
+
+                constexpr bool limit_frames{ false }; // For now, it's just false
+                if (remaining_ms > 0 && limit_frames)
+                {
+                    platform::sleep(remaining_ms - 1);
+                }
+
+                ++frame_count;
+            }
+
+            input::update(delta);
+
+
+            last_time = current_time;
         }
     }
 
@@ -165,6 +212,7 @@ bool run()
 
     events::shutdown();
     input::shutdown();
+    graphics::shutdown();
     platform::shutdown();
     logger::shutdown();
     return true;

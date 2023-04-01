@@ -1,4 +1,4 @@
-//  ------------------------------------------------------------------------------
+﻿//  ------------------------------------------------------------------------------
 // 
 //  Skyborn
 //     Copyright 2023 Matthew Rogers
@@ -16,19 +16,20 @@
 //     You should have received a copy of the GNU Lesser General Public
 //     License along with this library; if not, see <http://www.gnu.org/licenses/>.
 // 
-//  File Name: Version.h
-//  Date File Created: 03/31/2023
+//  File Name: GraphicsBackend.h
+//  Date File Created: 04/01/2023
 //  Author: Matt
 // 
 //  ------------------------------------------------------------------------------
 
 #pragma once
-#include "Defines.h"
 
-#define VERSION_MAJOR 0
-#define VERSION_MINOR 0
-#define VERSION_PATCH 0
-#define VERSION_BUILD 21
+#include "GraphicsInterface.h"
 
-#define SKY_VERSION STRINGIFY(VERSION_MAJOR) "." STRINGIFY(VERSION_MINOR) "." STRINGIFY(VERSION_PATCH) "." STRINGIFY(VERSION_BUILD)
+namespace sky::graphics
+{
 
+bool create_backend(graphics_backend_api::type api, graphics_backend* out_backend);
+void destroy_backend(graphics_backend* backend);
+
+}
