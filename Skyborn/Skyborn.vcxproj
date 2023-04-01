@@ -111,6 +111,7 @@
     <ClInclude Include="src\Memory\Memory.h" />
     <ClInclude Include="src\Platform\Platform.h" />
     <ClInclude Include="src\Skyborn.h" />
+    <ClInclude Include="src\Utl\Util.h" />
     <ClInclude Include="src\Utl\Vector.h" />
     <ClInclude Include="src\Version.h" />
   </ItemGroup>
@@ -125,6 +126,7 @@
     <ClCompile Include="src\Graphics\Vulkan\VulkanBackend.cpp" />
     <ClCompile Include="src\Memory\Memory.cpp" />
     <ClCompile Include="src\Platform\PlatformWindows.cpp" />
+    <ClCompile Include="src\Utl\Util.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
