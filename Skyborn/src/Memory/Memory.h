@@ -105,7 +105,7 @@ public:
     void deallocate(T* ptr, size_t size) noexcept { del(ptr, sizeof(T) * size, Tag); }
 };
 
-template<typename T, memory_tag::tag Tag, typename Deleter>
+template<typename T, memory_tag::tag Tag>
 class scope_allocator;
 
 template<typename T, memory_tag::tag Tag = memory_tag::unknown>
@@ -113,30 +113,30 @@ struct scope_deleter
 {
     void operator()(T* ptr) const noexcept
     {
-        scope_allocator<T, Tag, scope_deleter> alloc{};
+        scope_allocator<T, Tag> alloc{};
         std::allocator_traits<decltype(alloc)>::destroy(alloc, ptr);
         alloc.deallocate(ptr, 1);
     }
 };
 
-template<typename T, memory_tag::tag Tag = memory_tag::unknown, typename Deleter = scope_deleter<T, Tag>>
+template<typename T, memory_tag::tag Tag = memory_tag::unknown>
 class scope_allocator
 {
 public:
     using value_type = T;
     using pointer    = T*;
-    using deleter    = Deleter;
+    using deleter    = scope_deleter<T, Tag>;
 
     template<typename Other>
     struct rebind
     {
-        using other = scope_allocator<Other, Tag, Deleter>;
+        using other = scope_allocator<Other, Tag>;
     };
 
     scope_allocator() noexcept = default;
 
     template<typename Other>
-    scope_allocator(const scope_allocator<Other, Tag, Deleter>&) noexcept
+    scope_allocator(const scope_allocator<Other, Tag>&) noexcept
     {}
 
     pointer allocate(size_t size) { return (pointer) new_alloc(size * sizeof(T), Tag); }

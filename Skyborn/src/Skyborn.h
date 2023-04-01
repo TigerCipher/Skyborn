@@ -54,6 +54,12 @@ int main()
         return 2;
     }
 
+
+    // Before shutting down memory subsystem, check for tagged memory leaks
+    // Some smart pointers may still be allocated, but will be evident with deallocation messages
+    // printed after this memory leak check
+    LOG_DEBUG("Shutting down memory subsystem...");
+    LOG_DEBUG(sky::memory::get_usage_str());
     sky::memory::shutdown();
 
     return 0;
