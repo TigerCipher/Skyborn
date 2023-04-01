@@ -105,23 +105,38 @@ public:
     void deallocate(T* ptr, size_t size) noexcept { del(ptr, sizeof(T) * size, Tag); }
 };
 
-template<typename T, typename Deleter, memory_tag::tag Tag = memory_tag::unknown>
+template<typename T, memory_tag::tag Tag, typename Deleter>
+class scope_allocator;
+
+template<typename T, memory_tag::tag Tag = memory_tag::unknown>
+struct scope_deleter
+{
+    void operator()(T* ptr) const noexcept
+    {
+        scope_allocator<T, Tag, scope_deleter> alloc{};
+        std::allocator_traits<decltype(alloc)>::destroy(alloc, ptr);
+        alloc.deallocate(ptr, 1);
+    }
+};
+
+template<typename T, memory_tag::tag Tag = memory_tag::unknown, typename Deleter = scope_deleter<T, Tag>>
 class scope_allocator
 {
 public:
     using value_type = T;
     using pointer    = T*;
+    using deleter    = Deleter;
 
     template<typename Other>
     struct rebind
     {
-        using other = scope_allocator<Other, Deleter, Tag>;
+        using other = scope_allocator<Other, Tag, Deleter>;
     };
 
     scope_allocator() noexcept = default;
 
     template<typename Other>
-    scope_allocator(const scope_allocator<Other, Deleter, Tag>&) noexcept
+    scope_allocator(const scope_allocator<Other, Tag, Deleter>&) noexcept
     {}
 
     pointer allocate(size_t size) { return (pointer) new_alloc(size * sizeof(T), Tag); }
@@ -129,16 +144,56 @@ public:
     void deallocate(pointer ptr, size_t size) noexcept { del(ptr, size * sizeof(T), Tag); }
 };
 
-template<typename T, memory_tag::tag Tag>
-struct scope_deleter
-{
-    void operator()(T* ptr) const noexcept
-    {
-        scope_allocator<T, scope_deleter, Tag> alloc{};
-        std::allocator_traits<decltype(alloc)>::destroy(alloc, ptr);
-        alloc.deallocate(ptr, 1);
-    }
-};
 
 } // namespace memory
 } // namespace sky
+
+
+template<typename T, sky::memory_tag::tag Tag>
+using ref = std::shared_ptr<T>;
+
+template<typename T, sky::memory_tag::tag Tag, typename... Args>
+    requires constructible_from_args<T, Args...>
+constexpr ref<T, Tag> create_ref(Args&&... args)
+{
+    return std::allocate_shared<T>(sky::memory::ref_allocator<T, Tag>{}, std::forward<Args>(args)...);
+}
+
+template<typename T, sky::memory_tag::tag Tag = sky::memory_tag::unknown>
+using scope = std::unique_ptr<T, sky::memory::scope_deleter<T, Tag>>;
+
+template<typename T, sky::memory_tag::tag Tag = sky::memory_tag::unknown, typename... Args>
+scope<T, Tag> allocate_unique(sky::memory::scope_allocator<T, Tag> alloc, Args&&... args)
+{
+    auto ptr{ scope<T, Tag>(alloc.allocate(1), sky::memory::scope_allocator<T, Tag>::deleter()) };
+    if (ptr)
+    {
+        try
+        {
+            std::allocator_traits<sky::memory::scope_allocator<T, Tag>>::construct(alloc, ptr.get(), std::forward<Args>(args)...);
+            return ptr;
+        } catch (...)
+        {
+            alloc.deallocate(ptr.release(), 1);
+            throw;
+        }
+    }
+
+    return nullptr;
+}
+
+template<typename T, sky::memory_tag::tag Tag = sky::memory_tag::unknown, typename... Args>
+    requires constructible_from_args<T, Args...>
+constexpr scope<T, Tag> create_scope(Args&&... args)
+{
+    return allocate_unique<T>(sky::memory::scope_allocator<T, Tag>{}, std::forward<Args>(args)...);
+}
+
+//template<typename P, sky::memory_tag::tag Tag>
+
+
+#define SCOPE_CAST(parent, tag, ptr)                                                                                             \
+    scope<parent, tag>                                                                                                      \
+    {                                                                                                                            \
+        ptr.release()                                                                                                            \
+    }

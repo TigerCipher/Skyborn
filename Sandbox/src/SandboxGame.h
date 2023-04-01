@@ -75,6 +75,7 @@ public:
             ++idx;
         }
 
+        scope<u8> def_test { create_scope<u8>(32) };
 
         LOG_TRACE("Before deallocations:");
         LOG_TRACE(sky::memory::get_usage_str());
