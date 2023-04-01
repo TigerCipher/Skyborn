@@ -36,6 +36,41 @@ namespace
 scope<game, memory_tag::game> game_instance{ nullptr };
 bool                          running{ false };
 bool                          suspended{ false };
+
+bool on_event(u16 code, void* sender, void* listener, events::context ctx)
+{
+    switch (code)
+    {
+    case events::detail::system_event::application_quit:
+        LOG_INFO("application_quit event received. Shutting down application");
+        running = false;
+        return true;
+    default: return false;
+    }
+}
+
+bool on_key(u16 code, void* sender, void* listener, events::context ctx)
+{
+    if (code == events::detail::system_event::key_pressed)
+    {
+        const u16 key_code{ ctx.data.u16[0] };
+        if (key_code == input::key::escape)
+        {
+            events::context c{};
+            events::fire(events::detail::system_event::application_quit, nullptr, c);
+
+            return true;
+        }
+        LOG_TRACEF("{} key was pressed in window", (char) key_code);
+    } else if (code == events::detail::system_event::key_released)
+    {
+        const u16 key_code{ ctx.data.u16[0] };
+        LOG_TRACEF("{} key was released in window", (char) key_code);
+    }
+
+    return false;
+}
+
 } // anonymous namespace
 
 bool create(scope<game, memory_tag::game> game)
@@ -64,6 +99,11 @@ bool create(scope<game, memory_tag::game> game)
         LOG_FATAL("Event system failed to initialize. Aborting...");
         return false;
     }
+
+    // Register events
+    events::register_event(events::detail::system_event::application_quit, nullptr, on_event);
+    events::register_event(events::detail::system_event::key_pressed, nullptr, on_key);
+    events::register_event(events::detail::system_event::key_released, nullptr, on_key);
 
     if (!platform::initialize(name, pos_x, pos_y, width, height))
     {
@@ -117,6 +157,11 @@ bool run()
             input::update(0.0);
         }
     }
+
+    // Unregister events
+    events::unregister_event(events::detail::system_event::application_quit, nullptr, on_event);
+    events::unregister_event(events::detail::system_event::key_pressed, nullptr, on_key);
+    events::unregister_event(events::detail::system_event::key_released, nullptr, on_key);
 
     events::shutdown();
     input::shutdown();

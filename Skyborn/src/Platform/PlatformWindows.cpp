@@ -24,6 +24,7 @@
 
 #include "Platform.h"
 #include "Debug/Logger.h"
+#include "Core/Input.h"
 
 #if SKY_PLATFORM_WINDOWS
 
@@ -96,22 +97,25 @@ LRESULT CALLBACK process_messages(HWND hwnd, u32 msg, WPARAM wparam, LPARAM lpar
     case WM_KEYUP:
     case WM_SYSKEYUP:
     {
-        //        b8 pressed = (msg == WM_KEYDOWN || msg == WM_SYSKEYDOWN);
+        const bool pressed{ msg == WM_KEYDOWN || msg == WM_SYSKEYDOWN };
+        const auto k{ (input::key::code) wparam };
+        input::process_key(k, pressed);
     }
     break;
     case WM_MOUSEMOVE:
     {
-        //        s32 x = GET_X_LPARAM(lparam);
-        //        s32 y = GET_Y_LPARAM(lparam);
+        const i32 x_pos{ GET_X_LPARAM(lparam) };
+        const i32 y_pos{ GET_Y_LPARAM(lparam) };
+        input::process_mouse_move((i16) x_pos, (i16) y_pos);
     }
     break;
     case WM_MOUSEWHEEL:
     {
-        //        s32 z_delta = GET_WHEEL_DELTA_WPARAM(wparam);
-        //        if(z_delta != 0)
-        //        {
-        //            z_delta = (z_delta < 0) ? -1 : 1;
-        //        }
+        if (i32 delta{ GET_WHEEL_DELTA_WPARAM(wparam) }; delta != 0)
+        {
+            delta = delta < 0 ? -1 : 1;
+            input::process_mouse_wheel((i8) delta);
+        }
     }
     break;
     case WM_LBUTTONDOWN:
@@ -121,7 +125,24 @@ LRESULT CALLBACK process_messages(HWND hwnd, u32 msg, WPARAM wparam, LPARAM lpar
     case WM_MBUTTONUP:
     case WM_RBUTTONUP:
     {
-        //        b8 pressed = (msg == WM_LBUTTONDOWN || msg == WM_MBUTTONDOWN || msg == WM_RBUTTONDOWN);
+        bool                pressed = (msg == WM_LBUTTONDOWN || msg == WM_MBUTTONDOWN || msg == WM_RBUTTONDOWN);
+        input::button::code btn{ input::button::count };
+
+        switch (msg)
+        {
+        case WM_LBUTTONDOWN:
+        case WM_LBUTTONUP: btn = input::button::left; break;
+        case WM_RBUTTONDOWN:
+        case WM_RBUTTONUP: btn = input::button::right; break;
+        case WM_MBUTTONDOWN:
+        case WM_MBUTTONUP: btn = input::button::middle; break;
+        default: break;
+        }
+
+        if(btn != input::button::count)
+        {
+            input::process_button(btn, pressed);
+        }
     }
     break;
 
