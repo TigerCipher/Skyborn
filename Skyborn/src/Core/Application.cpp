@@ -84,6 +84,8 @@ bool create(scope<game, memory_tag::game> game)
         LOG_ERROR("Application is already initialized");
         return false;
     }
+    LOG_INFOF("{} starting up...", SKY_ENGINE_NAME);
+
     game_instance = std::move(game);
     const auto& [pos_x, pos_y, width, height, name]{ game_instance->desc() };
 
@@ -137,7 +139,7 @@ bool create(scope<game, memory_tag::game> game)
     //LOG_ERROR("Test message");
     //LOG_FATAL("Test message");
 
-    LOG_INFOF("Skyborn Version {} finished initializing", SKY_VERSION);
+    LOG_INFOF("{} finished initializing", SKY_ENGINE_NAME);
 
     return true;
 }
@@ -204,6 +206,8 @@ bool run()
             last_time = current_time;
         }
     }
+
+    LOG_INFOF("{} shutting down...", SKY_ENGINE_NAME);
 
     // Unregister events
     events::unregister_event(events::detail::system_event::application_quit, nullptr, on_event);

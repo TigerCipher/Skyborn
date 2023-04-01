@@ -54,9 +54,9 @@ SAPI void message(log_level::level lvl, std::string_view msg);
 } // namespace sky::logger
 
 #ifdef _DEBUG
-    #define LOG_TRACE(msg) sky::logger::detail::message(sky::logger::log_level::trace, msg)
+    #define LOG_TRACE(msg)       sky::logger::detail::message(sky::logger::log_level::trace, msg)
     #define LOG_TRACEF(fmt, ...) sky::logger::detail::message(sky::logger::log_level::trace, std::format(fmt, __VA_ARGS__))
-    #define LOG_DEBUG(msg) sky::logger::detail::message(sky::logger::log_level::debug, msg)
+    #define LOG_DEBUG(msg)       sky::logger::detail::message(sky::logger::log_level::debug, msg)
     #define LOG_DEBUGF(fmt, ...) sky::logger::detail::message(sky::logger::log_level::debug, std::format(fmt, __VA_ARGS__))
 #else
     #define LOG_TRACE(msg)
@@ -71,7 +71,20 @@ SAPI void message(log_level::level lvl, std::string_view msg);
 #define LOG_ERROR(msg) sky::logger::detail::message(sky::logger::log_level::error, msg)
 #define LOG_FATAL(msg) sky::logger::detail::message(sky::logger::log_level::fatal, msg)
 
-#define LOG_INFOF(fmt, ...) sky::logger::detail::message(sky::logger::log_level::info, std::format(fmt, __VA_ARGS__))
-#define LOG_WARNF(fmt, ...) sky::logger::detail::message(sky::logger::log_level::warn, std::format(fmt, __VA_ARGS__))
+#define LOG_INFOF(fmt, ...)  sky::logger::detail::message(sky::logger::log_level::info, std::format(fmt, __VA_ARGS__))
+#define LOG_WARNF(fmt, ...)  sky::logger::detail::message(sky::logger::log_level::warn, std::format(fmt, __VA_ARGS__))
 #define LOG_ERRORF(fmt, ...) sky::logger::detail::message(sky::logger::log_level::error, std::format(fmt, __VA_ARGS__))
 #define LOG_FATALF(fmt, ...) sky::logger::detail::message(sky::logger::log_level::fatal, std::format(fmt, __VA_ARGS__))
+
+
+#ifdef _DEBUG
+    #define SKY_ASSERT(condition, msg)                                                                                           \
+        if (!(condition))                                                                                                        \
+        {                                                                                                                        \
+            LOG_FATALF("Debug assertion failed ({}) at line {} of {}", #condition, __LINE__, __FILE__);                          \
+            LOG_FATAL(msg);                                                                                                      \
+        }                                                                                                                        \
+        assert(condition)
+#else
+    #define SKY_ASSERT(condition, msg)
+#endif

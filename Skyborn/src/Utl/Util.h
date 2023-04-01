@@ -24,7 +24,9 @@
 
 #pragma once
 
-#include "Common.h"
+#include "Defines.h"
+
+#include <string_view>
 
 namespace sky::utl
 {

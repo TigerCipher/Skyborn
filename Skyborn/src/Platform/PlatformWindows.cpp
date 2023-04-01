@@ -25,6 +25,7 @@
 #include "Platform.h"
 #include "Debug/Logger.h"
 #include "Core/Input.h"
+#include "Utl/Vector.h"
 
 #if SKY_PLATFORM_WINDOWS
 
@@ -69,7 +70,7 @@ u16 original_console_error_state;
 HINSTANCE hinst;
 HWND      hwnd;
 
-f64 clock_frequency{};
+f64           clock_frequency{};
 LARGE_INTEGER start_time{};
 
 LRESULT CALLBACK process_messages(HWND hwnd, u32 msg, WPARAM wparam, LPARAM lparam)
@@ -142,7 +143,7 @@ LRESULT CALLBACK process_messages(HWND hwnd, u32 msg, WPARAM wparam, LPARAM lpar
         default: break;
         }
 
-        if(btn != input::button::count)
+        if (btn != input::button::count)
         {
             input::process_button(btn, pressed);
         }
@@ -217,7 +218,7 @@ bool create_window(const char* app_name, i32 x, i32 y, i32 width, i32 height)
 
     LARGE_INTEGER freq{};
     QueryPerformanceFrequency(&freq);
-    clock_frequency = 1.0 / (f64)freq.QuadPart;
+    clock_frequency = 1.0 / (f64) freq.QuadPart;
     QueryPerformanceCounter(&start_time);
 
     return true;
@@ -243,7 +244,7 @@ bool initialize(std::string_view app_name, i32 x, i32 y, i32 width, i32 height)
     //    WriteConsoleA(console_handle, str.c_str(), (DWORD) str.length(), written, nullptr);
     //}
 
-    LOG_INFO("Skyborn starting up");
+    LOG_INFO("Platform starting up");
 
     create_window(app_name.data(), x, y, width, height);
 
@@ -253,7 +254,7 @@ bool initialize(std::string_view app_name, i32 x, i32 y, i32 width, i32 height)
 
 void shutdown()
 {
-    LOG_INFO("Skyborn shutting down");
+    LOG_INFO("Shutting down platform");
 
     if (hwnd)
     {
@@ -263,7 +264,6 @@ void shutdown()
 
     reset_console();
 }
-
 
 bool pump_messages()
 {
@@ -321,7 +321,7 @@ f64 get_time()
 {
     LARGE_INTEGER now_time{};
     QueryPerformanceCounter(&now_time);
-    return (f64)now_time.QuadPart * clock_frequency;
+    return (f64) now_time.QuadPart * clock_frequency;
 }
 
 void sleep(u32 milliseconds)
@@ -332,6 +332,14 @@ void sleep(u32 milliseconds)
 }
 
 } // namespace sky::platform
+
+namespace sky::graphics::vk::platform
+{
+void get_required_extensions(utl::vector<const char*>& names)
+{
+    names.push_back("VK_KHR_win32_surface");
+}
+} // namespace sky::graphics::vk::platform
 
 
 #endif

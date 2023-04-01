@@ -24,6 +24,8 @@
 
 #include "Util.h"
 
+#include "Memory/Memory.h"
+
 namespace sky::utl
 {
 u64 string_length(const char* str)

@@ -254,6 +254,20 @@ public:
         return m_data[index];
     }
 
+    // May retrieve past size() but within capacity()
+    constexpr T& at(u64 index)
+    {
+        assert(m_data && index < m_capacity);
+        return m_data[index];
+    }
+
+    // May retrieve past size() but within capacity()
+    constexpr T& at(u64 index) const
+    {
+        assert(m_data && index < m_capacity);
+        return m_data[index];
+    }
+
     constexpr T& front()
     {
         assert(m_data && m_size);

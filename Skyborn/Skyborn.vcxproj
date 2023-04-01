@@ -108,6 +108,7 @@
     <ClInclude Include="src\Graphics\GraphicsInterface.h" />
     <ClInclude Include="src\Graphics\Vulkan\VulkanBackend.h" />
     <ClInclude Include="src\Graphics\Vulkan\VulkanInterface.h" />
+    <ClInclude Include="src\Graphics\Vulkan\VulkanPlatform.h" />
     <ClInclude Include="src\Memory\Memory.h" />
     <ClInclude Include="src\Platform\Platform.h" />
     <ClInclude Include="src\Skyborn.h" />
