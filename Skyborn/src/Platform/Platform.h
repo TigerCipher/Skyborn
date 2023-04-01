@@ -45,4 +45,8 @@ void reset_console();
 void* allocate(u64 size, bool aligned = false);
 void free(void* block, bool aligned = false);
 
+f64 get_time();
+
+void sleep(u32 milliseconds);
+
 }

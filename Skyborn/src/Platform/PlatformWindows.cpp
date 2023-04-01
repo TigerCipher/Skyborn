@@ -69,6 +69,9 @@ u16 original_console_error_state;
 HINSTANCE hinst;
 HWND      hwnd;
 
+f64 clock_frequency{};
+LARGE_INTEGER start_time{};
+
 LRESULT CALLBACK process_messages(HWND hwnd, u32 msg, WPARAM wparam, LPARAM lparam)
 {
     switch (msg)
@@ -212,6 +215,11 @@ bool create_window(const char* app_name, i32 x, i32 y, i32 width, i32 height)
     constexpr i32  show_win_command_flags{ should_activate ? SW_SHOW : SW_SHOWNOACTIVATE };
     ShowWindow(hwnd, show_win_command_flags);
 
+    LARGE_INTEGER freq{};
+    QueryPerformanceFrequency(&freq);
+    clock_frequency = 1.0 / (f64)freq.QuadPart;
+    QueryPerformanceCounter(&start_time);
+
     return true;
 }
 
@@ -307,6 +315,18 @@ void* allocate(u64 size, bool aligned /*= false*/)
 void free(void* block, bool aligned /*= false*/)
 {
     std::free(block);
+}
+
+f64 get_time()
+{
+    LARGE_INTEGER now_time{};
+    QueryPerformanceCounter(&now_time);
+    return (f64)now_time.QuadPart * clock_frequency;
+}
+
+void sleep(u32 milliseconds)
+{
+    Sleep(milliseconds);
 }
 
 } // namespace sky::platform
