@@ -23,8 +23,9 @@
 //  ------------------------------------------------------------------------------
 
 #include "VulkanBackend.h"
-#include "VulkanInterface.h"
+#include "VulkanCommon.h"
 #include "VulkanPlatform.h"
+#include "VulkanDevice.h"
 
 namespace sky::graphics::vk
 {
@@ -38,7 +39,7 @@ VKAPI_ATTR VkBool32 VKAPI_CALL vk_debug_callback(VkDebugUtilsMessageSeverityFlag
                                                  VkDebugUtilsMessageTypeFlagsEXT             message_types,
                                                  const VkDebugUtilsMessengerCallbackDataEXT* callback_data, void* user_data)
 {
-    switch (message_severity)  // NOLINT(clang-diagnostic-switch-enum)
+    switch (message_severity) // NOLINT(clang-diagnostic-switch-enum)
     {
     case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT: LOG_ERRORF("Vulkan Error: {}", callback_data->pMessage); break;
     case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT: LOG_WARNF("Vulkan Warning: {}", callback_data->pMessage); break;
@@ -147,13 +148,27 @@ bool initialize(const char* app_name)
                                     VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT;
     debug_create_info.pfnUserCallback = vk_debug_callback;
 
-    const auto func{ (PFN_vkCreateDebugUtilsMessengerEXT) vkGetInstanceProcAddr(
-        context.instance, "vkCreateDebugUtilsMessengerEXT") };
+    const auto func{ (PFN_vkCreateDebugUtilsMessengerEXT) vkGetInstanceProcAddr(context.instance,
+                                                                                "vkCreateDebugUtilsMessengerEXT") };
     SKY_ASSERT(func, "Failed to create vulkan debug messenger");
     VK_CHECK(func(context.instance, &debug_create_info, context.allocator, &context.debug_messenger));
     LOG_DEBUG("Vulkan debugger created");
 
 #endif
+
+
+    LOG_DEBUG("Creating Vulkan surface");
+    if (!platform::create_surface(&context))
+    {
+        LOG_ERROR("Failed to create vulkan surface");
+        return false;
+    }
+
+    if (!create_device(&context))
+    {
+        LOG_ERROR("Failed to create Vulkan device");
+        return false;
+    }
 
     LOG_INFO("Vulkan backend initialized");
     return true;
@@ -161,14 +176,25 @@ bool initialize(const char* app_name)
 
 void shutdown()
 {
-    #ifdef _DEBUG
-    LOG_DEBUG("Destroying Vulkan debugger");
-    if(context.debug_messenger)
+    LOG_DEBUG("Destroying vulkan device");
+    destroy_device(&context);
+
+    LOG_DEBUG("Destroying vulkan surface");
+    if (context.surface)
     {
-        const auto func { (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(context.instance, "vkDestroyDebugUtilsMessengerEXT") };
+        vkDestroySurfaceKHR(context.instance, context.surface, context.allocator);
+        context.surface = nullptr;
+    }
+
+#ifdef _DEBUG
+    LOG_DEBUG("Destroying Vulkan debugger");
+    if (context.debug_messenger)
+    {
+        const auto func{ (PFN_vkDestroyDebugUtilsMessengerEXT) vkGetInstanceProcAddr(context.instance,
+                                                                                     "vkDestroyDebugUtilsMessengerEXT") };
         func(context.instance, context.debug_messenger, context.allocator);
     }
-    #endif
+#endif
 
     LOG_DEBUG("Destroying Vulkan instance");
     vkDestroyInstance(context.instance, context.allocator);

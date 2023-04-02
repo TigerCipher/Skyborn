@@ -48,6 +48,18 @@ using i64 = int64_t;
 using f32 = float;
 using f64 = double;
 
+// Invalid unsigned values (-1)
+constexpr u8  u8_invalid{ 0xffui8 };
+constexpr u16 u16_invalid{ 0xffffui16 };
+constexpr u32 u32_invalid{ 0xffff'ffffui32 };
+constexpr u64 u64_invalid{ 0xffff'ffff'ffff'ffffui64 };
+
+// Same as above, but for situations where the value is actually valid
+constexpr u8  u8_max{ 0xffui8 };
+constexpr u16 u16_max{ 0xffffui16 };
+constexpr u32 u32_max{ 0xffff'ffffui32 };
+constexpr u64 u64_max{ 0xffff'ffff'ffff'ffffui64 };
+
 #if defined(_WIN32)
     #define SKY_PLATFORM_WINDOWS 1
     #ifndef _WIN64
@@ -112,7 +124,6 @@ using f64 = double;
 
 template<typename T, typename... Args>
 concept constructible_from_args = std::constructible_from<T, Args...>;
-
 
 constexpr auto operator""_KB(const u64 x)
 {

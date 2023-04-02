@@ -26,7 +26,12 @@
 
 #include "Utl/Vector.h"
 
+struct sky::graphics::vk::vulkan_context;
+
 namespace sky::graphics::vk::platform
 {
 void get_required_extensions(utl::vector<const char*>& names);
+
+bool create_surface(vulkan_context* context);
+
 }

@@ -107,7 +107,8 @@
     <ClInclude Include="src\Graphics\GraphicsFrontend.h" />
     <ClInclude Include="src\Graphics\GraphicsInterface.h" />
     <ClInclude Include="src\Graphics\Vulkan\VulkanBackend.h" />
-    <ClInclude Include="src\Graphics\Vulkan\VulkanInterface.h" />
+    <ClInclude Include="src\Graphics\Vulkan\VulkanDevice.h" />
+    <ClInclude Include="src\Graphics\Vulkan\VulkanCommon.h" />
     <ClInclude Include="src\Graphics\Vulkan\VulkanPlatform.h" />
     <ClInclude Include="src\Memory\Memory.h" />
     <ClInclude Include="src\Platform\Platform.h" />
@@ -125,6 +126,7 @@
     <ClCompile Include="src\Graphics\GraphicsBackend.cpp" />
     <ClCompile Include="src\Graphics\GraphicsFrontend.cpp" />
     <ClCompile Include="src\Graphics\Vulkan\VulkanBackend.cpp" />
+    <ClCompile Include="src\Graphics\Vulkan\VulkanDevice.cpp" />
     <ClCompile Include="src\Memory\Memory.cpp" />
     <ClCompile Include="src\Platform\PlatformWindows.cpp" />
     <ClCompile Include="src\Utl\Util.cpp" />

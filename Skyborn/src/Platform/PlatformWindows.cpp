@@ -23,16 +23,20 @@
 // ------------------------------------------------------------------------------
 
 #include "Platform.h"
-#include "Core/Event.h"
-#include "Debug/Logger.h"
-#include "Core/Input.h"
-#include "Utl/Vector.h"
+
 
 #if SKY_PLATFORM_WINDOWS
+    #include "Core/Event.h"
+    #include "Debug/Logger.h"
+    #include "Core/Input.h"
+    #include "Graphics/Vulkan/VulkanCommon.h"
+    #include "Utl/Vector.h"
+
 
     #include <Windows.h>
     #include <windowsx.h>
     #include <cstdlib>
+    #include <vulkan/vulkan_win32.h>
 
 namespace sky::platform
 {
@@ -68,8 +72,9 @@ constexpr u8 levels[6]{ gray, light_gray, green, gold, red, red_bg_white_fg };
 u16 original_console_state;
 u16 original_console_error_state;
 
-HINSTANCE hinst;
-HWND      hwnd;
+HINSTANCE    hinst;
+HWND         hwnd;
+VkSurfaceKHR surface{};
 
 f64           clock_frequency{};
 LARGE_INTEGER start_time{};
@@ -342,6 +347,23 @@ void get_required_extensions(utl::vector<const char*>& names)
 {
     names.push_back("VK_KHR_win32_surface");
 }
+
+bool create_surface(vulkan_context* context)
+{
+    VkWin32SurfaceCreateInfoKHR create_info{ VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR };
+    create_info.hinstance = sky::platform::hinst;
+    create_info.hwnd      = sky::platform::hwnd;
+
+    if (vkCreateWin32SurfaceKHR(context->instance, &create_info, context->allocator, &sky::platform::surface) != VK_SUCCESS)
+    {
+        LOG_FATAL("Vulkan surface creation failed");
+        return false;
+    }
+
+    context->surface = sky::platform::surface;
+    return true;
+}
+
 } // namespace sky::graphics::vk::platform
 
 
