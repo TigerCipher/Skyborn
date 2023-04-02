@@ -45,12 +45,17 @@ struct swapchain_support_info
 // represents both the physical and logical devices
 struct vulkan_device
 {
-    VkPhysicalDevice                 physical{};
-    VkDevice                         logical{};
-    swapchain_support_info           swapchain_support{};
-    u32                              graphics_queue_index{};
-    u32                              present_queue_index{};
-    u32                              transfer_queue_index{};
+    VkPhysicalDevice       physical{};
+    VkDevice               logical{};
+    swapchain_support_info swapchain_support{};
+
+    u32     graphics_queue_index{};
+    u32     present_queue_index{};
+    u32     transfer_queue_index{};
+    VkQueue graphics_queue{};
+    VkQueue present_queue{};
+    VkQueue transfer_queue{};
+
     VkPhysicalDeviceProperties       properties{};
     VkPhysicalDeviceFeatures         features{};
     VkPhysicalDeviceMemoryProperties memory{};

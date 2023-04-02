@@ -51,29 +51,12 @@ struct physical_device_queue_family_indices
     u32 transfer{};
 };
 
-bool physical_device_meets_requirements(VkPhysicalDevice device, VkSurfaceKHR surface,
-                                        const VkPhysicalDeviceProperties* properties, const VkPhysicalDeviceFeatures* features,
-                                        const physcial_device_requirements*   requirements,
-                                        physical_device_queue_family_indices* out_queue_info,
-                                        swapchain_support_info*               out_swapchain_support)
+void get_queue_support(physical_device_queue_family_indices* out_queue_info, VkPhysicalDevice device, VkSurfaceKHR surface)
 {
-    out_queue_info->graphics = u32_invalid;
-    out_queue_info->present  = u32_invalid;
-    out_queue_info->compute  = u32_invalid;
-    out_queue_info->transfer = u32_invalid;
-
-    if (requirements->discrete_gpu && properties->deviceType != VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU)
-    {
-        LOG_INFOF("Device {} is not a discrete GPU. Skipping", properties->deviceName);
-        return false;
-    }
-
     u32 queue_family_count{};
     vkGetPhysicalDeviceQueueFamilyProperties(device, &queue_family_count, nullptr);
     utl::vector<VkQueueFamilyProperties> queue_families{ queue_family_count };
     vkGetPhysicalDeviceQueueFamilyProperties(device, &queue_family_count, queue_families.data());
-
-    // See what each queue supports
 
     u8 min_transfer_score{ u8_max };
     for (u32 i = 0; i < queue_families.size(); ++i)
@@ -108,6 +91,69 @@ bool physical_device_meets_requirements(VkPhysicalDevice device, VkSurfaceKHR su
             out_queue_info->present = i;
         }
     }
+}
+
+bool query_device_extensions(const physcial_device_requirements* requirements, VkPhysicalDevice device)
+{
+    if (!requirements->extension_names.empty())
+    {
+        u32 available_extension_count{};
+        VK_CHECK(vkEnumerateDeviceExtensionProperties(device, nullptr, &available_extension_count, nullptr));
+        if (available_extension_count)
+        {
+            //utl::vector<VkExtensionProperties> available_extensions{ available_extension_count };
+            VkExtensionProperties* available_extensions{ (VkExtensionProperties*) memory::allocate(
+                sizeof(VkExtensionProperties) * available_extension_count, memory_tag::renderer) };
+            VK_CHECK(vkEnumerateDeviceExtensionProperties(device, nullptr, &available_extension_count, available_extensions));
+            for (auto extension_name : requirements->extension_names)
+            {
+                bool found{ false };
+                for (u32 j = 0; j < available_extension_count; ++j)
+                {
+                    if (utl::string_compare(extension_name, available_extensions[j].extensionName))
+                    {
+                        found = true;
+                        break;
+                    }
+                }
+
+                if (!found)
+                {
+                    LOG_INFOF("Required extension not found ({}). Skipping device", extension_name);
+                    memory::free(available_extensions, sizeof(VkExtensionProperties) * available_extension_count,
+                                 memory_tag::renderer);
+                    return false;
+                }
+            }
+
+            memory::free(available_extensions, sizeof(VkExtensionProperties) * available_extension_count, memory_tag::renderer);
+        }
+    }
+
+    return true;
+}
+
+bool physical_device_meets_requirements(VkPhysicalDevice device, VkSurfaceKHR surface,
+                                        const VkPhysicalDeviceProperties* properties, const VkPhysicalDeviceFeatures* features,
+                                        const physcial_device_requirements*   requirements,
+                                        physical_device_queue_family_indices* out_queue_info,
+                                        swapchain_support_info*               out_swapchain_support)
+{
+    out_queue_info->graphics = u32_invalid;
+    out_queue_info->present  = u32_invalid;
+    out_queue_info->compute  = u32_invalid;
+    out_queue_info->transfer = u32_invalid;
+
+    if (requirements->discrete_gpu && properties->deviceType != VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU)
+    {
+        LOG_INFOF("Device {} is not a discrete GPU. Skipping", properties->deviceName);
+        return false;
+    }
+
+
+    // See what each queue supports
+    get_queue_support(out_queue_info, device, surface);
+
 
     LOG_INFO("Graphics | Present | Compute | Transfer | Name");
     LOG_INFOF("       {} |       {} |       {} |        {} | {}  ", (u8) (out_queue_info->graphics != u32_invalid),
@@ -146,41 +192,8 @@ bool physical_device_meets_requirements(VkPhysicalDevice device, VkSurfaceKHR su
         }
 
         // Device extensions
-        if (!requirements->extension_names.empty())
-        {
-            u32 available_extension_count{};
-            VK_CHECK(vkEnumerateDeviceExtensionProperties(device, nullptr, &available_extension_count, nullptr));
-            if (available_extension_count)
-            {
-                //utl::vector<VkExtensionProperties> available_extensions{ available_extension_count };
-                VkExtensionProperties* available_extensions{ (VkExtensionProperties*) memory::allocate(
-                    sizeof(VkExtensionProperties) * available_extension_count, memory_tag::renderer) };
-                VK_CHECK(vkEnumerateDeviceExtensionProperties(device, nullptr, &available_extension_count, available_extensions));
-                for (auto extension_name : requirements->extension_names)
-                {
-                    bool found{ false };
-                    for (u32 j = 0; j < available_extension_count; ++j)
-                    {
-                        if (utl::string_compare(extension_name, available_extensions[j].extensionName))
-                        {
-                            found = true;
-                            break;
-                        }
-                    }
-
-                    if (!found)
-                    {
-                        LOG_INFOF("Required extension not found ({}). Skipping device", extension_name);
-                        memory::free(available_extensions, sizeof(VkExtensionProperties) * available_extension_count,
-                                     memory_tag::renderer);
-                        return false;
-                    }
-                }
-
-                memory::free(available_extensions, sizeof(VkExtensionProperties) * available_extension_count,
-                             memory_tag::renderer);
-            }
-        }
+        if (!query_device_extensions(requirements, device))
+            return false;
 
         // Sampler anisotropy
         if (requirements->sampler_anisotropy && !features->samplerAnisotropy)
@@ -287,12 +300,94 @@ bool create_device(vulkan_context* context)
 {
     if (!select_physical_device(context))
         return false;
+
+    LOG_INFO("Creating logical device");
+    const bool present_shares_graphics_queue{ context->device.graphics_queue_index == context->device.present_queue_index };
+    const bool transfer_shares_graphics_queue{ context->device.graphics_queue_index == context->device.transfer_queue_index };
+    u32        idx_count{ 1 };
+    if (!present_shares_graphics_queue)
+        ++idx_count;
+    if (!transfer_shares_graphics_queue)
+        ++idx_count;
+    utl::vector<u32> indices{ idx_count };
+    u8               idx{};
+    indices[idx++] = context->device.graphics_queue_index;
+    if (!present_shares_graphics_queue)
+        indices[idx++] = context->device.present_queue_index;
+    if (!transfer_shares_graphics_queue)
+        indices[idx++] = context->device.transfer_queue_index;
+
+    utl::vector<VkDeviceQueueCreateInfo> queue_create_infos{ idx_count };
+    
+    for (u32 i = 0; i < idx_count; ++i)
+    {
+        auto& [sType, pNext, flags, queueFamilyIndex, queueCount, pQueuePriorities]{ queue_create_infos[i] };
+        sType            = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+        queueFamilyIndex = indices[i];
+        queueCount = 1;
+        if (indices[i] == context->device.graphics_queue_index)
+        {
+            queueCount = 2;
+        }
+
+        flags = 0;
+        pNext = nullptr;
+        f32 queue_priority[2]{ 1.0f, 1.0f };
+        pQueuePriorities = queue_priority;
+    }
+
+    // Request features
+    // TODO: Make configurable
+    VkPhysicalDeviceFeatures device_features{};
+    device_features.samplerAnisotropy = VK_TRUE;
+
+    VkDeviceCreateInfo create_info{ VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO };
+    create_info.queueCreateInfoCount  = idx_count;
+    create_info.pQueueCreateInfos     = queue_create_infos.data();
+
+    for (u32 i = 0; i < idx_count; ++i)
+    {
+        LOG_WARNF("Priority[0]: {:.1f} and at [1]: {:.1f}", create_info.pQueueCreateInfos[i].pQueuePriorities[0],
+                  create_info.pQueueCreateInfos[i].pQueuePriorities[1]);
+    }
+
+    create_info.pEnabledFeatures      = &device_features;
+    create_info.enabledExtensionCount = 1;
+    auto ext_names{ VK_KHR_SWAPCHAIN_EXTENSION_NAME };
+    create_info.ppEnabledExtensionNames = &ext_names;
+
+    // Explicitly zeroing deprecated items
+    create_info.enabledLayerCount   = 0;
+    create_info.ppEnabledLayerNames = nullptr;
+
+    VK_CHECK(vkCreateDevice(context->device.physical, &create_info, context->allocator, &context->device.logical));
+
+    LOG_INFO("Logical device created");
+    // Get device queues
+    vkGetDeviceQueue(context->device.logical, context->device.graphics_queue_index, 0, &context->device.graphics_queue);
+    vkGetDeviceQueue(context->device.logical, context->device.present_queue_index, 0, &context->device.present_queue);
+    vkGetDeviceQueue(context->device.logical, context->device.transfer_queue_index, 0, &context->device.transfer_queue);
+    LOG_INFO("Obtained device queues");
+
+
     return true;
 }
 
 void destroy_device(vulkan_context* context)
 {
-    // Physical device
+    context->device.graphics_queue = nullptr;
+    context->device.present_queue  = nullptr;
+    context->device.transfer_queue = nullptr;
+
+    // Destroy logical device
+    LOG_INFO("Destroying logical device...");
+    if (context->device.logical)
+    {
+        vkDestroyDevice(context->device.logical, context->allocator);
+        context->device.logical = nullptr;
+    }
+
+    // Physical device needs to be released not destroyed (obviously)
     LOG_INFO("Releasing physical device resources...");
     context->device.physical = nullptr;
 
