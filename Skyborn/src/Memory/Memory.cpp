@@ -63,7 +63,7 @@ struct memory_stats
 {
     u64 total_allocated{};
     u64 tagged_allocations[memory_tag::count]{};
-    u32 allocations{};
+    u64 allocations{};
 } stats;
 
 } // anonymous namespace
@@ -97,6 +97,7 @@ void* allocate(u64 size, memory_tag::tag tag)
 
 void free(void* block, u64 size, memory_tag::tag tag)
 {
+    if(!block || !size) return;
     if (tag == memory_tag::unknown)
     {
         LOG_WARN("memory::free was called using an unknown tag");
@@ -107,6 +108,7 @@ void free(void* block, u64 size, memory_tag::tag tag)
     --stats.allocations;
 
     platform::free(block); // TODO: Alignment
+    block = nullptr;
 
     LOG_TRACEF("Deallocated a block of {} bytes, tagged as {}", size, tag_strings[tag]);
 }
@@ -145,6 +147,8 @@ void* new_alloc(u64 size, memory_tag::tag tag)
 
 void del(void* block, u64 size, memory_tag::tag tag)
 {
+    if (!block || !size)
+        return;
     if (tag == memory_tag::unknown)
     {
         LOG_WARN("memory::del was called using an unknown tag");
@@ -155,6 +159,7 @@ void del(void* block, u64 size, memory_tag::tag tag)
     --stats.allocations;
 
     operator delete(block);
+    block = nullptr;
     LOG_TRACEF("Deallocated a block of {} bytes, tagged as {}", size, tag_strings[tag]);
 }
 

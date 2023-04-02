@@ -156,7 +156,8 @@ public:
 
         void* temp{ memory::allocate(new_capacity * sizeof(T), memory_tag::darray) };
         memory::copy(temp, m_data, m_size * sizeof(T));
-        memory::free(m_data, m_capacity * sizeof(T), memory_tag::darray);
+        if(m_data)
+            memory::free(m_data, m_capacity * sizeof(T), memory_tag::darray);
         m_data     = (T*) temp;
         m_capacity = new_capacity;
         //void* new_buffer = realloc(m_data, new_capacity * sizeof(T));

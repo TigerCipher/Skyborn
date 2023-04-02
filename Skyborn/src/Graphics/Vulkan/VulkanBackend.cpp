@@ -98,8 +98,7 @@ bool initialize(const char* app_name)
     // Get a list of available validation layers
     u32 available_layer_count{};
     VK_CHECK(vkEnumerateInstanceLayerProperties(&available_layer_count, nullptr));
-    utl::vector<VkLayerProperties> available_layers{};
-    available_layers.reserve(available_layer_count);
+    utl::vector<VkLayerProperties> available_layers{ available_layer_count };
     VK_CHECK(vkEnumerateInstanceLayerProperties(&available_layer_count, available_layers.data()));
 
     // Verify that all required validation layers are present
@@ -109,7 +108,7 @@ bool initialize(const char* app_name)
         bool found{ false };
         for (u32 j = 0; j < available_layer_count; ++j)
         {
-            if (utl::string_compare(required_validation_layer, available_layers.at(j).layerName))
+            if (utl::string_compare(required_validation_layer, available_layers[j].layerName))
             {
                 found = true;
                 LOG_DEBUG("Found.");
