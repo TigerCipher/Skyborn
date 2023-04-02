@@ -32,8 +32,7 @@ namespace sky::utl
 // We want memory layout to be:
 // u64 capacity = number of elements it *can* hold
 // u64 length / size = number of elements it actually holds
-// u64 stride = the size of T
-// T* elements
+// T* data
 template<typename T, bool Destruct = false>
 class vector
 {
@@ -49,7 +48,7 @@ public:
     constexpr vector(const vector& o) { *this = o; }
 
     // move ctor
-    constexpr vector(vector&& o) noexcept : m_capacity(o.m_capacity), m_size(o.m_size), m_data(o.m_data) { o.reset(); }
+    constexpr vector(vector&& o) noexcept : m_capacity{o.m_capacity}, m_size{o.m_size}, m_data{o.m_data} { o.reset(); }
 
     ~vector() { destroy(); }
 
@@ -97,7 +96,7 @@ public:
         }
         assert(m_size < m_capacity);
 
-        T* const item = new (std::addressof(m_data[m_size])) T(std::forward<Params>(p)...);
+        T* const item {new (std::addressof(m_data[m_size])) T(std::forward<Params>(p)...)};
         ++m_size;
         return *item;
     }

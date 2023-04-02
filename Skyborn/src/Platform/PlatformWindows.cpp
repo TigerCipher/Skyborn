@@ -23,6 +23,7 @@
 // ------------------------------------------------------------------------------
 
 #include "Platform.h"
+#include "Core/Event.h"
 #include "Debug/Logger.h"
 #include "Core/Input.h"
 #include "Utl/Vector.h"
@@ -79,9 +80,11 @@ LRESULT CALLBACK process_messages(HWND hwnd, u32 msg, WPARAM wparam, LPARAM lpar
     {
     case WM_ERASEBKGND: return 1;
     case WM_CLOSE:
-        // TODO Close event
-        LOG_TRACE("WM_CLOSE");
-        return 0;
+    {
+        constexpr events::context ctx{};
+        events::fire(events::detail::system_event::application_quit, nullptr, ctx);
+        return 1;
+    }
     case WM_DESTROY:
         LOG_TRACE("WM_DESTROY");
         PostQuitMessage(0);
@@ -129,7 +132,7 @@ LRESULT CALLBACK process_messages(HWND hwnd, u32 msg, WPARAM wparam, LPARAM lpar
     case WM_MBUTTONUP:
     case WM_RBUTTONUP:
     {
-        bool                pressed = (msg == WM_LBUTTONDOWN || msg == WM_MBUTTONDOWN || msg == WM_RBUTTONDOWN);
+        const bool          pressed{ (msg == WM_LBUTTONDOWN || msg == WM_MBUTTONDOWN || msg == WM_RBUTTONDOWN) };
         input::button::code btn{ input::button::count };
 
         switch (msg)
