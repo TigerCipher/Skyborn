@@ -26,7 +26,7 @@
 
 #include "Utl/Vector.h"
 
-namespace sky::graphics::vk
+namespace sky::graphics::vk::device
 {
 
 namespace
@@ -296,7 +296,7 @@ bool select_physical_device(vulkan_context* context)
 
 } // anonymous namespace
 
-bool create_device(vulkan_context* context)
+bool create(vulkan_context* context)
 {
     if (!select_physical_device(context))
         return false;
@@ -318,22 +318,24 @@ bool create_device(vulkan_context* context)
         indices[idx++] = context->device.transfer_queue_index;
 
     utl::vector<VkDeviceQueueCreateInfo> queue_create_infos{ idx_count };
-    
+
     for (u32 i = 0; i < idx_count; ++i)
     {
         auto& [sType, pNext, flags, queueFamilyIndex, queueCount, pQueuePriorities]{ queue_create_infos[i] };
         sType            = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
         queueFamilyIndex = indices[i];
-        queueCount = 1;
-        if (indices[i] == context->device.graphics_queue_index)
-        {
-            queueCount = 2;
-        }
+        queueCount       = 1;
+        // TODO: Enable for enhancements later on down the road
+        //if (indices[i] == context->device.graphics_queue_index)
+        //{
+        //    queueCount = 2;
+        //}
 
         flags = 0;
         pNext = nullptr;
-        f32 queue_priority[2]{ 1.0f, 1.0f };
-        pQueuePriorities = queue_priority;
+        //f32 queue_priority[2]{ 1.0f, 1.0f };
+        f32 queue_priority{ 1.0f };
+        pQueuePriorities = &queue_priority;
     }
 
     // Request features
@@ -342,8 +344,8 @@ bool create_device(vulkan_context* context)
     device_features.samplerAnisotropy = VK_TRUE;
 
     VkDeviceCreateInfo create_info{ VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO };
-    create_info.queueCreateInfoCount  = idx_count;
-    create_info.pQueueCreateInfos     = queue_create_infos.data();
+    create_info.queueCreateInfoCount = idx_count;
+    create_info.pQueueCreateInfos    = queue_create_infos.data();
 
     for (u32 i = 0; i < idx_count; ++i)
     {
@@ -373,7 +375,7 @@ bool create_device(vulkan_context* context)
     return true;
 }
 
-void destroy_device(vulkan_context* context)
+void destroy(vulkan_context* context)
 {
     context->device.graphics_queue = nullptr;
     context->device.present_queue  = nullptr;
@@ -446,4 +448,30 @@ void query_swapchain_support(VkPhysicalDevice physical_device, VkSurfaceKHR surf
     }
 }
 
-} // namespace sky::graphics::vk
+bool detect_depth_format(vulkan_device* pdevice)
+{
+    constexpr u8 candidate_count{ 3 };
+    VkFormat      candidates[candidate_count]{
+        VK_FORMAT_D32_SFLOAT,
+        VK_FORMAT_D32_SFLOAT_S8_UINT,
+        VK_FORMAT_D24_UNORM_S8_UINT,
+    };
+
+    constexpr u32 flags{VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT};
+
+    for (const auto& candidate : candidates)
+    {
+        VkFormatProperties props{};
+        vkGetPhysicalDeviceFormatProperties(pdevice->physical, candidate, &props);
+
+        if ((props.linearTilingFeatures & flags) == flags || (props.optimalTilingFeatures & flags) == flags)
+        {
+            pdevice->depth_format = candidate;
+            return true;
+        }
+    }
+
+    return false;
+}
+
+} // namespace sky::graphics::vk::device

@@ -29,3 +29,4 @@
 #include "Debug/Logger.h"
 #include "Memory/Memory.h"
 #include "Utl/Util.h"
+#include "Utl/Math.h"

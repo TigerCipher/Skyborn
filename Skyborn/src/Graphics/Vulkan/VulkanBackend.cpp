@@ -26,6 +26,7 @@
 #include "VulkanCommon.h"
 #include "VulkanPlatform.h"
 #include "VulkanDevice.h"
+#include "VulkanSwapchain.h"
 
 namespace sky::graphics::vk
 {
@@ -51,10 +52,27 @@ VKAPI_ATTR VkBool32 VKAPI_CALL vk_debug_callback(VkDebugUtilsMessageSeverityFlag
     return VK_FALSE;
 }
 
+i32 find_memory_index(u32 type_filter, u32 property_flags)
+{
+    VkPhysicalDeviceMemoryProperties props{};
+    vkGetPhysicalDeviceMemoryProperties(context.device.physical, &props);
+    for (u32 i = 0; i < props.memoryTypeCount; ++i)
+    {
+        if (type_filter & (1 << i) && (props.memoryTypes[i].propertyFlags & property_flags) == property_flags)
+        {
+            return i;
+        }
+    }
+
+    LOG_WARN("Unable to find a suitable memory type");
+    return -1;
+}
+
 } // anonymous namespace
 
 bool initialize(const char* app_name)
 {
+    context.find_memory_index = find_memory_index;
     VkApplicationInfo app_info{ VK_STRUCTURE_TYPE_APPLICATION_INFO };
     app_info.apiVersion         = VK_API_VERSION_1_2;
     app_info.pApplicationName   = app_name;
@@ -165,11 +183,14 @@ bool initialize(const char* app_name)
         return false;
     }
 
-    if (!create_device(&context))
+    if (!device::create(&context))
     {
         LOG_ERROR("Failed to create Vulkan device");
         return false;
     }
+
+
+    swapchain::create(&context, context.framebuffer_width, context.framebuffer_height, &context.swapchain);
 
     LOG_INFO("Vulkan backend initialized");
     return true;
@@ -177,8 +198,10 @@ bool initialize(const char* app_name)
 
 void shutdown()
 {
+    swapchain::destroy(&context, &context.swapchain);
+
     LOG_DEBUG("Destroying vulkan device");
-    destroy_device(&context);
+    device::destroy(&context);
 
     LOG_DEBUG("Destroying vulkan surface");
     if (context.surface)
