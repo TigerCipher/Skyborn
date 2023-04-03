@@ -33,7 +33,7 @@ void create(vulkan_context* context, u32 width, u32 height, vulkan_swapchain* ou
 
 void recreate(vulkan_context* context, u32 width, u32 height, vulkan_swapchain* out_swapchain);
 
-void destroy(const vulkan_context* context, vulkan_swapchain* swapchain);
+void destroy(const vulkan_context& context, vulkan_swapchain* swapchain);
 
 bool acquire_next_image_index(vulkan_context* context, vulkan_swapchain* swapchain, u64 timeout,
                               VkSemaphore image_available_semaphore, VkFence fence, u32* out_image_index);

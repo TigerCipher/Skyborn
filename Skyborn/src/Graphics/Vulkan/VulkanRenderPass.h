@@ -1,4 +1,4 @@
-//  ------------------------------------------------------------------------------
+﻿//  ------------------------------------------------------------------------------
 // 
 //  Skyborn
 //     Copyright 2023 Matthew Rogers
@@ -16,20 +16,25 @@
 //     You should have received a copy of the GNU Lesser General Public
 //     License along with this library; if not, see <http://www.gnu.org/licenses/>.
 // 
-//  File Name: Version.h
-//  Date File Created: 03/31/2023
+//  File Name: VulkanRenderPass.h
+//  Date File Created: 04/02/2023
 //  Author: Matt
 // 
 //  ------------------------------------------------------------------------------
 
 #pragma once
-#include "Defines.h"
 
-#define VERSION_MAJOR 0
-#define VERSION_MINOR 0
-#define VERSION_PATCH 0
-#define VERSION_BUILD 54
+#include "VulkanCommon.h"
 
-#define SKY_VERSION STRINGIFY(VERSION_MAJOR) "." STRINGIFY(VERSION_MINOR) "." STRINGIFY(VERSION_PATCH) "." STRINGIFY(VERSION_BUILD)
+namespace sky::graphics::vk::renderpass
+{
 
-#define SKY_ENGINE_NAME "Skyborn [Version " SKY_VERSION "]"
+void create(vulkan_context* context, vulkan_renderpass* prenderpass, f32 x, f32 y, f32 w, f32 h, f32 r, f32 g, f32 b, f32 a, f32 depth, f32 stencil);
+
+void destroy(const vulkan_context& context, vulkan_renderpass* prenderpass);
+
+void begin(vulkan_command_buffer* cmd_buffer, const vulkan_renderpass& renderpass, VkFramebuffer frame_buffer);
+
+void end(vulkan_command_buffer* cmd_buffer, vulkan_renderpass* prenderpass);
+
+}

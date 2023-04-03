@@ -27,6 +27,7 @@
 #include "VulkanPlatform.h"
 #include "VulkanDevice.h"
 #include "VulkanSwapchain.h"
+#include "VulkanRenderPass.h"
 
 namespace sky::graphics::vk
 {
@@ -191,6 +192,8 @@ bool initialize(const char* app_name)
 
 
     swapchain::create(&context, context.framebuffer_width, context.framebuffer_height, &context.swapchain);
+    renderpass::create(&context, &context.main_renderpass, 0.0f, 0.0f, (f32) context.framebuffer_width,
+                       (f32) context.framebuffer_height, 0.0f, 0.0f, 0.2f, 0.1f, 1.0f, 0.0f);
 
     LOG_INFO("Vulkan backend initialized");
     return true;
@@ -198,7 +201,8 @@ bool initialize(const char* app_name)
 
 void shutdown()
 {
-    swapchain::destroy(&context, &context.swapchain);
+    renderpass::destroy(context, &context.main_renderpass);
+    swapchain::destroy(context, &context.swapchain);
 
     LOG_DEBUG("Destroying vulkan device");
     device::destroy(&context);

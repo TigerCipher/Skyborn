@@ -76,6 +76,31 @@ struct vulkan_image
     u32            height{};
 };
 
+struct vulkan_render_pass_state
+{
+    enum state : u8
+    {
+        ready,
+        recording,
+        in_render_pass,
+        recording_ended,
+        submitted,
+        not_allocated
+    };
+};
+
+struct vulkan_renderpass
+{
+    VkRenderPass handle{};
+
+    f32 x{}, y{}, w{}, h{};
+    f32 r{}, g{}, b{}, a{};
+    f32 depth{};
+    u32 stencil{};
+
+    vulkan_render_pass_state::state state;
+};
+
 struct vulkan_swapchain
 {
     VkSurfaceFormatKHR image_format{};
@@ -86,6 +111,26 @@ struct vulkan_swapchain
     VkImageView*       views{};
 
     vulkan_image depth_attachment{};
+};
+
+struct vulkan_command_buffer_state
+{
+    enum state : u8
+    {
+        ready,
+        recording,
+        in_render_pass,
+        recording_ended,
+        submitted,
+        not_allocated
+    };
+};
+
+struct vulkan_command_buffer
+{
+    VkCommandBuffer handle{};
+
+    vulkan_command_buffer_state::state state{};
 };
 
 struct vulkan_context
@@ -101,14 +146,16 @@ struct vulkan_context
     VkDebugUtilsMessengerEXT debug_messenger{};
 #endif
 
-    vulkan_device    device{};
-    vulkan_swapchain swapchain{};
-    u32              image_index{};
-    u32              current_frame{};
+    vulkan_device     device{};
+    vulkan_swapchain  swapchain{};
+    vulkan_renderpass main_renderpass{};
+
+    u32 image_index{};
+    u32 current_frame{};
 
     bool recreating_swapchain{};
 
-    i32 (*find_memory_index)(u32 type_filter, u32 property_flags);
+    i32 (*find_memory_index)(u32 type_filter, u32 property_flags){};
 };
 
 

@@ -31,11 +31,11 @@ namespace sky::graphics::vk::swapchain
 namespace
 {
 
-void swapchain_info(const vulkan_context* context, u32 image_count, vulkan_swapchain* out_swapchain, VkPresentModeKHR present_mode,
+void swapchain_info(const vulkan_context& context, u32 image_count, vulkan_swapchain* out_swapchain, VkPresentModeKHR present_mode,
                     VkExtent2D            swapchain_extent)
 {
     VkSwapchainCreateInfoKHR create_info{ VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR };
-    create_info.surface          = context->surface;
+    create_info.surface          = context.surface;
     create_info.minImageCount    = image_count;
     create_info.imageFormat      = out_swapchain->image_format.format;
     create_info.imageColorSpace  = out_swapchain->image_format.colorSpace;
@@ -44,8 +44,8 @@ void swapchain_info(const vulkan_context* context, u32 image_count, vulkan_swapc
     create_info.imageUsage       = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
     // Set up queue family indices
-    const u32 gfx_idx{ context->device.graphics_queue_index };
-    const u32 present_idx{ context->device.present_queue_index };
+    const u32 gfx_idx{ context.device.graphics_queue_index };
+    const u32 present_idx{ context.device.present_queue_index };
     if (gfx_idx != present_idx)
     {
         const u32 queue_family_indices[2]{ gfx_idx, present_idx };
@@ -58,19 +58,19 @@ void swapchain_info(const vulkan_context* context, u32 image_count, vulkan_swapc
         create_info.queueFamilyIndexCount = 0;
         create_info.pQueueFamilyIndices   = nullptr;
     }
-    create_info.preTransform   = context->device.swapchain_support.capabilities.currentTransform;
+    create_info.preTransform   = context.device.swapchain_support.capabilities.currentTransform;
     create_info.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
     create_info.presentMode    = present_mode;
     create_info.clipped        = VK_TRUE;
     create_info.oldSwapchain   = nullptr;
 
-    VK_CHECK(vkCreateSwapchainKHR(context->device.logical, &create_info, context->allocator, &out_swapchain->handle));
+    VK_CHECK(vkCreateSwapchainKHR(context.device.logical, &create_info, context.allocator, &out_swapchain->handle));
 }
 
-void create_images(const vulkan_context* context, vulkan_swapchain* out_swapchain)
+void create_images(const vulkan_context& context, vulkan_swapchain* out_swapchain)
 {
     out_swapchain->image_count = 0;
-    VK_CHECK(vkGetSwapchainImagesKHR(context->device.logical, out_swapchain->handle, &out_swapchain->image_count, nullptr));
+    VK_CHECK(vkGetSwapchainImagesKHR(context.device.logical, out_swapchain->handle, &out_swapchain->image_count, nullptr));
     if (!out_swapchain->images)
     {
         out_swapchain->images = (VkImage*) memory::allocate(sizeof(VkImage) * out_swapchain->image_count, memory_tag::renderer);
@@ -82,11 +82,11 @@ void create_images(const vulkan_context* context, vulkan_swapchain* out_swapchai
             (VkImageView*) memory::allocate(sizeof(VkImageView) * out_swapchain->image_count, memory_tag::renderer);
     }
 
-    VK_CHECK(vkGetSwapchainImagesKHR(context->device.logical, out_swapchain->handle, &out_swapchain->image_count,
+    VK_CHECK(vkGetSwapchainImagesKHR(context.device.logical, out_swapchain->handle, &out_swapchain->image_count,
                                      out_swapchain->images));
 }
 
-void create_views(const vulkan_context* context, const vulkan_swapchain* out_swapchain)
+void create_views(const vulkan_context& context, const vulkan_swapchain* out_swapchain)
 {
     for (u32 i = 0; i < out_swapchain->image_count; ++i)
     {
@@ -100,7 +100,7 @@ void create_views(const vulkan_context* context, const vulkan_swapchain* out_swa
         view_info.subresourceRange.baseArrayLayer = 0;
         view_info.subresourceRange.layerCount     = 1;
 
-        VK_CHECK(vkCreateImageView(context->device.logical, &view_info, context->allocator, &out_swapchain->views[i]));
+        VK_CHECK(vkCreateImageView(context.device.logical, &view_info, context.allocator, &out_swapchain->views[i]));
     }
 }
 
@@ -162,16 +162,16 @@ void create(vulkan_context* context, u32 width, u32 height, vulkan_swapchain* ou
     }
 
     // Swapchain info
-    swapchain_info(context, image_count, out_swapchain, present_mode, swapchain_extent);
+    swapchain_info(*context, image_count, out_swapchain, present_mode, swapchain_extent);
 
 
     context->current_frame = 0;
 
     // Images
-    create_images(context, out_swapchain);
+    create_images(*context, out_swapchain);
 
     // Views
-    create_views(context, out_swapchain);
+    create_views(*context, out_swapchain);
 
     // Depth resources
     if (!device::detect_depth_format(&context->device))
@@ -181,7 +181,7 @@ void create(vulkan_context* context, u32 width, u32 height, vulkan_swapchain* ou
     }
 
     // Create image and views
-    image::create(context, VK_IMAGE_TYPE_2D, swapchain_extent.width, swapchain_extent.height, context->device.depth_format,
+    image::create(*context, VK_IMAGE_TYPE_2D, swapchain_extent.width, swapchain_extent.height, context->device.depth_format,
                   VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, true,
                   VK_IMAGE_ASPECT_DEPTH_BIT, &out_swapchain->depth_attachment);
 
@@ -190,20 +190,20 @@ void create(vulkan_context* context, u32 width, u32 height, vulkan_swapchain* ou
 
 void recreate(vulkan_context* context, u32 width, u32 height, vulkan_swapchain* out_swapchain)
 {
-    destroy(context, out_swapchain);
+    destroy(*context, out_swapchain);
     create(context, width, height, out_swapchain);
 }
 
-void destroy(const vulkan_context* context, vulkan_swapchain* swapchain)
+void destroy(const vulkan_context& context, vulkan_swapchain* swapchain)
 {
     image::destroy(context, &swapchain->depth_attachment);
 
     for (u32 i = 0; i < swapchain->image_count; ++i)
     {
-        vkDestroyImageView(context->device.logical, swapchain->views[i], context->allocator);
+        vkDestroyImageView(context.device.logical, swapchain->views[i], context.allocator);
     }
 
-    vkDestroySwapchainKHR(context->device.logical, swapchain->handle, context->allocator);
+    vkDestroySwapchainKHR(context.device.logical, swapchain->handle, context.allocator);
 
     if(swapchain->images)
     {

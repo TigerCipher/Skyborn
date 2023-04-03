@@ -29,12 +29,12 @@
 namespace sky::graphics::vk::image
 {
 
-void create(const vulkan_context* context, VkImageType image_type, u32 width, u32 height, VkFormat format, VkImageTiling tiling,
+void create(const vulkan_context& context, VkImageType image_type, u32 width, u32 height, VkFormat format, VkImageTiling tiling,
             VkImageUsageFlags usage, VkMemoryPropertyFlags memory_flags, bool create_view_flag,
             VkImageAspectFlags view_aspect_flags, vulkan_image* out_image);
 
-void create_view(const vulkan_context* context, VkFormat format, vulkan_image* image, VkImageAspectFlags aspect_flags);
+void create_view(const vulkan_context& context, VkFormat format, vulkan_image* image, VkImageAspectFlags aspect_flags);
 
-void destroy(const vulkan_context* context, vulkan_image* image);
+void destroy(const vulkan_context& context, vulkan_image* image);
 
 } // namespace sky::graphics::vk::image

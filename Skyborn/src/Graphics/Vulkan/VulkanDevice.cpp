@@ -347,11 +347,6 @@ bool create(vulkan_context* context)
     create_info.queueCreateInfoCount = idx_count;
     create_info.pQueueCreateInfos    = queue_create_infos.data();
 
-    for (u32 i = 0; i < idx_count; ++i)
-    {
-        LOG_WARNF("Priority[0]: {:.1f} and at [1]: {:.1f}", create_info.pQueueCreateInfos[i].pQueuePriorities[0],
-                  create_info.pQueueCreateInfos[i].pQueuePriorities[1]);
-    }
 
     create_info.pEnabledFeatures      = &device_features;
     create_info.enabledExtensionCount = 1;
