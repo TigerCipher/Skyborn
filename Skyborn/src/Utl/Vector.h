@@ -33,7 +33,7 @@ namespace sky::utl
 // u64 capacity = number of elements it *can* hold
 // u64 length / size = number of elements it actually holds
 // T* data
-template<typename T, bool Destruct = false>
+template<typename T, bool Destruct = true>
 class vector
 {
 public:

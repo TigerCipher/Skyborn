@@ -37,6 +37,8 @@ A 3D Vulkan engine being developed mostly for experimental and research purposes
     - Valid Examples:
         - `bool some_func(utl::vector<u32>& indices) // Class passed by reference`
         - `bool some_func(vulkan_context* pcontext) // Struct passed as pointer`
-    - Reason for this is that if I see in code somewhere: `if (some_func(&context))` I immediately know that `context` is potentially being modified
-        - But with `if (some_func(context))` I at first would think context is not being modified. I'd have to constantly recheck functions I wrote a long time ago to remember
+    - Reason for this is that for readability I like to be explicit with what I'm doing.
+        - If I see `func(a);` and it's a function belonging to Skyborn, then I assume `a` is passed either by value or const reference and not modified
+        - Likewise, if I see `func(*a)` then I know the value of pointer `a` is passed by value or const reference and not modified
+        - Likewise, if I see `func(&a)` then I know `a` will be modified
 - More to come...
