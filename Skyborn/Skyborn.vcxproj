@@ -107,6 +107,7 @@
     <ClInclude Include="src\Graphics\GraphicsFrontend.h" />
     <ClInclude Include="src\Graphics\GraphicsInterface.h" />
     <ClInclude Include="src\Graphics\Vulkan\VulkanBackend.h" />
+    <ClInclude Include="src\Graphics\Vulkan\VulkanCommandBuffer.h" />
     <ClInclude Include="src\Graphics\Vulkan\VulkanDevice.h" />
     <ClInclude Include="src\Graphics\Vulkan\VulkanCommon.h" />
     <ClInclude Include="src\Graphics\Vulkan\VulkanImage.h" />
@@ -130,6 +131,7 @@
     <ClCompile Include="src\Graphics\GraphicsBackend.cpp" />
     <ClCompile Include="src\Graphics\GraphicsFrontend.cpp" />
     <ClCompile Include="src\Graphics\Vulkan\VulkanBackend.cpp" />
+    <ClCompile Include="src\Graphics\Vulkan\VulkanCommandBuffer.cpp" />
     <ClCompile Include="src\Graphics\Vulkan\VulkanDevice.cpp" />
     <ClCompile Include="src\Graphics\Vulkan\VulkanImage.cpp" />
     <ClCompile Include="src\Graphics\Vulkan\VulkanRenderPass.cpp" />

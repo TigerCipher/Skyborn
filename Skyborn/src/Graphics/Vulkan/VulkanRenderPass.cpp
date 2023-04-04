@@ -137,7 +137,6 @@ void begin(vulkan_command_buffer* cmd_buffer, const vulkan_renderpass& renderpas
     begin_info.renderArea.extent.height = (i32)renderpass.h;
 
     VkClearValue clear_values[2]{};
-    memory::zero_memory(clear_values, sizeof(VkClearValue) * 2); // ensure it's zeroed out. I always seem to forget whether {} zeroes out an array or not.
     clear_values[0].color.float32[0]     = renderpass.r;
     clear_values[0].color.float32[1]     = renderpass.g;
     clear_values[0].color.float32[2]     = renderpass.b;

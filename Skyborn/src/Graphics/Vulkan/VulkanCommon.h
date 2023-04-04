@@ -28,6 +28,8 @@
 
 #include <vulkan/vulkan.h>
 
+#include "Utl/Vector.h"
+
 #ifdef _DEBUG
     #define VK_CHECK(expr) assert((expr) == VK_SUCCESS)
 #else
@@ -59,6 +61,8 @@ struct vulkan_device
     VkQueue graphics_queue{};
     VkQueue present_queue{};
     VkQueue transfer_queue{};
+
+    VkCommandPool graphics_cmd_pool{};
 
     VkPhysicalDeviceProperties       properties{};
     VkPhysicalDeviceFeatures         features{};
@@ -149,6 +153,8 @@ struct vulkan_context
     vulkan_device     device{};
     vulkan_swapchain  swapchain{};
     vulkan_renderpass main_renderpass{};
+
+    utl::vector<vulkan_command_buffer> graphics_cmd_buffers{};
 
     u32 image_index{};
     u32 current_frame{};

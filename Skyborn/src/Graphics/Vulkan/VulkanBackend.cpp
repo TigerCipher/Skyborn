@@ -28,6 +28,7 @@
 #include "VulkanDevice.h"
 #include "VulkanSwapchain.h"
 #include "VulkanRenderPass.h"
+#include "VulkanCommandBuffer.h"
 
 namespace sky::graphics::vk
 {
@@ -67,6 +68,26 @@ i32 find_memory_index(u32 type_filter, u32 property_flags)
 
     LOG_WARN("Unable to find a suitable memory type");
     return -1;
+}
+
+void create_command_buffers()
+{
+    if(context.graphics_cmd_buffers.empty())
+    {
+        context.graphics_cmd_buffers.resize(context.swapchain.image_count);
+    }
+
+    for (u32 i = 0; i < context.swapchain.image_count; ++i)
+    {
+        if(context.graphics_cmd_buffers[i].handle)
+        {
+            commands::free_buffer(context, context.device.graphics_cmd_pool, &context.graphics_cmd_buffers[i]);
+        }
+        //context.graphics_cmd_buffers[i] = {};
+        commands::allocate_buffer(context, context.device.graphics_cmd_pool, true, &context.graphics_cmd_buffers[i]);
+    }
+
+    LOG_INFO("Vulkan command buffers created");
 }
 
 } // anonymous namespace
@@ -195,12 +216,29 @@ bool initialize(const char* app_name)
     renderpass::create(&context, &context.main_renderpass, 0.0f, 0.0f, (f32) context.framebuffer_width,
                        (f32) context.framebuffer_height, 0.0f, 0.0f, 0.2f, 0.1f, 1.0f, 0.0f);
 
+
+    create_command_buffers();
+
     LOG_INFO("Vulkan backend initialized");
     return true;
 }
 
 void shutdown()
 {
+    // Note: Destroy resources in reverse order of creation
+
+    // Command buffers
+    for (u32 i = 0; i < context.swapchain.image_count; ++i)
+    {
+        if(context.graphics_cmd_buffers[i].handle)
+        {
+            commands::free_buffer(context, context.device.graphics_cmd_pool, &context.graphics_cmd_buffers[i]);
+            context.graphics_cmd_buffers[i].handle = nullptr;
+        }
+    }
+
+    context.graphics_cmd_buffers.clear();
+
     renderpass::destroy(context, &context.main_renderpass);
     swapchain::destroy(context, &context.swapchain);
 
