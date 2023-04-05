@@ -105,6 +105,16 @@ struct vulkan_renderpass
     vulkan_render_pass_state::state state;
 };
 
+struct vulkan_framebuffer
+{
+    VkFramebuffer      handle{};
+    vulkan_renderpass* renderpass{};
+
+    //utl::vector<VkImageView, memory_tag::renderer> attachments{};
+    VkImageView* attachments{}; // never resizes, I think it will be faster to not use a vector for this
+    u32          attachment_count{};
+};
+
 struct vulkan_swapchain
 {
     VkSurfaceFormatKHR image_format{};
@@ -115,6 +125,9 @@ struct vulkan_swapchain
     VkImageView*       views{};
 
     vulkan_image depth_attachment{};
+
+    //utl::vector<vulkan_framebuffer, memory_tag::renderer> framebuffers{};
+    vulkan_framebuffer* framebuffers{}; //  Won't resize, better off a light weight array than a vector
 };
 
 struct vulkan_command_buffer_state
@@ -137,6 +150,12 @@ struct vulkan_command_buffer
     vulkan_command_buffer_state::state state{};
 };
 
+struct vulkan_fence
+{
+    VkFence handle{};
+    bool    is_signaled{};
+};
+
 struct vulkan_context
 {
     VkInstance             instance{ nullptr };
@@ -154,7 +173,16 @@ struct vulkan_context
     vulkan_swapchain  swapchain{};
     vulkan_renderpass main_renderpass{};
 
-    utl::vector<vulkan_command_buffer> graphics_cmd_buffers{};
+    utl::vector<vulkan_command_buffer, memory_tag::renderer> graphics_cmd_buffers{};
+
+    utl::vector<VkSemaphore, memory_tag::renderer> image_available_semaphores{};
+    utl::vector<VkSemaphore, memory_tag::renderer> queue_complete_semaphores{};
+
+    u32 in_flight_fence_count{};
+
+    utl::vector<vulkan_fence, memory_tag::renderer> in_flight_fences{};
+
+    utl::vector<vulkan_fence*, memory_tag::renderer> images_in_flight{};
 
     u32 image_index{};
     u32 current_frame{};

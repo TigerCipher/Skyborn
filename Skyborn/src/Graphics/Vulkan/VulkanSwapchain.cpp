@@ -214,6 +214,8 @@ void destroy(const vulkan_context& context, vulkan_swapchain* swapchain)
     {
         memory::free(swapchain->views, sizeof(VkImageView) * swapchain->image_count, memory_tag::renderer);
     }
+
+    memory::free_(swapchain->framebuffers, memory_tag::renderer, swapchain->image_count);
 }
 
 bool acquire_next_image_index(vulkan_context* context, vulkan_swapchain* swapchain, u64 timeout,
@@ -256,6 +258,9 @@ void present(vulkan_context* context, vulkan_swapchain* swapchain, VkQueue graph
     {
         LOG_FATAL("Failed to present swapchain image");
     }
+
+    // % max count in order to loop the index and not go out of bounds
+    context->current_frame = (context->current_frame + 1) % swapchain->max_frames_in_flight;
 }
 
 } // namespace sky::graphics::vk::swapchain

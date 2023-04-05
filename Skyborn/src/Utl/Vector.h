@@ -26,6 +26,9 @@
 
 #include "Common.h"
 
+template<typename T>
+concept vector_enabled = std::is_copy_constructible_v<T> && std::is_default_constructible_v<T>;
+
 namespace sky::utl
 {
 
@@ -33,7 +36,7 @@ namespace sky::utl
 // u64 capacity = number of elements it *can* hold
 // u64 length / size = number of elements it actually holds
 // T* data
-template<typename T, bool Destruct = true>
+template<vector_enabled T, memory_tag::tag Tag = memory_tag::vector, bool Destruct = true>
 class vector
 {
 public:
@@ -103,7 +106,7 @@ public:
 
     constexpr void resize(u64 new_size)
     {
-        static_assert(std::is_default_constructible_v<T>, "Type must have a default constructor");
+        //static_assert(std::is_default_constructible_v<T>, "Type must have a default constructor");
 
         if (new_size > m_size)
         {
@@ -127,7 +130,7 @@ public:
 
     constexpr void resize(u64 new_size, const T& value)
     {
-        static_assert(std::is_copy_constructible_v<T>, "Type must be copyable");
+        //static_assert(std::is_copy_constructible_v<T>, "Type must be copyable");
 
         if (new_size > m_size)
         {
@@ -154,10 +157,10 @@ public:
         if (new_capacity <= m_capacity)
             return;
 
-        void* temp{ memory::allocate(new_capacity * sizeof(T), memory_tag::darray) };
+        void* temp{ memory::allocate(new_capacity * sizeof(T), Tag) };
         memory::copy(temp, m_data, m_size * sizeof(T));
         if(m_data)
-            memory::free(m_data, m_capacity * sizeof(T), memory_tag::darray);
+            memory::free(m_data, m_capacity * sizeof(T), Tag);
         m_data     = (T*) temp;
         m_capacity = new_capacity;
         //void* new_buffer = realloc(m_data, new_capacity * sizeof(T));
@@ -344,7 +347,7 @@ private:
         assert([&] { return m_capacity ? m_data != nullptr : m_data == nullptr; }());
         clear();
         if (m_data)
-            memory::free(m_data, m_capacity * sizeof(T), memory_tag::darray);
+            memory::free(m_data, m_capacity * sizeof(T), Tag);
         m_capacity = 0;
         m_data     = nullptr;
     }

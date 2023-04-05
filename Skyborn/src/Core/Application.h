@@ -64,4 +64,6 @@ private:
 SAPI bool create(scope<game, memory_tag::game> game);
 SAPI bool run();
 
+void get_framebuffer_size(u32* width, u32* height);
+
 }

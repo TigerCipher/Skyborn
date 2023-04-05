@@ -221,4 +221,11 @@ bool run()
     logger::shutdown();
     return true;
 }
+
+void get_framebuffer_size(u32* width, u32* height)
+{
+    *width = game_instance->desc().width;
+    *height = game_instance->desc().height;
+}
+
 } // namespace sky::app

@@ -27,6 +27,8 @@
 #include <string>
 
 #include "Defines.h"
+#include "Debug/Logger.h"
+#include "Platform/Platform.h"
 
 
 namespace sky
@@ -37,7 +39,7 @@ struct memory_tag
     {
         unknown,
         array,
-        darray,
+        vector,
         dictionary,
         ring_queue,
         bst,
@@ -58,9 +60,11 @@ struct memory_tag
 namespace memory
 {
 
-//void increase_memory_count(size_t size);
-//void decrease_memory_count(size_t size);
 
+
+
+void record_allocation(u64 size, memory_tag::tag tag);
+void record_deallocation(u64 size, memory_tag::tag tag);
 
 SAPI void initialize();
 SAPI void shutdown();
@@ -70,9 +74,47 @@ SAPI void shutdown();
 // But... in most cases I imagine I'll be using smart pointers
 
 
-SAPI void* allocate(u64 size, memory_tag::tag tag);          // malloc
+SAPI void* zero_memory(void* block, u64 size); // memset(block, 0, size)
+
+
+// TODO: Replace old allocate usages with new one
+
+template<typename T>
+void allocate(T*& block, memory_tag::tag tag, u64 count = 1)
+{
+    if (tag == memory_tag::unknown)
+    {
+        LOG_WARN("memory::allocate was called using an unknown tag");
+    }
+
+    const u64 size{sizeof(T) * count};
+    block = (T*)platform::allocate(size); // TODO: Alignment
+    zero_memory(block, size);
+    record_allocation(size, tag);
+}
+
+// TODO: Replace usages of old free with free_
+
+template<typename T>
+void free_(T* block, memory_tag::tag tag, u32 count = 1)
+{
+    const u64 size{sizeof(T) * count};
+    if (!block || !size)
+        return;
+    if (tag == memory_tag::unknown)
+    {
+        LOG_WARN("memory::free was called using an unknown tag");
+    }
+
+    platform::free(block); // TODO: Alignment
+    block = nullptr;
+
+    record_deallocation(size, tag);
+}
+
+SAPI void* allocate(u64 size, memory_tag::tag tag);
 SAPI void  free(void* block, u64 size, memory_tag::tag tag); // free
-SAPI void* zero_memory(void* block, u64 size);               // memset(block, 0, size)
+
 SAPI void* copy(void* dest, const void* src, u64 size);      // memcpy
 SAPI void* set(void* dest, i32 value, u64 size);             // memset
 

@@ -29,6 +29,10 @@
 #include "VulkanSwapchain.h"
 #include "VulkanRenderPass.h"
 #include "VulkanCommandBuffer.h"
+#include "VulkanFramebuffer.h"
+#include "VulkanFence.h"
+
+#include "Core/Application.h"
 
 namespace sky::graphics::vk
 {
@@ -36,6 +40,12 @@ namespace sky::graphics::vk
 namespace
 {
 vulkan_context context{};
+
+struct framebuffer_cache
+{
+    u32 width{};
+    u32 height{};
+} fb_cache;
 
 // Debug callback
 VKAPI_ATTR VkBool32 VKAPI_CALL vk_debug_callback(VkDebugUtilsMessageSeverityFlagBitsEXT      message_severity,
@@ -90,11 +100,30 @@ void create_command_buffers()
     LOG_INFO("Vulkan command buffers created");
 }
 
+void regenerate_framebuffers(vulkan_swapchain* swapchain, vulkan_renderpass* renderpass)
+{
+    constexpr u32 attachment_count{2}; // TODO make configurable / dynamic
+    for (u32 i = 0; i < swapchain->image_count; ++i)
+    {
+        const VkImageView attachments[attachment_count]{swapchain->views[i], swapchain->depth_attachment.view};
+
+        framebuffer::create(context, renderpass, context.framebuffer_width, context.framebuffer_height, attachment_count, attachments, &context.swapchain.framebuffers[i]);
+    }
+}
+
 } // anonymous namespace
 
 bool initialize(const char* app_name)
 {
     context.find_memory_index = find_memory_index;
+
+    app::get_framebuffer_size(&fb_cache.width, &fb_cache.height);
+    context.framebuffer_width = fb_cache.width ? fb_cache.width : 800;
+    context.framebuffer_height = fb_cache.height ? fb_cache.height : 600;
+    fb_cache.width = 0;
+    fb_cache.height = 0;
+
+
     VkApplicationInfo app_info{ VK_STRUCTURE_TYPE_APPLICATION_INFO };
     app_info.apiVersion         = VK_API_VERSION_1_2;
     app_info.pApplicationName   = app_name;
@@ -216,8 +245,29 @@ bool initialize(const char* app_name)
     renderpass::create(&context, &context.main_renderpass, 0.0f, 0.0f, (f32) context.framebuffer_width,
                        (f32) context.framebuffer_height, 0.0f, 0.0f, 0.2f, 0.1f, 1.0f, 0.0f);
 
+    // Swapchain framebuffers
+    //context.swapchain.framebuffers.resize(context.swapchain.image_count);
+    memory::allocate(context.swapchain.framebuffers, memory_tag::renderer, context.swapchain.image_count);
+    regenerate_framebuffers(&context.swapchain, &context.main_renderpass);
 
     create_command_buffers();
+
+    // Sync objects
+    context.image_available_semaphores.resize(context.swapchain.max_frames_in_flight);
+    context.queue_complete_semaphores.resize(context.swapchain.max_frames_in_flight);
+    context.in_flight_fences.resize(context.swapchain.max_frames_in_flight);
+
+    for (u8 i = 0; i < context.swapchain.max_frames_in_flight; ++i)
+    {
+        VkSemaphoreCreateInfo sem_info{VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO};
+        vkCreateSemaphore(context.device.logical, &sem_info, context.allocator, &context.image_available_semaphores[i]);
+        vkCreateSemaphore(context.device.logical, &sem_info, context.allocator, &context.queue_complete_semaphores[i]);
+
+        fence::create(context, true, &context.in_flight_fences[i]);
+    }
+
+    context.images_in_flight.resize(context.swapchain.image_count, nullptr); // just to be safe, filling the vector with nullptr
+
 
     LOG_INFO("Vulkan backend initialized");
     return true;
@@ -225,7 +275,26 @@ bool initialize(const char* app_name)
 
 void shutdown()
 {
+    vkDeviceWaitIdle(context.device.logical);
     // Note: Destroy resources in reverse order of creation
+
+    // Sync objects
+    for (u8 i = 0; i < context.swapchain.max_frames_in_flight; ++i)
+    {
+        if(context.image_available_semaphores[i])
+        {
+            vkDestroySemaphore(context.device.logical, context.image_available_semaphores[i], context.allocator);
+        }
+        if(context.queue_complete_semaphores[i])
+        {
+            vkDestroySemaphore(context.device.logical, context.queue_complete_semaphores[i], context.allocator);
+        }
+        fence::destroy(context, &context.in_flight_fences[i]);
+    }
+
+    context.image_available_semaphores.clear();
+    context.queue_complete_semaphores.clear();
+    context.in_flight_fences.clear();
 
     // Command buffers
     for (u32 i = 0; i < context.swapchain.image_count; ++i)
@@ -238,6 +307,11 @@ void shutdown()
     }
 
     context.graphics_cmd_buffers.clear();
+
+    for (u32 i = 0; i < context.swapchain.image_count; ++i)
+    {
+        framebuffer::destroy(context, &context.swapchain.framebuffers[i]);
+    }
 
     renderpass::destroy(context, &context.main_renderpass);
     swapchain::destroy(context, &context.swapchain);
