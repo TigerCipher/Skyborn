@@ -46,7 +46,7 @@ struct memory_stats
 // clang-format off
 constexpr const char* tag_strings[memory_tag::count]{
     "UNKNOWN    ",
-    "ARRAY      ",
+    "HEAP_ARRAY ",
     "VECTOR     ",
     "DICTIONARY ",
     "RING_QUEUE ",

@@ -38,7 +38,7 @@ struct memory_tag
     enum tag : u32
     {
         unknown,
-        array,
+        heap_array,
         vector,
         dictionary,
         ring_queue,
@@ -96,7 +96,7 @@ void allocate(T*& block, memory_tag::tag tag, u64 count = 1)
 // TODO: Replace usages of old free with free_
 
 template<typename T>
-void free_(T* block, memory_tag::tag tag, u32 count = 1)
+void free_(T* block, memory_tag::tag tag, u64 count = 1)
 {
     const u64 size{sizeof(T) * count};
     if (!block || !size)

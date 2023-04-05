@@ -215,7 +215,7 @@ void destroy(const vulkan_context& context, vulkan_swapchain* swapchain)
         memory::free(swapchain->views, sizeof(VkImageView) * swapchain->image_count, memory_tag::renderer);
     }
 
-    memory::free_(swapchain->framebuffers, memory_tag::renderer, swapchain->image_count);
+    //memory::free_(swapchain->framebuffers, memory_tag::renderer, swapchain->image_count);
 }
 
 bool acquire_next_image_index(vulkan_context* context, vulkan_swapchain* swapchain, u64 timeout,

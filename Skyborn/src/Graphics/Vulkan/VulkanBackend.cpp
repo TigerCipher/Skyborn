@@ -247,15 +247,16 @@ bool initialize(const char* app_name)
 
     // Swapchain framebuffers
     //context.swapchain.framebuffers.resize(context.swapchain.image_count);
-    memory::allocate(context.swapchain.framebuffers, memory_tag::renderer, context.swapchain.image_count);
+    //memory::allocate(context.swapchain.framebuffers, memory_tag::renderer, context.swapchain.image_count);
+    context.swapchain.framebuffers.initialize(context.swapchain.image_count);
     regenerate_framebuffers(&context.swapchain, &context.main_renderpass);
 
     create_command_buffers();
 
     // Sync objects
-    context.image_available_semaphores.resize(context.swapchain.max_frames_in_flight);
-    context.queue_complete_semaphores.resize(context.swapchain.max_frames_in_flight);
-    context.in_flight_fences.resize(context.swapchain.max_frames_in_flight);
+    context.image_available_semaphores.initialize(context.swapchain.max_frames_in_flight);
+    context.queue_complete_semaphores.initialize(context.swapchain.max_frames_in_flight);
+    context.in_flight_fences.initialize(context.swapchain.max_frames_in_flight);
 
     for (u8 i = 0; i < context.swapchain.max_frames_in_flight; ++i)
     {
@@ -266,7 +267,7 @@ bool initialize(const char* app_name)
         fence::create(context, true, &context.in_flight_fences[i]);
     }
 
-    context.images_in_flight.resize(context.swapchain.image_count, nullptr); // just to be safe, filling the vector with nullptr
+    context.images_in_flight.initialize(context.swapchain.image_count);
 
 
     LOG_INFO("Vulkan backend initialized");
@@ -292,9 +293,9 @@ void shutdown()
         fence::destroy(context, &context.in_flight_fences[i]);
     }
 
-    context.image_available_semaphores.clear();
-    context.queue_complete_semaphores.clear();
-    context.in_flight_fences.clear();
+    //context.image_available_semaphores.clear();
+    //context.queue_complete_semaphores.clear();
+    //context.in_flight_fences.clear();
 
     // Command buffers
     for (u32 i = 0; i < context.swapchain.image_count; ++i)

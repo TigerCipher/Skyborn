@@ -194,7 +194,7 @@ bool run()
                 constexpr bool limit_frames{ false }; // For now, it's just false
                 if (remaining_ms > 0 && limit_frames)
                 {
-                    platform::sleep(remaining_ms - 1);
+                    platform::sleep((u32)remaining_ms - 1);
                 }
 
                 ++frame_count;

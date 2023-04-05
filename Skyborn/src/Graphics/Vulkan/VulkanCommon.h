@@ -29,6 +29,7 @@
 #include <vulkan/vulkan.h>
 
 #include "Utl/Vector.h"
+#include "Utl/HeapArray.h"
 
 #ifdef _DEBUG
     #define VK_CHECK(expr) assert((expr) == VK_SUCCESS)
@@ -127,7 +128,8 @@ struct vulkan_swapchain
     vulkan_image depth_attachment{};
 
     //utl::vector<vulkan_framebuffer, memory_tag::renderer> framebuffers{};
-    vulkan_framebuffer* framebuffers{}; //  Won't resize, better off a light weight array than a vector
+    //vulkan_framebuffer* framebuffers{}; //  Won't resize, better off a light weight array than a vector
+    utl::heap_array<vulkan_framebuffer> framebuffers{};
 };
 
 struct vulkan_command_buffer_state
@@ -175,14 +177,18 @@ struct vulkan_context
 
     utl::vector<vulkan_command_buffer, memory_tag::renderer> graphics_cmd_buffers{};
 
-    utl::vector<VkSemaphore, memory_tag::renderer> image_available_semaphores{};
-    utl::vector<VkSemaphore, memory_tag::renderer> queue_complete_semaphores{};
+    //utl::vector<VkSemaphore, memory_tag::renderer> image_available_semaphores{};
+    //utl::vector<VkSemaphore, memory_tag::renderer> queue_complete_semaphores{};
+    utl::heap_array<VkSemaphore> queue_complete_semaphores{};
+    utl::heap_array<VkSemaphore> image_available_semaphores{};
 
     u32 in_flight_fence_count{};
 
-    utl::vector<vulkan_fence, memory_tag::renderer> in_flight_fences{};
+    //utl::vector<vulkan_fence, memory_tag::renderer> in_flight_fences{};
+    utl::heap_array<vulkan_fence> in_flight_fences{};
 
-    utl::vector<vulkan_fence*, memory_tag::renderer> images_in_flight{};
+    //utl::vector<vulkan_fence*, memory_tag::renderer> images_in_flight{};
+    utl::heap_array<vulkan_fence*> images_in_flight{};
 
     u32 image_index{};
     u32 current_frame{};
