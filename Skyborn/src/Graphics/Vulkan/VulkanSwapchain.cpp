@@ -31,8 +31,8 @@ namespace sky::graphics::vk::swapchain
 namespace
 {
 
-void swapchain_info(const vulkan_context& context, u32 image_count, vulkan_swapchain* out_swapchain, VkPresentModeKHR present_mode,
-                    VkExtent2D            swapchain_extent)
+void swapchain_info(const vulkan_context& context, u32 image_count, vulkan_swapchain* out_swapchain,
+                    VkPresentModeKHR present_mode, VkExtent2D swapchain_extent)
 {
     VkSwapchainCreateInfoKHR create_info{ VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR };
     create_info.surface          = context.surface;
@@ -71,22 +71,24 @@ void create_images(const vulkan_context& context, vulkan_swapchain* out_swapchai
 {
     out_swapchain->image_count = 0;
     VK_CHECK(vkGetSwapchainImagesKHR(context.device.logical, out_swapchain->handle, &out_swapchain->image_count, nullptr));
-    if (!out_swapchain->images)
-    {
-        out_swapchain->images = (VkImage*) memory::allocate(sizeof(VkImage) * out_swapchain->image_count, memory_tag::renderer);
-    }
+    out_swapchain->images.initialize(out_swapchain->image_count);
+    out_swapchain->views.initialize(out_swapchain->image_count);
+    //if (!out_swapchain->images)
+    //{
+    //    out_swapchain->images = (VkImage*) memory::allocate(sizeof(VkImage) * out_swapchain->image_count, memory_tag::renderer);
+    //}
 
-    if (!out_swapchain->views)
-    {
-        out_swapchain->views =
-            (VkImageView*) memory::allocate(sizeof(VkImageView) * out_swapchain->image_count, memory_tag::renderer);
-    }
+    //if (!out_swapchain->views)
+    //{
+    //    out_swapchain->views =
+    //        (VkImageView*) memory::allocate(sizeof(VkImageView) * out_swapchain->image_count, memory_tag::renderer);
+    //}
 
     VK_CHECK(vkGetSwapchainImagesKHR(context.device.logical, out_swapchain->handle, &out_swapchain->image_count,
-                                     out_swapchain->images));
+                                     out_swapchain->images.data()));
 }
 
-void create_views(const vulkan_context& context, const vulkan_swapchain* out_swapchain)
+void create_views(const vulkan_context& context, vulkan_swapchain* out_swapchain)
 {
     for (u32 i = 0; i < out_swapchain->image_count; ++i)
     {
@@ -206,15 +208,15 @@ void destroy(const vulkan_context& context, vulkan_swapchain* swapchain)
 
     vkDestroySwapchainKHR(context.device.logical, swapchain->handle, context.allocator);
 
-    if(swapchain->images)
-    {
-        memory::free(swapchain->images, sizeof(VkImage) * swapchain->image_count, memory_tag::renderer);
-    }
+    //if (swapchain->images)
+    //{
+    //    memory::free(swapchain->images, sizeof(VkImage) * swapchain->image_count, memory_tag::renderer);
+    //}
 
-    if (swapchain->views)
-    {
-        memory::free(swapchain->views, sizeof(VkImageView) * swapchain->image_count, memory_tag::renderer);
-    }
+    //if (swapchain->views)
+    //{
+    //    memory::free(swapchain->views, sizeof(VkImageView) * swapchain->image_count, memory_tag::renderer);
+    //}
 
     //memory::free_(swapchain->framebuffers, memory_tag::renderer, swapchain->image_count);
 }
@@ -222,8 +224,8 @@ void destroy(const vulkan_context& context, vulkan_swapchain* swapchain)
 bool acquire_next_image_index(vulkan_context* context, vulkan_swapchain* swapchain, u64 timeout,
                               VkSemaphore image_available_semaphore, VkFence fence, u32* out_image_index)
 {
-    const VkResult result{ vkAcquireNextImageKHR(context->device.logical, swapchain->handle, timeout, image_available_semaphore, fence,
-                                                 out_image_index) };
+    const VkResult result{ vkAcquireNextImageKHR(context->device.logical, swapchain->handle, timeout, image_available_semaphore,
+                                                 fence, out_image_index) };
 
     if (result == VK_ERROR_OUT_OF_DATE_KHR)
     {
@@ -247,6 +249,7 @@ void present(vulkan_context* context, vulkan_swapchain* swapchain, VkQueue graph
     present_info.waitSemaphoreCount = 1;
     present_info.pWaitSemaphores    = &render_complete_semaphore;
     present_info.swapchainCount     = 1;
+    present_info.pSwapchains        = &swapchain->handle;
     present_info.pImageIndices      = &present_image_index;
     present_info.pResults           = nullptr;
 

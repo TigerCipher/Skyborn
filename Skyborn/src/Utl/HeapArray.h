@@ -75,7 +75,7 @@ public:
 
     constexpr void initialize(u64 size)
     {
-        assert(!m_size);
+        if(m_size) return;
         m_size = size;
         memory::allocate(m_data, memory_tag::heap_array, size);
     }

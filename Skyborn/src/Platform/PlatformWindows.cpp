@@ -96,11 +96,15 @@ LRESULT CALLBACK process_messages(HWND hwnd, u32 msg, WPARAM wparam, LPARAM lpar
         return 0;
     case WM_SIZE:
     {
-        //        RECT r;
-        //        GetClientRect(hwnd, &r);
-        //        s32 w = r.right - r.left;
-        //        s32 h = r.bottom - r.top;
+        RECT r{};
+        GetClientRect(hwnd, &r);
+        u32 w {(u32)r.right - r.left};
+        u32 h {(u32)r.bottom - r.top};
 
+        events::context ctx{};
+        ctx.data.u16[0] = (u16)w;
+        ctx.data.u16[1] = (u16)h;
+        events::fire(events::detail::system_event::resized, nullptr, ctx);
         // Resize event
     }
     break;

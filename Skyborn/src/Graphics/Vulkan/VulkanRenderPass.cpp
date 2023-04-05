@@ -40,7 +40,7 @@ void create(vulkan_context* context, vulkan_renderpass* prenderpass, f32 x, f32 
     prenderpass->a       = a;
 
     prenderpass->depth   = depth;
-    prenderpass->stencil = stencil;
+    prenderpass->stencil = (u32)stencil;
 
     // Main subpass
     VkSubpassDescription subpass{};

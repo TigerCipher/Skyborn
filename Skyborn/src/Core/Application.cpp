@@ -40,7 +40,7 @@ bool                          running{ false };
 bool                          suspended{ false };
 core::clock                   clock{};
 
-bool on_event(u16 code, void* sender, void* listener, events::context ctx)
+bool on_event(u16 code, [[maybe_unused]] void* sender, [[maybe_unused]] void* listener, events::context ctx)
 {
     switch (code)
     {
@@ -52,7 +52,7 @@ bool on_event(u16 code, void* sender, void* listener, events::context ctx)
     }
 }
 
-bool on_key(u16 code, void* sender, void* listener, events::context ctx)
+bool on_key(u16 code, [[maybe_unused]] void* sender, [[maybe_unused]] void* listener, events::context ctx)
 {
     if (code == events::detail::system_event::key_pressed)
     {
@@ -71,6 +71,38 @@ bool on_key(u16 code, void* sender, void* listener, events::context ctx)
         LOG_TRACEF("{} key was released in window", (char) key_code);
     }
 
+    return false;
+}
+
+bool on_resized(u16 code, [[maybe_unused]] void* sender, [[maybe_unused]] void* listener, events::context ctx)
+{
+    if (code != events::detail::system_event::resized)
+        return false;
+
+    u16 width{ ctx.data.u16[0] };
+    u16 height{ ctx.data.u16[1] };
+
+    if (width != game_instance->desc().width || height != game_instance->desc().height)
+    {
+        game_instance->desc().width  = (i16) width;
+        game_instance->desc().height = (i16) height;
+
+        LOG_DEBUGF("Window Resize ({}, {})", width, height);
+
+        if (width == 0 || height == 0)
+        {
+            LOG_INFO("Window minimized. Suspending system");
+            suspended = true;
+            return true;
+        }
+        if (suspended)
+        {
+            LOG_INFO("Window restored. Resuming system");
+            suspended = false;
+        }
+        game_instance->on_resize(width, height);
+        graphics::on_resized(width, height);
+    }
     return false;
 }
 
@@ -109,6 +141,7 @@ bool create(scope<game, memory_tag::game> game)
     events::register_event(events::detail::system_event::application_quit, nullptr, on_event);
     events::register_event(events::detail::system_event::key_pressed, nullptr, on_key);
     events::register_event(events::detail::system_event::key_released, nullptr, on_key);
+    events::register_event(events::detail::system_event::resized, nullptr, on_resized);
 
     if (!platform::initialize(name, pos_x, pos_y, width, height))
     {
@@ -143,6 +176,7 @@ bool create(scope<game, memory_tag::game> game)
 
     return true;
 }
+
 bool run()
 {
     clock.start();
@@ -180,7 +214,7 @@ bool run()
                 break;
             }
 
-            graphics::render_packet packet{(f32)delta};
+            graphics::render_packet packet{ (f32) delta };
             graphics::draw_frame(&packet);
 
             const f64 frame_end_time{ platform::get_time() };
@@ -194,7 +228,7 @@ bool run()
                 constexpr bool limit_frames{ false }; // For now, it's just false
                 if (remaining_ms > 0 && limit_frames)
                 {
-                    platform::sleep((u32)remaining_ms - 1);
+                    platform::sleep((u32) remaining_ms - 1);
                 }
 
                 ++frame_count;
@@ -213,6 +247,7 @@ bool run()
     events::unregister_event(events::detail::system_event::application_quit, nullptr, on_event);
     events::unregister_event(events::detail::system_event::key_pressed, nullptr, on_key);
     events::unregister_event(events::detail::system_event::key_released, nullptr, on_key);
+    events::unregister_event(events::detail::system_event::resized, nullptr, on_resized);
 
     events::shutdown();
     input::shutdown();
@@ -224,7 +259,7 @@ bool run()
 
 void get_framebuffer_size(u32* width, u32* height)
 {
-    *width = game_instance->desc().width;
+    *width  = game_instance->desc().width;
     *height = game_instance->desc().height;
 }
 

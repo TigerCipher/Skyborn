@@ -82,14 +82,14 @@ i32 find_memory_index(u32 type_filter, u32 property_flags)
 
 void create_command_buffers()
 {
-    if(context.graphics_cmd_buffers.empty())
+    if (context.graphics_cmd_buffers.empty())
     {
         context.graphics_cmd_buffers.resize(context.swapchain.image_count);
     }
 
     for (u32 i = 0; i < context.swapchain.image_count; ++i)
     {
-        if(context.graphics_cmd_buffers[i].handle)
+        if (context.graphics_cmd_buffers[i].handle)
         {
             commands::free_buffer(context, context.device.graphics_cmd_pool, &context.graphics_cmd_buffers[i]);
         }
@@ -102,13 +102,74 @@ void create_command_buffers()
 
 void regenerate_framebuffers(const vulkan_swapchain& swapchain, vulkan_renderpass* renderpass)
 {
-    constexpr u32 attachment_count{2}; // TODO make configurable / dynamic
+    constexpr u32 attachment_count{ 2 }; // TODO make configurable / dynamic
     for (u32 i = 0; i < swapchain.image_count; ++i)
     {
-        const VkImageView attachments[attachment_count]{swapchain.views[i], swapchain.depth_attachment.view};
+        const VkImageView attachments[attachment_count]{ swapchain.views[i], swapchain.depth_attachment.view };
 
-        framebuffer::create(context, renderpass, context.framebuffer_width, context.framebuffer_height, attachment_count, attachments, &context.swapchain.framebuffers[i]);
+        framebuffer::create(context, renderpass, context.framebuffer_width, context.framebuffer_height, attachment_count,
+                            attachments, &context.swapchain.framebuffers[i]);
     }
+}
+
+bool recreate_swapchain()
+{
+    if (context.recreating_swapchain)
+    {
+        return false;
+    }
+
+    if (!context.framebuffer_width || !context.framebuffer_height)
+    {
+        LOG_DEBUG("recreate_swapchain called and window is less than 1 in either width or height or both");
+        return false;
+    }
+
+    context.recreating_swapchain = true;
+
+    vkDeviceWaitIdle(context.device.logical);
+
+    for (auto& iif : context.images_in_flight)
+    {
+        iif = nullptr;
+    }
+
+    device::query_swapchain_support(context.device.physical, context.surface, &context.device.swapchain_support);
+    device::detect_depth_format(&context.device);
+
+    swapchain::recreate(&context, fb_cache.width, fb_cache.height, &context.swapchain);
+
+    context.framebuffer_width  = fb_cache.width;
+    context.framebuffer_height = fb_cache.height;
+    context.main_renderpass.w  = (f32) context.framebuffer_width;
+    context.main_renderpass.h  = (f32) context.framebuffer_height;
+    fb_cache.width             = 0;
+    fb_cache.height            = 0;
+
+    context.framebuffer_size_last_generation = context.framebuffer_size_generation;
+
+    for (u32 i = 0; i < context.swapchain.image_count; ++i)
+    {
+        commands::free_buffer(context, context.device.graphics_cmd_pool, &context.graphics_cmd_buffers[i]);
+    }
+
+    for (u32 i = 0; i < context.swapchain.image_count; ++i)
+    {
+        framebuffer::destroy(context, &context.swapchain.framebuffers[i]);
+    }
+
+    context.main_renderpass.x = 0;
+    context.main_renderpass.y = 0;
+    context.main_renderpass.w = (f32) context.framebuffer_width;
+    context.main_renderpass.h = (f32) context.framebuffer_height;
+
+    regenerate_framebuffers(context.swapchain, &context.main_renderpass);
+
+    create_command_buffers();
+
+    context.recreating_swapchain = false;
+
+    return true;
 }
 
 } // anonymous namespace
@@ -118,10 +179,10 @@ bool initialize(const char* app_name)
     context.find_memory_index = find_memory_index;
 
     app::get_framebuffer_size(&fb_cache.width, &fb_cache.height);
-    context.framebuffer_width = fb_cache.width ? fb_cache.width : 800;
+    context.framebuffer_width  = fb_cache.width ? fb_cache.width : 800;
     context.framebuffer_height = fb_cache.height ? fb_cache.height : 600;
-    fb_cache.width = 0;
-    fb_cache.height = 0;
+    fb_cache.width             = 0;
+    fb_cache.height            = 0;
 
 
     VkApplicationInfo app_info{ VK_STRUCTURE_TYPE_APPLICATION_INFO };
@@ -260,7 +321,7 @@ bool initialize(const char* app_name)
 
     for (u8 i = 0; i < context.swapchain.max_frames_in_flight; ++i)
     {
-        VkSemaphoreCreateInfo sem_info{VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO};
+        VkSemaphoreCreateInfo sem_info{ VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO };
         vkCreateSemaphore(context.device.logical, &sem_info, context.allocator, &context.image_available_semaphores[i]);
         vkCreateSemaphore(context.device.logical, &sem_info, context.allocator, &context.queue_complete_semaphores[i]);
 
@@ -282,11 +343,11 @@ void shutdown()
     // Sync objects
     for (u8 i = 0; i < context.swapchain.max_frames_in_flight; ++i)
     {
-        if(context.image_available_semaphores[i])
+        if (context.image_available_semaphores[i])
         {
             vkDestroySemaphore(context.device.logical, context.image_available_semaphores[i], context.allocator);
         }
-        if(context.queue_complete_semaphores[i])
+        if (context.queue_complete_semaphores[i])
         {
             vkDestroySemaphore(context.device.logical, context.queue_complete_semaphores[i], context.allocator);
         }
@@ -300,7 +361,7 @@ void shutdown()
     // Command buffers
     for (u32 i = 0; i < context.swapchain.image_count; ++i)
     {
-        if(context.graphics_cmd_buffers[i].handle)
+        if (context.graphics_cmd_buffers[i].handle)
         {
             commands::free_buffer(context, context.device.graphics_cmd_pool, &context.graphics_cmd_buffers[i]);
             context.graphics_cmd_buffers[i].handle = nullptr;
@@ -341,17 +402,94 @@ void shutdown()
     vkDestroyInstance(context.instance, context.allocator);
 }
 
-void on_resized(u16 width, u16 height) {}
+void on_resized(u16 width, u16 height)
+{
+    fb_cache.width  = width;
+    fb_cache.height = height;
+    ++context.framebuffer_size_generation;
+
+    LOG_DEBUGF("Vulan backend resized; Width: {}, Height: {}, Generation: {}", width, height,
+               context.framebuffer_size_generation);
+}
 
 bool begin_frame(f32 delta)
 {
-    const vulkan_device& device{context.device};
+    const vulkan_device& device{ context.device };
 
-    if(context.recreating_swapchain)
+    if (context.recreating_swapchain)
     {
-        VkResult res{vkDeviceWaitIdle(device.logical)};
-        // check if success... if not, log error and return false. Other wise log info and also return false
+        VkResult res{ vkDeviceWaitIdle(device.logical) };
+        if (!is_success(res))
+        {
+            LOG_ERRORF("Vulkan backend vkDeviceWaitIdle failed. Error code: {}",
+                       (u32)res); // TODO error code conversion to string function
+            return false;
+        }
+        LOG_DEBUG("Recreating swapchain...");
+        return false;
     }
+
+    // If framebuffer was resized, a new swapchain is needed
+    if (context.framebuffer_size_generation != context.framebuffer_size_last_generation)
+    {
+        VkResult res{ vkDeviceWaitIdle(device.logical) };
+        if (!is_success(res))
+        {
+            LOG_ERRORF("Vulkan backend vkDeviceWaitIdle failed. Error code: {}",
+                       (u32)res); // TODO error code conversion to string function
+            return false;
+        }
+
+        if (!recreate_swapchain())
+        {
+            return false;
+        }
+
+        LOG_DEBUG("Resized...");
+        return false;
+    }
+
+
+    //VkResult res{vkWaitForFences(context.device.logical, 1, &context.in_flight_fences[context.current_frame].handle, true, u64_max)};
+
+    if(!fence::wait(context, &context.in_flight_fences[context.current_frame], u64_max))
+    {
+        LOG_ERROR("In Flight fence wait failed");
+        return false;
+    }
+
+    if (!swapchain::acquire_next_image_index(&context, &context.swapchain, u64_max,
+                                             context.image_available_semaphores[context.current_frame], nullptr,
+                                             &context.image_index))
+    {
+        return false;
+    }
+
+    // Record commands
+    vulkan_command_buffer& cmd_buffer{ context.graphics_cmd_buffers[context.image_index] };
+    commands::reset(&cmd_buffer);
+    commands::begin(&cmd_buffer, false, false, false);
+
+    VkViewport viewport{};
+    viewport.x        = 0.0f;
+    viewport.y        = (f32) context.framebuffer_height;
+    viewport.width    = (f32) context.framebuffer_width;
+    viewport.height   = -(f32) context.framebuffer_height;
+    viewport.minDepth = 0.0f;
+    viewport.maxDepth = 1.0f;
+
+    VkRect2D scissor{};
+    scissor.offset.x = scissor.offset.y = 0;
+    scissor.extent.width                = context.framebuffer_width;
+    scissor.extent.height               = context.framebuffer_height;
+
+    vkCmdSetViewport(cmd_buffer.handle, 0, 1, &viewport);
+    vkCmdSetScissor(cmd_buffer.handle, 0, 1, &scissor);
+
+    context.main_renderpass.w = (f32) context.framebuffer_width;
+    context.main_renderpass.h = (f32) context.framebuffer_height;
+
+    renderpass::begin(&cmd_buffer, context.main_renderpass, context.swapchain.framebuffers[context.image_index].handle);
 
 
     return true;
@@ -359,6 +497,44 @@ bool begin_frame(f32 delta)
 
 bool end_frame(f32 delta)
 {
+    vulkan_command_buffer& cmd_buffer{ context.graphics_cmd_buffers[context.image_index] };
+
+    renderpass::end(&cmd_buffer, &context.main_renderpass);
+    commands::end(&cmd_buffer);
+
+    if (context.images_in_flight[context.image_index] != VK_NULL_HANDLE)
+    {
+        fence::wait(context, context.images_in_flight[context.image_index], u64_max);
+    }
+
+    context.images_in_flight[context.image_index] = &context.in_flight_fences[context.current_frame];
+
+    fence::reset(context, &context.in_flight_fences[context.current_frame]);
+
+    VkSubmitInfo submit_info{ VK_STRUCTURE_TYPE_SUBMIT_INFO };
+    submit_info.commandBufferCount   = 1;
+    submit_info.pCommandBuffers      = &cmd_buffer.handle;
+    submit_info.signalSemaphoreCount = 1;
+    submit_info.pSignalSemaphores    = &context.queue_complete_semaphores[context.current_frame];
+    submit_info.waitSemaphoreCount   = 1;
+    submit_info.pWaitSemaphores      = &context.image_available_semaphores[context.current_frame];
+
+    constexpr VkPipelineStageFlags flags{ VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
+    submit_info.pWaitDstStageMask = &flags;
+
+    VkResult res{ vkQueueSubmit(context.device.graphics_queue, 1, &submit_info,
+                                context.in_flight_fences[context.current_frame].handle) };
+    if (res != VK_SUCCESS)
+    {
+        LOG_ERRORF("vkQueueSubmit failed with error code: {}", (u32)res);
+        return false;
+    }
+
+    commands::update_submitted(&cmd_buffer);
+
+    swapchain::present(&context, &context.swapchain, context.device.graphics_queue, context.device.present_queue,
+                       context.queue_complete_semaphores[context.current_frame], context.image_index);
+
     return true;
 }
 

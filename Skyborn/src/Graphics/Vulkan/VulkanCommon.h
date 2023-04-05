@@ -119,12 +119,12 @@ struct vulkan_framebuffer
 
 struct vulkan_swapchain
 {
-    VkSurfaceFormatKHR image_format{};
-    u8                 max_frames_in_flight{};
-    VkSwapchainKHR     handle{};
-    u32                image_count{};
-    VkImage*           images{};
-    VkImageView*       views{};
+    VkSurfaceFormatKHR           image_format{};
+    u8                           max_frames_in_flight{};
+    VkSwapchainKHR               handle{};
+    u32                          image_count{};
+    utl::heap_array<VkImage>     images{};
+    utl::heap_array<VkImageView> views{};
 
     vulkan_image depth_attachment{};
 
@@ -168,6 +168,9 @@ struct vulkan_context
     u32 framebuffer_width{};
     u32 framebuffer_height{};
 
+    u64 framebuffer_size_generation{};
+    u64 framebuffer_size_last_generation{};
+
 #ifdef _DEBUG
     VkDebugUtilsMessengerEXT debug_messenger{};
 #endif
@@ -198,6 +201,26 @@ struct vulkan_context
 
     i32 (*find_memory_index)(u32 type_filter, u32 property_flags){};
 };
+
+inline bool is_success(VkResult result)
+{
+    switch (result)
+    {
+    case VK_SUCCESS:
+    case VK_NOT_READY:
+    case VK_TIMEOUT:
+    case VK_EVENT_SET:
+    case VK_EVENT_RESET:
+    case VK_INCOMPLETE:
+    case VK_SUBOPTIMAL_KHR:
+    case VK_THREAD_IDLE_KHR:
+    case VK_THREAD_DONE_KHR:
+    case VK_OPERATION_DEFERRED_KHR:
+    case VK_OPERATION_NOT_DEFERRED_KHR:
+    case VK_PIPELINE_COMPILE_REQUIRED_EXT: return true;
+    default: return false;
+    }
+}
 
 
 } // namespace sky::graphics::vk

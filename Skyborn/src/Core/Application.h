@@ -55,6 +55,7 @@ public:
 
     virtual void on_resize(i32 width, i32 height) = 0;
 
+    application_desc& desc() { return m_desc; }
     [[nodiscard]] constexpr const application_desc& desc() const { return m_desc; }
 
 private:
