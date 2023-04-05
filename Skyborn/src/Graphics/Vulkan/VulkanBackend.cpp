@@ -100,12 +100,12 @@ void create_command_buffers()
     LOG_INFO("Vulkan command buffers created");
 }
 
-void regenerate_framebuffers(vulkan_swapchain* swapchain, vulkan_renderpass* renderpass)
+void regenerate_framebuffers(const vulkan_swapchain& swapchain, vulkan_renderpass* renderpass)
 {
     constexpr u32 attachment_count{2}; // TODO make configurable / dynamic
-    for (u32 i = 0; i < swapchain->image_count; ++i)
+    for (u32 i = 0; i < swapchain.image_count; ++i)
     {
-        const VkImageView attachments[attachment_count]{swapchain->views[i], swapchain->depth_attachment.view};
+        const VkImageView attachments[attachment_count]{swapchain.views[i], swapchain.depth_attachment.view};
 
         framebuffer::create(context, renderpass, context.framebuffer_width, context.framebuffer_height, attachment_count, attachments, &context.swapchain.framebuffers[i]);
     }
@@ -249,7 +249,7 @@ bool initialize(const char* app_name)
     //context.swapchain.framebuffers.resize(context.swapchain.image_count);
     //memory::allocate(context.swapchain.framebuffers, memory_tag::renderer, context.swapchain.image_count);
     context.swapchain.framebuffers.initialize(context.swapchain.image_count);
-    regenerate_framebuffers(&context.swapchain, &context.main_renderpass);
+    regenerate_framebuffers(context.swapchain, &context.main_renderpass);
 
     create_command_buffers();
 
@@ -345,6 +345,15 @@ void on_resized(u16 width, u16 height) {}
 
 bool begin_frame(f32 delta)
 {
+    const vulkan_device& device{context.device};
+
+    if(context.recreating_swapchain)
+    {
+        VkResult res{vkDeviceWaitIdle(device.logical)};
+        // check if success... if not, log error and return false. Other wise log info and also return false
+    }
+
+
     return true;
 }
 

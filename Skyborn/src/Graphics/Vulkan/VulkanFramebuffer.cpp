@@ -29,7 +29,8 @@ namespace sky::graphics::vk::framebuffer
 void create(const vulkan_context& context, vulkan_renderpass* renderpass, u32 width, u32 height, u32 attachment_count,
             const VkImageView* attachments, vulkan_framebuffer* pbuffer)
 {
-    memory::allocate(pbuffer->attachments, memory_tag::renderer, attachment_count);
+    pbuffer->attachments.initialize(attachment_count);
+    //memory::allocate(pbuffer->attachments, memory_tag::renderer, attachment_count);
     pbuffer->attachment_count = attachment_count;
     for (u32 i = 0; i < attachment_count; ++i)
     {
@@ -41,7 +42,7 @@ void create(const vulkan_context& context, vulkan_renderpass* renderpass, u32 wi
     VkFramebufferCreateInfo fb_info{ VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO };
     fb_info.renderPass      = renderpass->handle;
     fb_info.attachmentCount = attachment_count;
-    fb_info.pAttachments    = pbuffer->attachments;
+    fb_info.pAttachments    = pbuffer->attachments.data();
     fb_info.width           = width;
     fb_info.height          = height;
     fb_info.layers          = 1;
@@ -52,7 +53,7 @@ void create(const vulkan_context& context, vulkan_renderpass* renderpass, u32 wi
 void destroy(const vulkan_context& context, vulkan_framebuffer* pbuffer)
 {
     vkDestroyFramebuffer(context.device.logical, pbuffer->handle, context.allocator);
-    memory::free_(pbuffer->attachments, memory_tag::renderer, pbuffer->attachment_count);
+    //memory::free_(pbuffer->attachments, memory_tag::renderer, pbuffer->attachment_count);
     pbuffer->handle           = nullptr;
     pbuffer->renderpass       = nullptr;
     pbuffer->attachment_count = 0;

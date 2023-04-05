@@ -93,6 +93,8 @@ public:
 
     [[nodiscard]] constexpr u64 size() const { return m_size; }
 
+    constexpr T* data() { return m_data; }
+
     [[nodiscard]] constexpr T* data() const { return m_data; }
 
     constexpr T& operator[](u64 index)

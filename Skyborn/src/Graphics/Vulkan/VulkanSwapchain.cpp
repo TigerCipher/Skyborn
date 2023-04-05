@@ -196,6 +196,7 @@ void recreate(vulkan_context* context, u32 width, u32 height, vulkan_swapchain* 
 
 void destroy(const vulkan_context& context, vulkan_swapchain* swapchain)
 {
+    vkDeviceWaitIdle(context.device.logical);
     image::destroy(context, &swapchain->depth_attachment);
 
     for (u32 i = 0; i < swapchain->image_count; ++i)

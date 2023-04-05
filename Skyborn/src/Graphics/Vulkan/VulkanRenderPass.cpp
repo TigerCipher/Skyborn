@@ -29,6 +29,19 @@ namespace sky::graphics::vk::renderpass
 void create(vulkan_context* context, vulkan_renderpass* prenderpass, f32 x, f32 y, f32 w, f32 h, f32 r, f32 g, f32 b, f32 a,
             f32 depth, f32 stencil)
 {
+    prenderpass->x       = x;
+    prenderpass->y       = y;
+    prenderpass->w       = w;
+    prenderpass->h       = h;
+
+    prenderpass->r       = r;
+    prenderpass->g       = g;
+    prenderpass->b       = b;
+    prenderpass->a       = a;
+
+    prenderpass->depth   = depth;
+    prenderpass->stencil = stencil;
+
     // Main subpass
     VkSubpassDescription subpass{};
     subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
@@ -119,7 +132,7 @@ void create(vulkan_context* context, vulkan_renderpass* prenderpass, f32 x, f32 
 
 void destroy(const vulkan_context& context, vulkan_renderpass* prenderpass)
 {
-    if(prenderpass && prenderpass->handle)
+    if (prenderpass && prenderpass->handle)
     {
         vkDestroyRenderPass(context.device.logical, prenderpass->handle, context.allocator);
         prenderpass->handle = nullptr;
@@ -128,13 +141,13 @@ void destroy(const vulkan_context& context, vulkan_renderpass* prenderpass)
 
 void begin(vulkan_command_buffer* cmd_buffer, const vulkan_renderpass& renderpass, VkFramebuffer frame_buffer)
 {
-    VkRenderPassBeginInfo begin_info    { VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO };
+    VkRenderPassBeginInfo begin_info{ VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO };
     begin_info.renderPass               = renderpass.handle;
     begin_info.framebuffer              = frame_buffer;
-    begin_info.renderArea.offset.x      = (i32)renderpass.x;
-    begin_info.renderArea.offset.y      = (i32)renderpass.y;
-    begin_info.renderArea.extent.width  = (i32)renderpass.w;
-    begin_info.renderArea.extent.height = (i32)renderpass.h;
+    begin_info.renderArea.offset.x      = (i32) renderpass.x;
+    begin_info.renderArea.offset.y      = (i32) renderpass.y;
+    begin_info.renderArea.extent.width  = (i32) renderpass.w;
+    begin_info.renderArea.extent.height = (i32) renderpass.h;
 
     VkClearValue clear_values[2]{};
     clear_values[0].color.float32[0]     = renderpass.r;

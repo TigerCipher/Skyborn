@@ -112,8 +112,9 @@ struct vulkan_framebuffer
     vulkan_renderpass* renderpass{};
 
     //utl::vector<VkImageView, memory_tag::renderer> attachments{};
-    VkImageView* attachments{}; // never resizes, I think it will be faster to not use a vector for this
-    u32          attachment_count{};
+    //VkImageView* attachments{}; // never resizes, I think it will be faster to not use a vector for this
+    utl::heap_array<VkImageView> attachments{};
+    u32                          attachment_count{};
 };
 
 struct vulkan_swapchain
