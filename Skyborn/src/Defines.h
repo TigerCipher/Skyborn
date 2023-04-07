@@ -125,6 +125,9 @@ constexpr u64 u64_max{ 0xffff'ffff'ffff'ffffui64 };
 template<typename T, typename... Args>
 concept constructible_from_args = std::constructible_from<T, Args...>;
 
+template<typename T>
+concept primitive_type = std::is_arithmetic_v<T>;
+
 constexpr auto operator""_KB(const u64 x)
 {
     return x * 1024u;

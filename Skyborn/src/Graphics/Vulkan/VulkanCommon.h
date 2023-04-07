@@ -32,7 +32,13 @@
 #include "Utl/HeapArray.h"
 
 #ifdef _DEBUG
-    #define VK_CHECK(expr) assert((expr) == VK_SUCCESS)
+    #define VK_CHECK(expr)                                                                                                       \
+        if ((expr) != VK_SUCCESS)                                                                                                \
+        {                                                                                                                        \
+            LOG_ERRORF("Vulkan Call Error > {}", #expr);                                                                         \
+            LOG_ERRORF("In {} at line {}", __FILE__, __LINE__);                                                                  \
+            assert(false);                                                                                                       \
+        }
 #else
     #define VK_CHECK(expr) expr
 #endif
