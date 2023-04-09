@@ -241,36 +241,6 @@ public:
     }
 };
 
-inline f32 distance(const vector2& first, const vector2& second)
-{
-    const vector2 dist{ first.x - second.x, first.y - second.y };
-    return dist.length();
-}
-
-constexpr vector2 lerp(const vector2& a, const vector2& b, f32 f)
-{
-    return a + f * (b - a);
-}
-
-constexpr f32 dot(const vector2& a, const vector2& b)
-{
-    return a.x * b.x + a.y * b.y;
-}
-
-// Reflects vector V around vector N (N is expected to be normalized)
-// Returns a copy
-constexpr vector2 reflect(const vector2& v, const vector2& n)
-{
-    return v - 2.0f * dot(v, n) * n;
-}
-
-constexpr vector2 zero_vec2  = {};
-constexpr vector2 one_vec2   = { 1.0f };
-constexpr vector2 up_vec2    = { 0.0f, 1.0f };
-constexpr vector2 down_vec2  = { 0.0f, -1.0f };
-constexpr vector2 right_vec2 = { 1.0f, 0.0f };
-constexpr vector2 left_vec2  = { -1.0f, 0.0f };
-
 class vector3
 {
 public:
@@ -404,7 +374,7 @@ public:
         return *this;
     }
 
-     bool operator==(const vector3& other) const noexcept
+    bool operator==(const vector3& other) const noexcept
     {
         return is_equal(x, other.x) && is_equal(y, other.y) && is_equal(z, other.z);
     }
@@ -428,7 +398,7 @@ public:
     }
 
     // Normalizes this vector and returns it as a reference
-     vector3& normalize() noexcept
+    vector3& normalize() noexcept
     {
         const f32 len{ length() };
         x /= len;
@@ -437,340 +407,6 @@ public:
         return *this;
     }
 };
-
- inline f32 distance(const vector3& a, const vector3& b)
-{
-    const vector3 dist{ a.x - b.x, a.y - b.y, a.z - b.z };
-    return dist.length();
-}
-
-constexpr f32 dot(const vector3& a, const vector3& b)
-{
-    return a.x * b.x + a.y * b.y + a.z * b.z;
-}
-
-constexpr vector3 cross(const vector3& a, const vector3& b)
-{
-    return { a.y * b.z - a.z * b.y, a.z * b.x - a.x * b.z, a.x * b.y - a.y * b.x };
-}
-
-constexpr vector3 lerp(const vector3& a, const vector3& b, f32 f)
-{
-    return a + f * (b - a);
-}
-
-constexpr vector3 zero_vec3    = {};
-constexpr vector3 one_vec3     = { 1.0f };
-constexpr vector3 up_vec3      = { 0.0f, 1.0f, 0.0f };
-constexpr vector3 down_vec3    = { 0.0f, -1.0f, 0.0f };
-constexpr vector3 right_vec3   = { 1.0f, 0.0f, 0.0f };
-constexpr vector3 left_vec3    = { -1.0f, 0.0f, 0.0f };
-constexpr vector3 forward_vec3 = { 0.0f, 0.0f, -1.0f };
-constexpr vector3 back_vec3    = { 0.0f, 0.0f, 1.0f };
-
-class vector4
-{
-public:
-    union
-    {
-#if SKY_USE_SIMD
-        alignas(16) __m128 data;
-#endif
-        alignas(16) f32 elements[4]{};
-
-        struct
-        {
-            union
-            {
-                f32 x, r, s;
-            };
-
-            union
-            {
-                f32 y, g, t;
-            };
-
-            union
-            {
-                f32 z, b, p;
-            };
-
-            union
-            {
-                f32 w, a, q;
-            };
-        };
-    };
-
-    constexpr vector4() noexcept = default;
-
-    constexpr vector4(f32 value) noexcept : x{ value }, y{ value }, z{ value }, w{ value } {}
-
-    constexpr vector4(f32 _x, f32 _y, f32 _z, f32 _w) noexcept : x{ _x }, y{ _y }, z{ _z }, w{ _w } {}
-
-    constexpr vector4(const vector3& vec, f32 _w) noexcept : x{ vec.x }, y{ vec.y }, z{ vec.z }, w{ _w } {}
-
-#if SKY_USE_SIMD
-    vector4(__m128 _data) noexcept : data{ _data } {}
-
-    friend vector4 operator+(const vector4& a, const vector4& b) noexcept { return { _mm_add_ps(a.data, b.data) }; }
-
-    friend vector4 operator-(const vector4& a, const vector4& b) noexcept { return { _mm_sub_ps(a.data, b.data) }; }
-
-    friend vector4 operator*(const vector4& a, const vector4& b) noexcept { return { _mm_mul_ps(a.data, b.data) }; }
-
-    friend vector4 operator*(const vector4& v, f32 scalar) noexcept { return { _mm_mul_ps(v.data, _mm_set1_ps(scalar)) }; }
-
-    friend vector4 operator*(f32 scalar, const vector4& v) noexcept { return { _mm_mul_ps(v.data, _mm_set1_ps(scalar)) }; }
-
-    friend vector4 operator/(const vector4& a, const vector4& b) noexcept { return { _mm_div_ps(a.data, b.data) }; }
-
-    friend vector4 operator/(const vector4& v, f32 scalar) noexcept { return { _mm_div_ps(v.data, _mm_set1_ps(scalar)) }; }
-
-    vector4& operator+=(const vector4& right) noexcept
-    {
-        data = _mm_add_ps(data, right.data);
-        return *this;
-    }
-
-    vector4& operator-=(const vector4& right) noexcept
-    {
-        data = _mm_sub_ps(data, right.data);
-        return *this;
-    }
-
-    vector4& operator*=(const vector4& right) noexcept
-    {
-        data = _mm_mul_ps(data, right.data);
-        return *this;
-    }
-
-    vector4& operator/=(const vector4& right) noexcept
-    {
-        data = _mm_div_ps(data, right.data);
-        return *this;
-    }
-
-    vector4& operator+=(f32 scalar) noexcept
-    {
-        data = _mm_add_ps(data, _mm_set1_ps(scalar));
-        return *this;
-    }
-
-    vector4& operator-=(f32 scalar) noexcept
-    {
-        data = _mm_sub_ps(data, _mm_set1_ps(scalar));
-        return *this;
-    }
-
-    vector4& operator*=(f32 scalar) noexcept
-    {
-        data = _mm_mul_ps(data, _mm_set1_ps(scalar));
-        return *this;
-    }
-
-    vector4& operator/=(f32 scalar) noexcept
-    {
-        data = _mm_div_ps(data, _mm_set1_ps(scalar));
-        return *this;
-    }
-
-    [[nodiscard]] f32 length_squared() const noexcept
-    {
-        const __m128 product{ _mm_mul_ps(data, data) };
-        const __m128 sum1{ _mm_add_ps(product, _mm_shuffle_ps(product, product, _MM_SHUFFLE(2, 3, 0, 1))) };
-        const __m128 sum2{ _mm_add_ps(sum1, _mm_shuffle_ps(sum1, sum1, _MM_SHUFFLE(1, 0, 3, 2))) };
-
-        f32 result;
-        _mm_store_ss(&result, sum2);
-        return result;
-    }
-
-    [[nodiscard]] f32 length() const noexcept
-    {
-        const __m128 product{ _mm_mul_ps(data, data) };
-        const __m128 sum1{ _mm_add_ps(product, _mm_shuffle_ps(product, product, _MM_SHUFFLE(2, 3, 0, 1))) };
-        const __m128 sum2{ _mm_add_ps(sum1, _mm_shuffle_ps(sum1, sum1, _MM_SHUFFLE(1, 0, 3, 2))) };
-        const __m128 result{ _mm_sqrt_ss(sum2) };
-
-        f32 length;
-        _mm_store_ss(&length, result);
-        return length;
-    }
-
-    // returns a copy of this vector, normalized
-    [[nodiscard]] vector4 normalized() const noexcept
-    {
-        const f32 len{ length() };
-        return { _mm_div_ps(data, _mm_set1_ps(len)) };
-    }
-
-    // Normalizes this vector and returns it as a reference
-    vector4& normalize() noexcept
-    {
-        const f32 len{ length() };
-        data = _mm_div_ps(data, _mm_set1_ps(len));
-        return *this;
-    }
-#else
-    constexpr friend vector4 operator+(const vector4& a, const vector4& b) noexcept
-    {
-        return { a.x + b.x, a.y + b.y, a.z + b.z, a.w + b.w };
-    }
-
-    constexpr friend vector4 operator-(const vector4& a, const vector4& b) noexcept
-    {
-        return { a.x - b.x, a.y - b.y, a.z - b.z, a.w - b.w };
-    }
-
-    constexpr friend vector4 operator*(const vector4& a, const vector4& b) noexcept
-    {
-        return { a.x * b.x, a.y * b.y, a.z * b.z, a.w * b.w };
-    }
-
-    constexpr friend vector4 operator*(const vector4& v, f32 scalar) noexcept
-    {
-        return { v.x * scalar, v.y * scalar, v.z * scalar, v.w * scalar };
-    }
-
-    constexpr friend vector4 operator*(f32 scalar, const vector4& v) noexcept
-    {
-        return { v.x * scalar, v.y * scalar, v.z * scalar, v.w * scalar };
-    }
-
-    constexpr friend vector4 operator/(const vector4& a, const vector4& b) noexcept
-    {
-        return { a.x / b.x, a.y / b.y, a.z / b.z, a.w / b.w };
-    }
-
-    constexpr friend vector4 operator/(const vector4& v, f32 scalar) noexcept
-    {
-        return { v.x / scalar, v.y / scalar, v.z / scalar, v.w / scalar };
-    }
-
-    constexpr vector4& operator+=(const vector4& right) noexcept
-    {
-        x += right.x;
-        y += right.y;
-        z += right.z;
-        w += right.w;
-        return *this;
-    }
-
-    constexpr vector4& operator-=(const vector4& right) noexcept
-    {
-        x -= right.x;
-        y -= right.y;
-        z -= right.z;
-        w -= right.w;
-        return *this;
-    }
-
-    constexpr vector4& operator*=(const vector4& right) noexcept
-    {
-        x *= right.x;
-        y *= right.y;
-        z *= right.z;
-        w *= right.w;
-        return *this;
-    }
-
-    constexpr vector4& operator/=(const vector4& right) noexcept
-    {
-        x /= right.x;
-        y /= right.y;
-        z /= right.z;
-        w /= right.w;
-        return *this;
-    }
-
-    constexpr vector4& operator+=(f32 scalar) noexcept
-    {
-        x += scalar;
-        y += scalar;
-        z += scalar;
-        w += scalar;
-        return *this;
-    }
-
-    constexpr vector4& operator-=(f32 scalar) noexcept
-    {
-        x -= scalar;
-        y -= scalar;
-        z -= scalar;
-        w -= scalar;
-        return *this;
-    }
-
-    constexpr vector4& operator*=(f32 scalar) noexcept
-    {
-        x *= scalar;
-        y *= scalar;
-        z *= scalar;
-        w *= scalar;
-        return *this;
-    }
-
-    constexpr vector4& operator/=(f32 scalar) noexcept
-    {
-        x /= scalar;
-        y /= scalar;
-        z /= scalar;
-        w /= scalar;
-        return *this;
-    }
-
-    [[nodiscard]] constexpr f32 length_squared() const noexcept { return x * x + y * y + z * z + w * w; }
-
-    [[nodiscard]] constexpr f32 length() const noexcept { return sqrt(length_squared()); }
-
-    // returns a copy of this vector, normalized
-    [[nodiscard]] constexpr vector4 normalized() const noexcept
-    {
-        const f32 len{ length() };
-        return { x / len, y / len, z / len, w / len };
-    }
-
-    // Normalizes this vector and returns it as a reference
-    constexpr vector4& normalize() noexcept
-    {
-        const f32 len{ length() };
-        x /= len;
-        y /= len;
-        z /= len;
-        w /= len;
-        return *this;
-    }
-
-#endif
-
-     bool operator==(const vector4& other) const noexcept
-    {
-        return is_equal(x, other.x) && is_equal(y, other.y) && is_equal(z, other.z) && is_equal(w, other.w);
-    }
-
-     bool operator!=(const vector4& other) const noexcept
-    {
-        return !is_equal(x, other.x) || !is_equal(y, other.y) || !is_equal(z, other.z) || !is_equal(w, other.w);
-    }
-
-    explicit constexpr operator vector2() const { return vector2{ x, y }; }
-
-    explicit constexpr operator vector3() const { return vector3{ x, y, z }; }
-};
-
-constexpr f32 dot(const vector4& a, const vector4& b)
-{
-    return a.x * b.x + a.y * b.y + a.z * b.z + a.w * b.w;
-}
-
-inline vector4 lerp(const vector4& a, const vector4& b, f32 f)
-{
-    return a + f * (b - a);
-}
-
-constexpr vector4 zero_vec4 = {};
-constexpr vector4 one_vec4  = { 1.0f };
 
 class matrix
 {
@@ -786,7 +422,7 @@ public:
 
     // Can be used to quickly set up a matrix filled with zeros and then value at 00, 11, 22, 33 positions.
     // In other words, matrix{1.0f} creates an identity matrix
-    explicit constexpr matrix(f32 value) noexcept
+    constexpr matrix(f32 value) noexcept
     {
         elements[0][0] = value;
         elements[1][1] = value;
@@ -1041,6 +677,381 @@ private:
 #endif
 };
 
+class vector4
+{
+public:
+    union
+    {
+#if SKY_USE_SIMD
+        alignas(16) __m128 data;
+#endif
+        alignas(16) f32 elements[4]{};
+
+        struct
+        {
+            union
+            {
+                f32 x, r, s;
+            };
+
+            union
+            {
+                f32 y, g, t;
+            };
+
+            union
+            {
+                f32 z, b, p;
+            };
+
+            union
+            {
+                f32 w, a, q;
+            };
+        };
+    };
+
+    constexpr vector4() noexcept = default;
+
+    // Creates identity vector (or vector with value at W)
+    constexpr vector4(f32 value) noexcept : x{ 0.0f }, y{ 0.0f }, z{ 0.0f }, w{ value } {}
+
+    constexpr vector4(f32 _x, f32 _y, f32 _z, f32 _w) noexcept : x{ _x }, y{ _y }, z{ _z }, w{ _w } {}
+
+    constexpr vector4(const vector3& vec, f32 _w) noexcept : x{ vec.x }, y{ vec.y }, z{ vec.z }, w{ _w } {}
+
+#if SKY_USE_SIMD
+    vector4(__m128 _data) noexcept : data{ _data } {}
+
+    friend vector4 operator+(const vector4& a, const vector4& b) noexcept { return { _mm_add_ps(a.data, b.data) }; }
+
+    friend vector4 operator-(const vector4& a, const vector4& b) noexcept { return { _mm_sub_ps(a.data, b.data) }; }
+
+    friend vector4 operator*(const vector4& a, const vector4& b) noexcept { return { _mm_mul_ps(a.data, b.data) }; }
+
+    friend vector4 operator*(const vector4& v, f32 scalar) noexcept { return { _mm_mul_ps(v.data, _mm_set1_ps(scalar)) }; }
+
+    friend vector4 operator*(f32 scalar, const vector4& v) noexcept { return { _mm_mul_ps(v.data, _mm_set1_ps(scalar)) }; }
+
+    friend vector4 operator/(const vector4& a, const vector4& b) noexcept { return { _mm_div_ps(a.data, b.data) }; }
+
+    friend vector4 operator/(const vector4& v, f32 scalar) noexcept { return { _mm_div_ps(v.data, _mm_set1_ps(scalar)) }; }
+
+    vector4& operator+=(const vector4& right) noexcept
+    {
+        data = _mm_add_ps(data, right.data);
+        return *this;
+    }
+
+    vector4& operator-=(const vector4& right) noexcept
+    {
+        data = _mm_sub_ps(data, right.data);
+        return *this;
+    }
+
+    vector4& operator*=(const vector4& right) noexcept
+    {
+        data = _mm_mul_ps(data, right.data);
+        return *this;
+    }
+
+    vector4& operator/=(const vector4& right) noexcept
+    {
+        data = _mm_div_ps(data, right.data);
+        return *this;
+    }
+
+    vector4& operator+=(f32 scalar) noexcept
+    {
+        data = _mm_add_ps(data, _mm_set1_ps(scalar));
+        return *this;
+    }
+
+    vector4& operator-=(f32 scalar) noexcept
+    {
+        data = _mm_sub_ps(data, _mm_set1_ps(scalar));
+        return *this;
+    }
+
+    vector4& operator*=(f32 scalar) noexcept
+    {
+        data = _mm_mul_ps(data, _mm_set1_ps(scalar));
+        return *this;
+    }
+
+    vector4& operator/=(f32 scalar) noexcept
+    {
+        data = _mm_div_ps(data, _mm_set1_ps(scalar));
+        return *this;
+    }
+
+    [[nodiscard]] f32 length_squared() const noexcept
+    {
+        const __m128 product{ _mm_mul_ps(data, data) };
+        const __m128 sum1{ _mm_add_ps(product, _mm_shuffle_ps(product, product, _MM_SHUFFLE(2, 3, 0, 1))) };
+        const __m128 sum2{ _mm_add_ps(sum1, _mm_shuffle_ps(sum1, sum1, _MM_SHUFFLE(1, 0, 3, 2))) };
+
+        f32 result;
+        _mm_store_ss(&result, sum2);
+        return result;
+    }
+
+    [[nodiscard]] f32 length() const noexcept
+    {
+        const __m128 product{ _mm_mul_ps(data, data) };
+        const __m128 sum1{ _mm_add_ps(product, _mm_shuffle_ps(product, product, _MM_SHUFFLE(2, 3, 0, 1))) };
+        const __m128 sum2{ _mm_add_ps(sum1, _mm_shuffle_ps(sum1, sum1, _MM_SHUFFLE(1, 0, 3, 2))) };
+        const __m128 result{ _mm_sqrt_ss(sum2) };
+
+        f32 length;
+        _mm_store_ss(&length, result);
+        return length;
+    }
+
+    // returns a copy of this vector, normalized
+    [[nodiscard]] vector4 normalized() const noexcept
+    {
+        const f32 len{ length() };
+        return { _mm_div_ps(data, _mm_set1_ps(len)) };
+    }
+
+    // Normalizes this vector and returns it as a reference
+    vector4& normalize() noexcept
+    {
+        const f32 len{ length() };
+        data = _mm_div_ps(data, _mm_set1_ps(len));
+        return *this;
+    }
+#else
+    constexpr friend vector4 operator+(const vector4& a, const vector4& b) noexcept
+    {
+        return { a.x + b.x, a.y + b.y, a.z + b.z, a.w + b.w };
+    }
+
+    constexpr friend vector4 operator-(const vector4& a, const vector4& b) noexcept
+    {
+        return { a.x - b.x, a.y - b.y, a.z - b.z, a.w - b.w };
+    }
+
+    constexpr friend vector4 operator*(const vector4& a, const vector4& b) noexcept
+    {
+        return { a.x * b.x, a.y * b.y, a.z * b.z, a.w * b.w };
+    }
+
+    constexpr friend vector4 operator*(const vector4& v, f32 scalar) noexcept
+    {
+        return { v.x * scalar, v.y * scalar, v.z * scalar, v.w * scalar };
+    }
+
+    constexpr friend vector4 operator*(f32 scalar, const vector4& v) noexcept
+    {
+        return { v.x * scalar, v.y * scalar, v.z * scalar, v.w * scalar };
+    }
+
+    constexpr friend vector4 operator/(const vector4& a, const vector4& b) noexcept
+    {
+        return { a.x / b.x, a.y / b.y, a.z / b.z, a.w / b.w };
+    }
+
+    constexpr friend vector4 operator/(const vector4& v, f32 scalar) noexcept
+    {
+        return { v.x / scalar, v.y / scalar, v.z / scalar, v.w / scalar };
+    }
+
+    constexpr vector4& operator+=(const vector4& right) noexcept
+    {
+        x += right.x;
+        y += right.y;
+        z += right.z;
+        w += right.w;
+        return *this;
+    }
+
+    constexpr vector4& operator-=(const vector4& right) noexcept
+    {
+        x -= right.x;
+        y -= right.y;
+        z -= right.z;
+        w -= right.w;
+        return *this;
+    }
+
+    constexpr vector4& operator*=(const vector4& right) noexcept
+    {
+        x *= right.x;
+        y *= right.y;
+        z *= right.z;
+        w *= right.w;
+        return *this;
+    }
+
+    constexpr vector4& operator/=(const vector4& right) noexcept
+    {
+        x /= right.x;
+        y /= right.y;
+        z /= right.z;
+        w /= right.w;
+        return *this;
+    }
+
+    constexpr vector4& operator+=(f32 scalar) noexcept
+    {
+        x += scalar;
+        y += scalar;
+        z += scalar;
+        w += scalar;
+        return *this;
+    }
+
+    constexpr vector4& operator-=(f32 scalar) noexcept
+    {
+        x -= scalar;
+        y -= scalar;
+        z -= scalar;
+        w -= scalar;
+        return *this;
+    }
+
+    constexpr vector4& operator*=(f32 scalar) noexcept
+    {
+        x *= scalar;
+        y *= scalar;
+        z *= scalar;
+        w *= scalar;
+        return *this;
+    }
+
+    constexpr vector4& operator/=(f32 scalar) noexcept
+    {
+        x /= scalar;
+        y /= scalar;
+        z /= scalar;
+        w /= scalar;
+        return *this;
+    }
+
+    [[nodiscard]] constexpr f32 length_squared() const noexcept { return x * x + y * y + z * z + w * w; }
+
+    [[nodiscard]] constexpr f32 length() const noexcept { return sqrt(length_squared()); }
+
+    // returns a copy of this vector, normalized
+    [[nodiscard]] constexpr vector4 normalized() const noexcept
+    {
+        const f32 len{ length() };
+        return { x / len, y / len, z / len, w / len };
+    }
+
+    // Normalizes this vector and returns it as a reference
+    constexpr vector4& normalize() noexcept
+    {
+        const f32 len{ length() };
+        x /= len;
+        y /= len;
+        z /= len;
+        w /= len;
+        return *this;
+    }
+
+#endif
+
+    [[nodiscard]] f32 normal() const noexcept { return length(); }
+
+    bool operator==(const vector4& other) const noexcept
+    {
+        return is_equal(x, other.x) && is_equal(y, other.y) && is_equal(z, other.z) && is_equal(w, other.w);
+    }
+
+    bool operator!=(const vector4& other) const noexcept
+    {
+        return !is_equal(x, other.x) || !is_equal(y, other.y) || !is_equal(z, other.z) || !is_equal(w, other.w);
+    }
+
+    explicit constexpr operator vector2() const { return vector2{ x, y }; }
+
+    explicit constexpr operator vector3() const { return vector3{ x, y, z }; }
+
+    // TODO: SIMD Version
+    explicit operator matrix() const noexcept
+    {
+        matrix result{ 1.0f };
+        // https://stackoverflow.com/questions/1556260/convert-quaternion-rotation-to-rotation-matrix
+
+        const vector4 n{ normalized() };
+
+        result.m[0] = 1.0f - 2.0f * n.y * n.y - 2.0f * n.z * n.z;
+        result.m[1] = 2.0f * n.x * n.y - 2.0f * n.z * n.w;
+        result.m[2] = 2.0f * n.x * n.z + 2.0f * n.y * n.w;
+
+        result.m[4] = 2.0f * n.x * n.y + 2.0f * n.z * n.w;
+        result.m[5] = 1.0f - 2.0f * n.x * n.x - 2.0f * n.z * n.z;
+        result.m[6] = 2.0f * n.y * n.z - 2.0f * n.x * n.w;
+
+        result.m[8]  = 2.0f * n.x * n.z - 2.0f * n.y * n.w;
+        result.m[9]  = 2.0f * n.y * n.z + 2.0f * n.x * n.w;
+        result.m[10] = 1.0f - 2.0f * n.x * n.x - 2.0f * n.y * n.y;
+
+        return result;
+    }
+
+    [[nodiscard]] constexpr vector4 conjugate() const noexcept { return { -x, -y, -z, w }; }
+
+    [[nodiscard]] vector4 inverse() const noexcept { return conjugate().normalized(); }
+};
+
+inline f32 distance(const vector2& first, const vector2& second)
+{
+    const vector2 dist{ first.x - second.x, first.y - second.y };
+    return dist.length();
+}
+
+constexpr vector2 lerp(const vector2& a, const vector2& b, f32 f)
+{
+    return a + f * (b - a);
+}
+
+constexpr f32 dot(const vector2& a, const vector2& b)
+{
+    return a.x * b.x + a.y * b.y;
+}
+
+// Reflects vector V around vector N (N is expected to be normalized)
+// Returns a copy
+constexpr vector2 reflect(const vector2& v, const vector2& n)
+{
+    return v - 2.0f * dot(v, n) * n;
+}
+
+inline f32 distance(const vector3& a, const vector3& b)
+{
+    const vector3 dist{ a.x - b.x, a.y - b.y, a.z - b.z };
+    return dist.length();
+}
+
+constexpr f32 dot(const vector3& a, const vector3& b)
+{
+    return a.x * b.x + a.y * b.y + a.z * b.z;
+}
+
+constexpr vector3 cross(const vector3& a, const vector3& b)
+{
+    return { a.y * b.z - a.z * b.y, a.z * b.x - a.x * b.z, a.x * b.y - a.y * b.x };
+}
+
+constexpr vector3 lerp(const vector3& a, const vector3& b, f32 f)
+{
+    return a + f * (b - a);
+}
+
+constexpr f32 dot(const vector4& a, const vector4& b)
+{
+    return a.x * b.x + a.y * b.y + a.z * b.z + a.w * b.w;
+}
+
+inline vector4 lerp(const vector4& a, const vector4& b, f32 f)
+{
+    return a + f * (b - a);
+}
+
 inline matrix transpose(const matrix& mat) noexcept
 {
     matrix result{ 1.0f };
@@ -1260,358 +1271,9 @@ inline vector3 right(const matrix& mat)
     return result;
 }
 
-class quaternion
-{
-public:
-    union
-    {
-#if SKY_USE_SIMD
-        alignas(16) __m128 data;
-#endif
-        alignas(16) f32 elements[4]{};
-
-        struct
-        {
-            union
-            {
-                f32 x, r, s;
-            };
-
-            union
-            {
-                f32 y, g, t;
-            };
-
-            union
-            {
-                f32 z, b, p;
-            };
-
-            union
-            {
-                f32 w, a, q;
-            };
-        };
-    };
-
-    constexpr quaternion() noexcept = default;
-
-    // Creates an matrix with value at the W slot. A value of 1.0 creates an identity quaternion
-    constexpr quaternion(f32 value) noexcept : x{ 0.0f }, y{ 0.0f }, z{ 0.0f }, w{ value } {}
-
-    constexpr quaternion(f32 _x, f32 _y, f32 _z, f32 _w) noexcept : x{ _x }, y{ _y }, z{ _z }, w{ _w } {}
-
-    constexpr quaternion(const vector3& vec, f32 _w) noexcept : x{ vec.x }, y{ vec.y }, z{ vec.z }, w{ _w } {}
-
-    constexpr quaternion(const vector4& vec) noexcept : x{ vec.x }, y{ vec.y }, z{ vec.z }, w{ vec.w } {}
-
-#if SKY_USE_SIMD
-    quaternion(__m128 _data) noexcept : data{ _data } {}
-
-    friend quaternion operator+(const quaternion& a, const quaternion& b) noexcept { return { _mm_add_ps(a.data, b.data) }; }
-
-    friend quaternion operator-(const quaternion& a, const quaternion& b) noexcept { return { _mm_sub_ps(a.data, b.data) }; }
-
-    //friend quaternion operator*(const quaternion& a, const quaternion& b) noexcept { return { _mm_mul_ps(a.data, b.data) }; }
-
-    friend quaternion operator*(const quaternion& v, f32 scalar) noexcept { return { _mm_mul_ps(v.data, _mm_set1_ps(scalar)) }; }
-
-    friend quaternion operator*(f32 scalar, const quaternion& v) noexcept { return { _mm_mul_ps(v.data, _mm_set1_ps(scalar)) }; }
-
-    friend quaternion operator/(const quaternion& a, const quaternion& b) noexcept { return { _mm_div_ps(a.data, b.data) }; }
-
-    friend quaternion operator/(const quaternion& v, f32 scalar) noexcept { return { _mm_div_ps(v.data, _mm_set1_ps(scalar)) }; }
-
-    quaternion& operator+=(const quaternion& right) noexcept
-    {
-        data = _mm_add_ps(data, right.data);
-        return *this;
-    }
-
-    quaternion& operator-=(const quaternion& right) noexcept
-    {
-        data = _mm_sub_ps(data, right.data);
-        return *this;
-    }
-
-    //quaternion& operator*=(const quaternion& right) noexcept
-    //{
-    //    data = _mm_mul_ps(data, right.data);
-    //    return *this;
-    //}
-
-    quaternion& operator/=(const quaternion& right) noexcept
-    {
-        data = _mm_div_ps(data, right.data);
-        return *this;
-    }
-
-    quaternion& operator+=(f32 scalar) noexcept
-    {
-        data = _mm_add_ps(data, _mm_set1_ps(scalar));
-        return *this;
-    }
-
-    quaternion& operator-=(f32 scalar) noexcept
-    {
-        data = _mm_sub_ps(data, _mm_set1_ps(scalar));
-        return *this;
-    }
-
-    quaternion& operator*=(f32 scalar) noexcept
-    {
-        data = _mm_mul_ps(data, _mm_set1_ps(scalar));
-        return *this;
-    }
-
-    quaternion& operator/=(f32 scalar) noexcept
-    {
-        data = _mm_div_ps(data, _mm_set1_ps(scalar));
-        return *this;
-    }
-
-    [[nodiscard]] f32 normal_squared() const noexcept
-    {
-        const __m128 product{ _mm_mul_ps(data, data) };
-        const __m128 sum1{ _mm_add_ps(product, _mm_shuffle_ps(product, product, _MM_SHUFFLE(2, 3, 0, 1))) };
-        const __m128 sum2{ _mm_add_ps(sum1, _mm_shuffle_ps(sum1, sum1, _MM_SHUFFLE(1, 0, 3, 2))) };
-
-        f32 result;
-        _mm_store_ss(&result, sum2);
-        return result;
-    }
-
-    [[nodiscard]] f32 normal() const noexcept
-    {
-        const __m128 product{ _mm_mul_ps(data, data) };
-        const __m128 sum1{ _mm_add_ps(product, _mm_shuffle_ps(product, product, _MM_SHUFFLE(2, 3, 0, 1))) };
-        const __m128 sum2{ _mm_add_ps(sum1, _mm_shuffle_ps(sum1, sum1, _MM_SHUFFLE(1, 0, 3, 2))) };
-        const __m128 result{ _mm_sqrt_ss(sum2) };
-
-        f32 length;
-        _mm_store_ss(&length, result);
-        return length;
-    }
-
-    // returns a copy of this vector, normalized
-    [[nodiscard]] quaternion normalized() const noexcept
-    {
-        const f32 len{ normal() };
-        return { _mm_div_ps(data, _mm_set1_ps(len)) };
-    }
-
-    // Normalizes this vector and returns it as a reference
-    quaternion& normalize() noexcept
-    {
-        const f32 len{ normal() };
-        data = _mm_div_ps(data, _mm_set1_ps(len));
-        return *this;
-    }
-#else
-    constexpr friend quaternion operator+(const quaternion& a, const quaternion& b) noexcept
-    {
-        return { a.x + b.x, a.y + b.y, a.z + b.z, a.w + b.w };
-    }
-
-    constexpr friend quaternion operator-(const quaternion& a, const quaternion& b) noexcept
-    {
-        return { a.x - b.x, a.y - b.y, a.z - b.z, a.w - b.w };
-    }
-
-    //constexpr friend quaternion operator*(const quaternion& a, const quaternion& b) noexcept
-    //{
-    //    return { a.x * b.x, a.y * b.y, a.z * b.z, a.w * b.w };
-    //}
-
-    constexpr friend quaternion operator*(const quaternion& v, f32 scalar) noexcept
-    {
-        return { v.x * scalar, v.y * scalar, v.z * scalar, v.w * scalar };
-    }
-
-    constexpr friend quaternion operator*(f32 scalar, const quaternion& v) noexcept
-    {
-        return { v.x * scalar, v.y * scalar, v.z * scalar, v.w * scalar };
-    }
-
-    constexpr friend quaternion operator/(const quaternion& a, const quaternion& b) noexcept
-    {
-        return { a.x / b.x, a.y / b.y, a.z / b.z, a.w / b.w };
-    }
-
-    constexpr friend quaternion operator/(const quaternion& v, f32 scalar) noexcept
-    {
-        return { v.x / scalar, v.y / scalar, v.z / scalar, v.w / scalar };
-    }
-
-    constexpr quaternion& operator+=(const quaternion& right) noexcept
-    {
-        x += right.x;
-        y += right.y;
-        z += right.z;
-        w += right.w;
-        return *this;
-    }
-
-    constexpr quaternion& operator-=(const quaternion& right) noexcept
-    {
-        x -= right.x;
-        y -= right.y;
-        z -= right.z;
-        w -= right.w;
-        return *this;
-    }
-
-    //constexpr quaternion& operator*=(const quaternion& right) noexcept
-    //{
-    //    x *= right.x;
-    //    y *= right.y;
-    //    z *= right.z;
-    //    w *= right.w;
-    //    return *this;
-    //}
-
-    constexpr quaternion& operator/=(const quaternion& right) noexcept
-    {
-        x /= right.x;
-        y /= right.y;
-        z /= right.z;
-        w /= right.w;
-        return *this;
-    }
-
-    constexpr quaternion& operator+=(f32 scalar) noexcept
-    {
-        x += scalar;
-        y += scalar;
-        z += scalar;
-        w += scalar;
-        return *this;
-    }
-
-    constexpr quaternion& operator-=(f32 scalar) noexcept
-    {
-        x -= scalar;
-        y -= scalar;
-        z -= scalar;
-        w -= scalar;
-        return *this;
-    }
-
-    constexpr quaternion& operator*=(f32 scalar) noexcept
-    {
-        x *= scalar;
-        y *= scalar;
-        z *= scalar;
-        w *= scalar;
-        return *this;
-    }
-
-    constexpr quaternion& operator/=(f32 scalar) noexcept
-    {
-        x /= scalar;
-        y /= scalar;
-        z /= scalar;
-        w /= scalar;
-        return *this;
-    }
-
-    [[nodiscard]] constexpr f32 normal_squared() const noexcept { return x * x + y * y + z * z + w * w; }
-
-    [[nodiscard]] constexpr f32 normal() const noexcept { return sqrt(normal_squared()); }
-
-    // returns a copy of this vector, normalized
-    [[nodiscard]] constexpr quaternion normalized() const noexcept
-    {
-        const f32 len{ normal() };
-        return { x / len, y / len, z / len, w / len };
-    }
-
-    // Normalizes this vector and returns it as a reference
-    constexpr quaternion& normalize() noexcept
-    {
-        const f32 len{ normal() };
-        x /= len;
-        y /= len;
-        z /= len;
-        w /= len;
-        return *this;
-    }
-
-#endif
-
-     bool operator==(const quaternion& other) const noexcept
-    {
-        return is_equal(x, other.x) && is_equal(y, other.y) && is_equal(z, other.z) && is_equal(w, other.w);
-    }
-
-     bool operator!=(const quaternion& other) const noexcept
-    {
-        return !is_equal(x, other.x) || !is_equal(y, other.y) || !is_equal(z, other.z) || !is_equal(w, other.w);
-    }
-
-    constexpr friend quaternion operator*(const quaternion& a, const quaternion& b) noexcept
-    {
-        quaternion result{};
-
-        result.x = a.x * b.w + a.y * b.z - a.z * b.y + a.w * b.x;
-        result.y = -a.x * b.z + a.y * b.w + a.z * b.x + a.w * b.y;
-        result.z = a.x * b.y - a.y * b.x + a.z * b.w + a.w * b.z;
-        result.w = -a.x * b.x - a.y * b.y - a.z * b.z + a.w * b.w;
-
-        return result;
-    }
-
-    constexpr quaternion& operator*=(const quaternion& b) noexcept
-    {
-        const quaternion a{ x, y, z, w };
-        x = a.x * b.w + a.y * b.z - a.z * b.y + a.w * b.x;
-        y = -a.x * b.z + a.y * b.w + a.z * b.x + a.w * b.y;
-        z = a.x * b.y - a.y * b.x + a.z * b.w + a.w * b.z;
-        w = -a.x * b.x - a.y * b.y - a.z * b.z + a.w * b.w;
-
-        return *this;
-    }
-
-    explicit constexpr operator vector2() const { return vector2{ x, y }; }
-
-    explicit constexpr operator vector3() const { return vector3{ x, y, z }; }
-
-    explicit constexpr operator vector4() const { return vector4{ x, y, z, w }; }
-
-    explicit operator matrix() const noexcept
-    {
-        matrix result{ 1.0f };
-        // https://stackoverflow.com/questions/1556260/convert-quaternion-rotation-to-rotation-matrix
-
-        const quaternion n{ normalized() };
-
-        result.m[0] = 1.0f - 2.0f * n.y * n.y - 2.0f * n.z * n.z;
-        result.m[1] = 2.0f * n.x * n.y - 2.0f * n.z * n.w;
-        result.m[2] = 2.0f * n.x * n.z + 2.0f * n.y * n.w;
-
-        result.m[4] = 2.0f * n.x * n.y + 2.0f * n.z * n.w;
-        result.m[5] = 1.0f - 2.0f * n.x * n.x - 2.0f * n.z * n.z;
-        result.m[6] = 2.0f * n.y * n.z - 2.0f * n.x * n.w;
-
-        result.m[8]  = 2.0f * n.x * n.z - 2.0f * n.y * n.w;
-        result.m[9]  = 2.0f * n.y * n.z + 2.0f * n.x * n.w;
-        result.m[10] = 1.0f - 2.0f * n.x * n.x - 2.0f * n.y * n.y;
-
-        return result;
-    }
-
-    [[nodiscard]] constexpr quaternion conjugate() const noexcept { return { -x, -y, -z, w }; }
-
-    [[nodiscard]] quaternion inverse() const noexcept { return conjugate().normalized(); }
-};
-
-inline f32 dot(const quaternion& a, const quaternion& b)
-{
-    return a.x * b.x + a.y * b.y + a.z * b.z + a.w * b.w;
-}
-
+// TODO: SIMD version
 // Calculates a rotation matrix based on the quaternion and the passed in center point.
-inline matrix rotation(const quaternion& q, const vector3& center)
+inline matrix rotation(const vector4& q, const vector3& center)
 {
     matrix result{};
 
@@ -1638,13 +1300,13 @@ inline matrix rotation(const quaternion& q, const vector3& center)
     return result;
 }
 
-inline quaternion quat_from_axis_angle(const vector3& axis, f32 angle, bool normalize)
+inline vector4 quat_from_axis_angle(const vector3& axis, f32 angle, bool normalize)
 {
     const f32 half_angle{ 0.5f * angle };
     const f32 s{ sinf(half_angle) };
     const f32 c{ cosf(half_angle) };
 
-    quaternion q{ s * axis.x, s * axis.y, s * axis.z, c };
+    vector4 q{ s * axis.x, s * axis.y, s * axis.z, c };
     if (normalize)
     {
         return q.normalized();
@@ -1652,14 +1314,27 @@ inline quaternion quat_from_axis_angle(const vector3& axis, f32 angle, bool norm
     return q;
 }
 
-inline quaternion slerp(const quaternion& a, const quaternion& b, f32 percentage)
+inline vector4 multiply_quaternion(const vector4& a, const vector4& b)
+{
+    vector4 result{};
+
+    result.x = a.x * b.w + a.y * b.z - a.z * b.y + a.w * b.x;
+    result.y = -a.x * b.z + a.y * b.w + a.z * b.x + a.w * b.y;
+    result.z = a.x * b.y - a.y * b.x + a.z * b.w + a.w * b.z;
+    result.w = -a.x * b.x - a.y * b.y - a.z * b.z + a.w * b.w;
+
+    return result;
+}
+
+// Spherical linear interpolation
+inline vector4 slerp(const vector4& a, const vector4& b, f32 percentage)
 {
     // Normalize to avoid undefined behavior.
-    quaternion v0{ a.normalized() };
-    quaternion v1{ b.normalized() };
+    vector4 v0{ a.normalized() };
+    vector4 v1{ b.normalized() };
 
     // Compute the cosine of the angle between the two vectors.
-    f32 dot_prod {dot(v0, v1)};
+    f32 dot_prod{ dot(v0, v1) };
 
     // If the dot product is negative, slerp won't take
     // the shorter path. Note that v1 and -v1 are equivalent when
@@ -1667,11 +1342,11 @@ inline quaternion slerp(const quaternion& a, const quaternion& b, f32 percentage
     // reversing one quaternion.
     if (dot_prod < 0.0f)
     {
-        v1.x = -v1.x;
-        v1.y = -v1.y;
-        v1.z = -v1.z;
-        v1.w = -v1.w;
-        dot_prod  = -dot_prod;
+        v1.x     = -v1.x;
+        v1.y     = -v1.y;
+        v1.z     = -v1.z;
+        v1.w     = -v1.w;
+        dot_prod = -dot_prod;
     }
 
     constexpr f32 dot_threshold = 0.9995f;
@@ -1679,14 +1354,14 @@ inline quaternion slerp(const quaternion& a, const quaternion& b, f32 percentage
     {
         // If the inputs are too close for comfort, linearly interpolate
         // and normalize the result.
-        quaternion result{ v0.x + ((v1.x - v0.x) * percentage), v0.y + ((v1.y - v0.y) * percentage),
-                           v0.z + ((v1.z - v0.z) * percentage), v0.w + ((v1.w - v0.w) * percentage) };
+        vector4 result{ v0.x + ((v1.x - v0.x) * percentage), v0.y + ((v1.y - v0.y) * percentage),
+                        v0.z + ((v1.z - v0.z) * percentage), v0.w + ((v1.w - v0.w) * percentage) };
 
         return result.normalized();
     }
 
     // Since dot is in range [0, dot_threshold], acos is safe
-    f32 theta_0{ acosf(dot_prod) };         // theta_0 = angle between input vectors
+    f32 theta_0{ acosf(dot_prod) };    // theta_0 = angle between input vectors
     f32 theta{ theta_0 * percentage }; // theta = angle between v0 and result
     f32 sin_theta{ sinf(theta) };      // compute this value only once
     f32 sin_theta_0{ sinf(theta_0) };  // compute this value only once
@@ -1697,6 +1372,27 @@ inline quaternion slerp(const quaternion& a, const quaternion& b, f32 percentage
     return { (v0.x * s0) + (v1.x * s1), (v0.y * s0) + (v1.y * s1), (v0.z * s0) + (v1.z * s1), (v0.w * s0) + (v1.w * s1) };
 }
 
+constexpr vector2 zero_vec2  = {};
+constexpr vector2 one_vec2   = { 1.0f };
+constexpr vector2 up_vec2    = { 0.0f, 1.0f };
+constexpr vector2 down_vec2  = { 0.0f, -1.0f };
+constexpr vector2 right_vec2 = { 1.0f, 0.0f };
+constexpr vector2 left_vec2  = { -1.0f, 0.0f };
+
+constexpr vector3 zero_vec3    = {};
+constexpr vector3 one_vec3     = { 1.0f };
+constexpr vector3 up_vec3      = { 0.0f, 1.0f, 0.0f };
+constexpr vector3 down_vec3    = { 0.0f, -1.0f, 0.0f };
+constexpr vector3 right_vec3   = { 1.0f, 0.0f, 0.0f };
+constexpr vector3 left_vec3    = { -1.0f, 0.0f, 0.0f };
+constexpr vector3 forward_vec3 = { 0.0f, 0.0f, -1.0f };
+constexpr vector3 back_vec3    = { 0.0f, 0.0f, 1.0f };
+
+constexpr vector4 zero_vec4           = {};
+constexpr vector4 one_vec4            = { 1.0f, 1.0f, 1.0f, 1.0f };
+constexpr vector4 identity_quaternion = { 1.0f };
+
+constexpr matrix identity_matrix = { 1.0f };
 
 } // namespace sky::math
 
@@ -1705,5 +1401,5 @@ inline quaternion slerp(const quaternion& a, const quaternion& b, f32 percentage
 using vec2 = sky::math::vector2;
 using vec3 = sky::math::vector3;
 using vec4 = sky::math::vector4;
-using quat = sky::math::quaternion;
+using quat = sky::math::vector4;
 using mat4 = sky::math::matrix;
