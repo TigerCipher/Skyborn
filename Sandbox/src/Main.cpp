@@ -25,7 +25,7 @@
 #include "Skyborn.h"
 #include "SandboxGame.h"
 
-#pragma comment(lib, "Skyborn.lib")
+//#pragma comment(lib, "Skyborn.lib")
 
 
 using namespace sky;
