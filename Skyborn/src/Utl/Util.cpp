@@ -26,6 +26,9 @@
 
 #include "Memory/Memory.h"
 
+
+#include <filesystem>
+
 namespace sky::utl
 {
 
@@ -35,6 +38,14 @@ char* copy_string(const char* str)
     const auto copy{ (char*) memory::allocate(len + 1, memory_tag::string) };
     memory::copy(copy, str, len + 1);
     return copy;
+}
+
+void change_working_directory(std::string_view path)
+{
+    const std::filesystem::path cwd{ std::filesystem::current_path() };
+    std::filesystem::current_path(cwd / path);
+    const std::filesystem::path new_cwd{ std::filesystem::current_path() };
+    LOG_INFOF("Changed working directory from {} to: {}", cwd.string(), new_cwd.string());
 }
 
 } // namespace sky::utl

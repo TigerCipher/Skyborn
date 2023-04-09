@@ -23,6 +23,7 @@
 //  ------------------------------------------------------------------------------
 
 #include "Application.h"
+
 #include "Debug/Logger.h"
 #include "Platform/Platform.h"
 #include "Event.h"
@@ -131,6 +132,8 @@ bool create(scope<game, memory_tag::game> game)
         LOG_ERROR("Application is already initialized");
         return false;
     }
+    utl::change_working_directory("../bin");
+
     LOG_INFOF("{} starting up...", SKY_ENGINE_NAME);
 
     game_instance = std::move(game);

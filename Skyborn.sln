@@ -11,6 +11,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Misc", "Misc", "{215B5F39-9
 		.gitignore = .gitignore
 		increment_build.ps1 = increment_build.ps1
 		README.md = README.md
+		postbuild.bat = postbuild.bat
+		postbuild.sh = postbuild.sh
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Sandbox", "Sandbox\Sandbox.vcxproj", "{A2A605C1-49DD-4AA7-B4EF-AB69D0C0C7AF}"

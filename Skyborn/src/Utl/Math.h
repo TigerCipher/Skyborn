@@ -1391,9 +1391,6 @@ constexpr vector3 back_vec3    = { 0.0f, 0.0f, 1.0f };
 constexpr vector4 zero_vec4           = {};
 constexpr vector4 one_vec4            = { 1.0f, 1.0f, 1.0f, 1.0f };
 constexpr vector4 identity_quaternion = { 1.0f };
-
-constexpr matrix identity_matrix = { 1.0f };
-
 } // namespace sky::math
 
 // global namespace type aliases for convenience (though might move within sky::math)

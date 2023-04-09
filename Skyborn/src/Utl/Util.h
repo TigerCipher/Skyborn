@@ -54,4 +54,6 @@ inline void sleep(u32 milliseconds)
     std::this_thread::sleep_for(std::chrono::milliseconds{milliseconds});
 }
 
+void change_working_directory(std::string_view path);
+
 }
