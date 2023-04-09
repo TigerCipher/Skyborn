@@ -160,8 +160,8 @@ struct key
         rshift       = 0xA1,
         lcontrol     = 0xA2,
         rcontrol     = 0xA3,
-        lmenu        = 0xA4,
-        rmenu        = 0xA5,
+        lalt         = 0xA4,
+        ralt         = 0xA5,
         semicolon    = 0xBA,
         plus         = 0xBB,
         comma        = 0xBC,
@@ -184,7 +184,6 @@ void process_key(key::code key, bool pressed);
 void process_button(button::code btn, bool pressed);
 void process_mouse_move(i16 x, i16 y);
 void process_mouse_wheel(i8 delta);
-
 
 
 SAPI bool key_down(key::code key);

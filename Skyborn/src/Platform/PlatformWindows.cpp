@@ -114,7 +114,37 @@ LRESULT CALLBACK process_messages(HWND hwnd, u32 msg, WPARAM wparam, LPARAM lpar
     case WM_SYSKEYUP:
     {
         const bool pressed{ msg == WM_KEYDOWN || msg == WM_SYSKEYDOWN };
-        const auto k{ (input::key::code) wparam };
+        auto k{ (input::key::code) wparam };
+
+        if(wparam == VK_MENU)
+        {
+            if(GetKeyState(VK_RMENU) & 0x8000)
+            {
+                k = input::key::ralt;
+            }else if(GetKeyState(VK_LMENU) & 0x8000)
+            {
+                k = input::key::lalt;
+            }
+        }else if (wparam == VK_SHIFT)
+        {
+            if (GetKeyState(VK_RSHIFT) & 0x8000)
+            {
+                k = input::key::rshift;
+            } else if (GetKeyState(VK_LSHIFT) & 0x8000)
+            {
+                k = input::key::lshift;
+            }
+        } else if (wparam == VK_CONTROL)
+        {
+            if (GetKeyState(VK_RCONTROL) & 0x8000)
+            {
+                k = input::key::rcontrol;
+            } else if (GetKeyState(VK_LCONTROL) & 0x8000)
+            {
+                k = input::key::lcontrol;
+            }
+        }
+
         input::process_key(k, pressed);
     }
     break;

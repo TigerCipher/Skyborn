@@ -36,6 +36,7 @@ namespace
 void swapchain_info(const vulkan_context& context, u32 image_count, vulkan_swapchain* out_swapchain,
                     VkPresentModeKHR present_mode, VkExtent2D swapchain_extent)
 {
+    out_swapchain->max_frames_in_flight = image_count - 1;
     VkSwapchainCreateInfoKHR create_info{ VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR };
     create_info.surface          = context.surface;
     create_info.minImageCount    = image_count;
@@ -113,7 +114,6 @@ void create_views(const vulkan_context& context, vulkan_swapchain* out_swapchain
 void create(vulkan_context* context, u32 width, u32 height, vulkan_swapchain* out_swapchain)
 {
     VkExtent2D swapchain_extent{ width, height };
-    out_swapchain->max_frames_in_flight = 2;
 
     // Choose a format
     bool found{ false };

@@ -126,7 +126,7 @@ struct vulkan_framebuffer
 struct vulkan_swapchain
 {
     VkSurfaceFormatKHR           image_format{};
-    u8                           max_frames_in_flight{};
+    u32                          max_frames_in_flight{};
     VkSwapchainKHR               handle{};
     u32                          image_count{};
     utl::heap_array<VkImage>     images{};

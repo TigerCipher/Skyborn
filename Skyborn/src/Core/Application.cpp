@@ -75,16 +75,18 @@ bool on_key(u16 code, [[maybe_unused]] void* sender, [[maybe_unused]] void* list
         const u16 key_code{ ctx.data.u16[0] };
         if (key_code == input::key::escape)
         {
-            events::context c{};
+            const events::context c{};
             events::fire(events::detail::system_event::application_quit, nullptr, c);
 
             return true;
         }
-        LOG_TRACEF("{} key was pressed in window", (char) key_code);
+
+
+        LOG_TRACEF("{} ({}) key was pressed in window", (char) key_code, key_code);
     } else if (code == events::detail::system_event::key_released)
     {
         const u16 key_code{ ctx.data.u16[0] };
-        LOG_TRACEF("{} key was released in window", (char) key_code);
+        LOG_TRACEF("{} ({}) key was released in window", (char) key_code, key_code);
     }
 
     return false;
