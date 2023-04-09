@@ -27,6 +27,7 @@
 #include "Defines.h"
 
 #include <string_view>
+#include <thread>
 
 namespace sky::utl
 {
@@ -34,13 +35,23 @@ namespace sky::utl
 // C-String utils. For certain circumstances I do find std::strings to have a bit more overhead than I'd like
 // So in cases where I prefer to use c-strings, these utility functions should prove handy
 
-u64 string_length(const char* str);
-u64 string_length(std::string_view str);
+inline u64 string_length(std::string_view str)
+{
+    return str.length();
+}
 
 // Will allocate memory
 char* copy_string(const char* str);
 
 // For comparing c-strings. I can't help but see `strcmp(str0, str1) == 0` and think it means they aren't equal, when they are
-bool string_compare(const char* str1, const char* str2);
+inline bool string_compare(const char* str1, const char* str2)
+{
+    return strcmp(str1, str2) == 0;
+}
+
+inline void sleep(u32 milliseconds)
+{
+    std::this_thread::sleep_for(std::chrono::milliseconds{milliseconds});
+}
 
 }

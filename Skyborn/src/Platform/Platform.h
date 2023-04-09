@@ -47,6 +47,4 @@ void free(void* block, bool aligned = false);
 
 f64 get_time();
 
-void sleep(u32 milliseconds);
-
 }

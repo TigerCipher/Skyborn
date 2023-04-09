@@ -960,7 +960,7 @@ public:
         return *this;
     }
 
-    matrix& inverse() noexcept
+    constexpr matrix& inverse() noexcept
     {
         f32 t0  = m[10] * m[15];
         f32 t1  = m[14] * m[11];
@@ -1652,11 +1652,11 @@ inline quaternion quat_from_axis_angle(const vector3& axis, f32 angle, bool norm
     return q;
 }
 
-inline quaternion slerp(const quaternion& q_0, const quaternion& q_1, f32 percentage)
+inline quaternion slerp(const quaternion& a, const quaternion& b, f32 percentage)
 {
     // Normalize to avoid undefined behavior.
-    quaternion v0{ q_0.normalized() };
-    quaternion v1{ q_1.normalized() };
+    quaternion v0{ a.normalized() };
+    quaternion v1{ b.normalized() };
 
     // Compute the cosine of the angle between the two vectors.
     f32 dot_prod {dot(v0, v1)};

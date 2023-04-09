@@ -23,32 +23,41 @@
 //  ------------------------------------------------------------------------------
 
 #include "Clock.h"
+
 #include "Platform/Platform.h"
+#include <chrono>
+
 
 namespace sky::core
 {
 
 void clock::start()
 {
+    //m_start_time = high_res_clock::now();
     m_start_time = platform::get_time();
     m_elapsed = 0.0;
 }
 
 void clock::stop()
 {
+    //m_start_time = {};
     m_start_time = 0.0;
 }
 
 void clock::reset()
 {
+    //m_start_time = {};
     m_start_time = 0.0;
     m_elapsed = 0.0;
 }
 
 void clock::update()
 {
-    if (m_start_time == 0.0)
-        return;
+    //if (m_start_time == high_res_clock::time_point{})
+    //    return;
+    if(m_start_time == 0.0) return;
+    //const duration elapsed{ high_res_clock::now() - m_start_time };
+    //m_elapsed = elapsed.count();
     m_elapsed = platform::get_time() - m_start_time;
 }
 }

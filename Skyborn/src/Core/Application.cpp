@@ -30,6 +30,21 @@
 #include "Clock.h"
 #include "Graphics/GraphicsFrontend.h"
 
+
+#ifdef _DEBUG
+    #define VERSION_MAJOR 0
+    #define VERSION_MINOR 0
+    #define VERSION_PATCH 0
+    #define VERSION_BUILD 110
+
+    #define SKY_VERSION                                                                                                          \
+        STRINGIFY(VERSION_MAJOR) "." STRINGIFY(VERSION_MINOR) "." STRINGIFY(VERSION_PATCH) "." STRINGIFY(VERSION_BUILD)
+
+    #define SKY_ENGINE_NAME "Skyborn [Version " SKY_VERSION "]"
+#else
+    #include "Version.h"
+#endif
+
 namespace sky::app
 {
 
@@ -179,6 +194,10 @@ bool create(scope<game, memory_tag::game> game)
 
 bool run()
 {
+    core::clock fps_clock{};
+    fps_clock.start();
+    u16 fps{};
+
     clock.start();
     clock.update();
     f64 last_time{ clock.elapsed() };
@@ -198,6 +217,7 @@ bool run()
             clock.update();
             const f64 current_time{ clock.elapsed() };
             const f64 delta{ current_time - last_time };
+            //const core::clock::time_point frame_start_time{ core::clock::high_res_clock::now() };
             const f64 frame_start_time{ platform::get_time() };
 
             if (!game_instance->update((f32) delta))
@@ -216,19 +236,24 @@ bool run()
 
             graphics::render_packet packet{ (f32) delta };
             graphics::draw_frame(&packet);
+            ++fps;
 
+            //const core::clock::time_point frame_end_time{ core::clock::high_res_clock::now() };
             const f64 frame_end_time{ platform::get_time() };
             const f64 frame_elapsed_time{ frame_end_time - frame_start_time };
-            running_time += frame_elapsed_time;
+            //const core::clock::duration frame_elapsed_time{ frame_end_time - frame_start_time };
+            running_time += frame_elapsed_time /*.count()*/;
 
-            if (const f64 remaining_seconds{ target_frame_seconds - frame_elapsed_time }; remaining_seconds > 0.0)
+            if (const f64 remaining_seconds{ target_frame_seconds - frame_elapsed_time /*.count()*/ }; remaining_seconds > 0.0)
             {
-                const u64 remaining_ms{ (u64) remaining_seconds * 1000 };
+                //LOG_TRACEF("Remaining seconds: {}", remaining_seconds);
+                const u64 remaining_ms{ (u64) (remaining_seconds * 1000) };
 
                 constexpr bool limit_frames{ false }; // For now, it's just false
                 if (remaining_ms > 0 && limit_frames)
                 {
-                    platform::sleep((u32) remaining_ms - 1);
+                    //LOG_DEBUGF("Remaining ms: {}", remaining_ms);
+                    utl::sleep((u32) remaining_ms - 1);
                 }
 
                 ++frame_count;
@@ -236,7 +261,14 @@ bool run()
 
             input::update(delta);
 
-
+            // TODO: When limiting fps to 60, this reports as 64-65. Need to figure out if it's because of how I count the fps, or if my frame limiter isn't quite correct
+            fps_clock.update();
+            if (fps_clock.elapsed() >= 1.0)
+            {
+                LOG_DEBUGF("FPS: {}", fps);
+                fps = 0;
+                fps_clock.start();
+            }
             last_time = current_time;
         }
     }

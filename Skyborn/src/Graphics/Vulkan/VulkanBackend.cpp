@@ -34,6 +34,20 @@
 
 #include "Core/Application.h"
 
+#ifdef _DEBUG
+    #define VERSION_MAJOR 0
+    #define VERSION_MINOR 0
+    #define VERSION_PATCH 0
+    #define VERSION_BUILD 110
+
+    #define SKY_VERSION                                                                                                          \
+        STRINGIFY(VERSION_MAJOR) "." STRINGIFY(VERSION_MINOR) "." STRINGIFY(VERSION_PATCH) "." STRINGIFY(VERSION_BUILD)
+
+    #define SKY_ENGINE_NAME "Skyborn [Version " SKY_VERSION "]"
+#else
+    #include "Version.h"
+#endif
+
 namespace sky::graphics::vk
 {
 
@@ -422,7 +436,7 @@ bool begin_frame(f32 delta)
         if (!is_success(res))
         {
             LOG_ERRORF("Vulkan backend vkDeviceWaitIdle failed. Error code: {}",
-                       (u32)res); // TODO error code conversion to string function
+                       (u32) res); // TODO error code conversion to string function
             return false;
         }
         LOG_DEBUG("Recreating swapchain...");
@@ -436,7 +450,7 @@ bool begin_frame(f32 delta)
         if (!is_success(res))
         {
             LOG_ERRORF("Vulkan backend vkDeviceWaitIdle failed. Error code: {}",
-                       (u32)res); // TODO error code conversion to string function
+                       (u32) res); // TODO error code conversion to string function
             return false;
         }
 
@@ -452,7 +466,7 @@ bool begin_frame(f32 delta)
 
     //VkResult res{vkWaitForFences(context.device.logical, 1, &context.in_flight_fences[context.current_frame].handle, true, u64_max)};
 
-    if(!fence::wait(context, &context.in_flight_fences[context.current_frame], u64_max))
+    if (!fence::wait(context, &context.in_flight_fences[context.current_frame], u64_max))
     {
         LOG_ERROR("In Flight fence wait failed");
         return false;
@@ -526,7 +540,7 @@ bool end_frame(f32 delta)
                                 context.in_flight_fences[context.current_frame].handle) };
     if (res != VK_SUCCESS)
     {
-        LOG_ERRORF("vkQueueSubmit failed with error code: {}", (u32)res);
+        LOG_ERRORF("vkQueueSubmit failed with error code: {}", (u32) res);
         return false;
     }
 

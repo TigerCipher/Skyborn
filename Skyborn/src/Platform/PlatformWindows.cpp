@@ -336,12 +336,6 @@ f64 get_time()
     return (f64) now_time.QuadPart * clock_frequency;
 }
 
-void sleep(u32 milliseconds)
-{
-    // TODO: will likely use std threads rather than win32 threads, though I need to do more research in terms of overhead and performance first
-    // If std threads, will want to use std::this_thread::sleep_for instead of Sleep
-    Sleep(milliseconds);
-}
 
 } // namespace sky::platform
 

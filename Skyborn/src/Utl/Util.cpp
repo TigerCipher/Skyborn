@@ -28,26 +28,13 @@
 
 namespace sky::utl
 {
-u64 string_length(const char* str)
-{
-    return strlen(str);
-}
-
-u64 string_length(std::string_view str)
-{
-    return str.length();
-}
 
 char* copy_string(const char* str)
 {
     const u64  len{ string_length(str) };
-    auto copy{ (char*) memory::allocate(len + 1, memory_tag::string) };
+    const auto copy{ (char*) memory::allocate(len + 1, memory_tag::string) };
     memory::copy(copy, str, len + 1);
     return copy;
 }
 
-bool string_compare(const char* str1, const char* str2)
-{
-    return strcmp(str1, str2) == 0;
-}
 } // namespace sky::utl

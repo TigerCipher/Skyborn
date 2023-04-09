@@ -26,6 +26,8 @@
 #include "VulkanDevice.h"
 #include "VulkanImage.h"
 
+#include "Utl/Math.h"
+
 namespace sky::graphics::vk::swapchain
 {
 namespace
