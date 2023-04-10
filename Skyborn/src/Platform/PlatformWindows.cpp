@@ -79,6 +79,14 @@ VkSurfaceKHR surface{};
 f64           clock_frequency{};
 LARGE_INTEGER start_time{};
 
+void setup_clock()
+{
+    LARGE_INTEGER frequency{};
+    QueryPerformanceFrequency(&frequency);
+    clock_frequency = 1.0 / (f64)frequency.QuadPart;
+    QueryPerformanceCounter(&start_time);
+}
+
 LRESULT CALLBACK process_messages(HWND hwnd, u32 msg, WPARAM wparam, LPARAM lparam)
 {
     switch (msg)
@@ -258,10 +266,7 @@ bool create_window(const char* app_name, i32 x, i32 y, i32 width, i32 height)
     constexpr i32  show_win_command_flags{ should_activate ? SW_SHOW : SW_SHOWNOACTIVATE };
     ShowWindow(hwnd, show_win_command_flags);
 
-    LARGE_INTEGER freq{};
-    QueryPerformanceFrequency(&freq);
-    clock_frequency = 1.0 / (f64) freq.QuadPart;
-    QueryPerformanceCounter(&start_time);
+    setup_clock();
 
     return true;
 }
@@ -361,6 +366,10 @@ void free(void* block, bool aligned /*= false*/)
 
 f64 get_time()
 {
+    if(!clock_frequency)
+    {
+        setup_clock();
+    }
     LARGE_INTEGER now_time{};
     QueryPerformanceCounter(&now_time);
     return (f64) now_time.QuadPart * clock_frequency;
