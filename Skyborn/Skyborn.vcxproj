@@ -116,6 +116,7 @@
     <ClInclude Include="src\Graphics\Vulkan\VulkanPlatform.h" />
     <ClInclude Include="src\Graphics\Vulkan\VulkanRenderPass.h" />
     <ClInclude Include="src\Graphics\Vulkan\VulkanSwapchain.h" />
+    <ClInclude Include="src\Memory\LinearAllocator.h" />
     <ClInclude Include="src\Memory\Memory.h" />
     <ClInclude Include="src\Platform\Platform.h" />
     <ClInclude Include="src\Skyborn.h" />
@@ -141,6 +142,7 @@
     <ClCompile Include="src\Graphics\Vulkan\VulkanImage.cpp" />
     <ClCompile Include="src\Graphics\Vulkan\VulkanRenderPass.cpp" />
     <ClCompile Include="src\Graphics\Vulkan\VulkanSwapchain.cpp" />
+    <ClCompile Include="src\Memory\LinearAllocator.cpp" />
     <ClCompile Include="src\Memory\Memory.cpp" />
     <ClCompile Include="src\Platform\PlatformWindows.cpp" />
     <ClCompile Include="src\Utl\Util.cpp" />

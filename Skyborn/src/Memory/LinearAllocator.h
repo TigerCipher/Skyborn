@@ -16,47 +16,46 @@
 //     You should have received a copy of the GNU Lesser General Public
 //     License along with this library; if not, see <http://www.gnu.org/licenses/>.
 //
-//  File Name: Clock.h
-//  Date File Created: 04/01/2023
+//  File Name: LinearAllocator.h
+//  Date File Created: 04/09/2023
 //  Author: Matt
 //
 //  ------------------------------------------------------------------------------
 
 #pragma once
 
-#include "Common.h"
+#include "Defines.h"
 
-namespace sky::core
+namespace sky::memory
 {
 
-class clock
+class linear_allocator
 {
 public:
-    using high_res_clock = std::chrono::high_resolution_clock;
-    using duration       = std::chrono::duration<f64>;
-    using time_point     = high_res_clock::time_point;
+    SAPI constexpr linear_allocator() = default;
 
-    SAPI constexpr clock() = default;
+    SAPI explicit linear_allocator(u64 total_size, void* _memory = nullptr);
 
-    // Starts clock and resets elapsed time
-    SAPI void start();
+    SAPI ~linear_allocator();
 
-    // Stops clock and resets start time but not elapsed time
-    SAPI void stop();
+    // Destructor will call this if needed. This is a public function mostly for the sake of early destruction if needed and for memory stats debug output
+    SAPI void destroy();
 
-    // Resets start and elapsed time to 0
-    SAPI void reset();
+    SAPI void* allocate(u64 size);
 
-    // Updates the clock. Should be called before checking elapsed time
-    SAPI void update();
+    SAPI void free_all();
 
-    // update() should be called first. This retrieves the elapsed time (current time - start_time)
-    SAPI [[nodiscard]] constexpr f64 elapsed() const { return m_elapsed; }
+    SAPI [[nodiscard]] constexpr void* memory() const { return m_memory; }
+
+    SAPI [[nodiscard]] constexpr u64 total_size() const { return m_total_size; }
+
+    SAPI [[nodiscard]] constexpr u64 allocated() const { return m_allocated; }
 
 private:
-    //time_point m_start_time{};
-    f64 m_start_time{};
-    f64        m_elapsed{};
+    u64   m_total_size{};
+    u64   m_allocated{};
+    void* m_memory{nullptr};
+    bool  m_owns_memory{};
 };
 
-} // namespace sky::core
+} // namespace sky::memory

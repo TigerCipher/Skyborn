@@ -53,6 +53,7 @@ struct memory_tag
         entity,
         entity_node,
         scene,
+        linear_allocator,
 
         count
     };

@@ -1,4 +1,4 @@
-//  ------------------------------------------------------------------------------
+﻿//  ------------------------------------------------------------------------------
 // 
 //  Skyborn
 //     Copyright 2023 Matthew Rogers
@@ -16,20 +16,39 @@
 //     You should have received a copy of the GNU Lesser General Public
 //     License along with this library; if not, see <http://www.gnu.org/licenses/>.
 // 
-//  File Name: Version.h
-//  Date File Created: 03/31/2023
+//  File Name: LinearAllocatorTests.cpp
+//  Date File Created: 04/09/2023
 //  Author: Matt
 // 
 //  ------------------------------------------------------------------------------
 
-#pragma once
-#include "Defines.h"
+#include "LinearAllocatorTests.h"
+#include "TestManager.h"
+#include "Expect.h"
 
-#define VERSION_MAJOR 0
-#define VERSION_MINOR 0
-#define VERSION_PATCH 0
-#define VERSION_BUILD 132
+#include <Memory/LinearAllocator.h>
 
-#define SKY_VERSION STRINGIFY(VERSION_MAJOR) "." STRINGIFY(VERSION_MINOR) "." STRINGIFY(VERSION_PATCH) "." STRINGIFY(VERSION_BUILD)
+using namespace sky;
 
-#define SKY_ENGINE_NAME "Skyborn [Version " SKY_VERSION "]"
+u8 linear_allocate_create_destroy()
+{
+    memory::linear_allocator alloc{sizeof(u64)};
+
+    expect_should_not_be(nullptr, alloc.memory());
+    expect_should_be(sizeof(u64), alloc.total_size());
+    expect_should_be(0, alloc.allocated());
+
+    alloc.destroy();
+
+    expect_should_be(nullptr, alloc.memory());
+    expect_should_be(0, alloc.total_size());
+    expect_should_be(0, alloc.allocated());
+
+    return 1;
+}
+
+
+void register_linear_allocator_tests()
+{
+    test_manager::register_test(linear_allocate_create_destroy, "Linear Allocator should be able to create and destroy");
+}
