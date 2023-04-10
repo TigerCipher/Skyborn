@@ -16,26 +16,15 @@
 //     You should have received a copy of the GNU Lesser General Public
 //     License along with this library; if not, see <http://www.gnu.org/licenses/>.
 //
-//  File Name: TestManager.h
-//  Date File Created: 04/09/2023
+//  File Name: CommonHeaders.h
+//  Date File Created: 03/31/2023
 //  Author: Matt
 //
 //  ------------------------------------------------------------------------------
 
 #pragma once
 
-#include <Skyborn/Defines.h>
-
-constexpr u8 bypass = 2;
-
-using func_test = u8 (*)();
-
-namespace test_manager
-{
-
-
-void register_test(func_test test, const char* desc);
-
-void run_tests();
-
-} // namespace test_manager
+#include "Skyborn/Defines.h"
+#include "Skyborn/Debug/Logger.h"
+#include "Skyborn/Memory/Memory.h"
+#include "Skyborn/Utl/Util.h"

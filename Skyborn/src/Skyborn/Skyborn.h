@@ -16,7 +16,7 @@
 //     You should have received a copy of the GNU Lesser General Public
 //     License along with this library; if not, see <http://www.gnu.org/licenses/>.
 //
-//  File Name: SandboxGame.h
+//  File Name: Skyborn.h
 //  Date File Created: 03/30/2023
 //  Author: Matt
 //
@@ -24,31 +24,43 @@
 
 #pragma once
 
-#include <Skyborn/Common.h>
-#include <Skyborn/Core/Application.h>
-#include <Skyborn/Utl/Vector.h>
+#include "Skyborn/Defines.h"
+#include "Skyborn/Debug/Logger.h"
+#include "Skyborn/Core/Application.h"
+#include "Skyborn/Memory/Memory.h"
 
-class sandbox_game : public sky::app::game
+extern scope<sky::app::game, sky::memory_tag::game> create_game();
+
+// Entry point
+int main()
 {
-public:
-    explicit sandbox_game(sky::app::application_desc desc) : game{ std::move(desc) } {}
-    ~sandbox_game() override = default;
+    sky::memory::initialize();
+    scope<sky::app::game, sky::memory_tag::game> game{ create_game() };
+    if (!game)
+    {
+        LOG_FATAL("Failed to create game");
+        return -1;
+    }
 
-    bool initialize() override
+    if (!sky::app::create(std::move(game)))
     {
-        LOG_DEBUG("Sandbox game initialize");
-        return true;
+        LOG_FATAL("Failed to create application");
+        return 1;
     }
-    bool update(f32 delta) override
-    {
-        //LOG_DEBUG("Sandbox game update");
-        return true;
-    }
-    bool render(f32 delta) override
-    {
-        //LOG_DEBUG("Sandbox game render");
-        return true;
-    }
-    void on_resize(i32 width, i32 height) override { LOG_DEBUG("Sandbox game on_resize"); }
 
-};
+    if (!sky::app::run())
+    {
+        LOG_FATAL("Application failed to shutdown properly");
+        return 2;
+    }
+
+
+    // Before shutting down memory subsystem, check for tagged memory leaks
+    // Some smart pointers may still be allocated, but will be evident with deallocation messages
+    // printed after this memory leak check
+    LOG_DEBUG("Shutting down memory subsystem...");
+    LOG_DEBUG(sky::memory::get_usage_str());
+    sky::memory::shutdown();
+
+    return 0;
+}

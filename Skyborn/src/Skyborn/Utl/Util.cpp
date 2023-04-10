@@ -16,26 +16,36 @@
 //     You should have received a copy of the GNU Lesser General Public
 //     License along with this library; if not, see <http://www.gnu.org/licenses/>.
 //
-//  File Name: TestManager.h
-//  Date File Created: 04/09/2023
+//  File Name: Util.cpp
+//  Date File Created: 04/01/2023
 //  Author: Matt
 //
 //  ------------------------------------------------------------------------------
 
-#pragma once
+#include "Util.h"
 
-#include <Skyborn/Defines.h>
+#include "Skyborn/Memory/Memory.h"
 
-constexpr u8 bypass = 2;
 
-using func_test = u8 (*)();
+#include <filesystem>
 
-namespace test_manager
+namespace sky::utl
 {
 
+char* copy_string(const char* str)
+{
+    const u64  len{ string_length(str) };
+    const auto copy{ (char*) memory::allocate(len + 1, memory_tag::string) };
+    memory::copy(copy, str, len + 1);
+    return copy;
+}
 
-void register_test(func_test test, const char* desc);
+void change_working_directory(std::string_view path)
+{
+    const std::filesystem::path cwd{ std::filesystem::current_path() };
+    std::filesystem::current_path(cwd / path);
+    const std::filesystem::path new_cwd{ std::filesystem::current_path() };
+    LOG_INFOF("Changed working directory from {} to: {}", cwd.string(), new_cwd.string());
+}
 
-void run_tests();
-
-} // namespace test_manager
+} // namespace sky::utl

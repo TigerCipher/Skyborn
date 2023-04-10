@@ -16,7 +16,7 @@
 //     You should have received a copy of the GNU Lesser General Public
 //     License along with this library; if not, see <http://www.gnu.org/licenses/>.
 //
-//  File Name: TestManager.h
+//  File Name: LinearAllocator.h
 //  Date File Created: 04/09/2023
 //  Author: Matt
 //
@@ -24,18 +24,38 @@
 
 #pragma once
 
-#include <Skyborn/Defines.h>
+#include "Skyborn/Defines.h"
 
-constexpr u8 bypass = 2;
-
-using func_test = u8 (*)();
-
-namespace test_manager
+namespace sky::memory
 {
 
+class linear_allocator
+{
+public:
+    SAPI constexpr linear_allocator() = default;
 
-void register_test(func_test test, const char* desc);
+    SAPI explicit linear_allocator(u64 total_size, void* _memory = nullptr);
 
-void run_tests();
+    SAPI ~linear_allocator();
 
-} // namespace test_manager
+    // Destructor will call this if needed. This is a public function mostly for the sake of early destruction if needed and for memory stats debug output
+    SAPI void destroy();
+
+    SAPI void* allocate(u64 size);
+
+    SAPI void free_all();
+
+    SAPI [[nodiscard]] constexpr void* memory() const { return m_memory; }
+
+    SAPI [[nodiscard]] constexpr u64 total_size() const { return m_total_size; }
+
+    SAPI [[nodiscard]] constexpr u64 allocated() const { return m_allocated; }
+
+private:
+    u64   m_total_size{};
+    u64   m_allocated{};
+    void* m_memory{nullptr};
+    bool  m_owns_memory{};
+};
+
+} // namespace sky::memory

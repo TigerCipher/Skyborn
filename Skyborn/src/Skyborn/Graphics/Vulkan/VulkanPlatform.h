@@ -16,26 +16,22 @@
 //     You should have received a copy of the GNU Lesser General Public
 //     License along with this library; if not, see <http://www.gnu.org/licenses/>.
 //
-//  File Name: TestManager.h
-//  Date File Created: 04/09/2023
+//  File Name: VulkanPlatform.h
+//  Date File Created: 04/01/2023
 //  Author: Matt
 //
 //  ------------------------------------------------------------------------------
 
 #pragma once
 
-#include <Skyborn/Defines.h>
+#include "Skyborn/Utl/Vector.h"
 
-constexpr u8 bypass = 2;
+struct sky::graphics::vk::vulkan_context;
 
-using func_test = u8 (*)();
-
-namespace test_manager
+namespace sky::graphics::vk::platform
 {
+void get_required_extensions(utl::vector<const char*>& names);
 
+bool create_surface(vulkan_context* context);
 
-void register_test(func_test test, const char* desc);
-
-void run_tests();
-
-} // namespace test_manager
+}

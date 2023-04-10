@@ -25,8 +25,8 @@
 // ReSharper disable CppInconsistentNaming
 #pragma once
 
-#include <Debug/Logger.h>
-#include <Utl/Math.h>
+#include <Skyborn/Debug/Logger.h>
+#include <Skyborn/Utl/Math.h>
 
 #define expect_should_be(expected, actual)                                                                                       \
     if ((actual) != (expected))                                                                                                  \

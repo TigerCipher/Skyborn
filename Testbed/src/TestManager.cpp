@@ -24,9 +24,9 @@
 
 #include "TestManager.h"
 
-#include <Utl/Vector.h>
-#include <Debug/Logger.h>
-#include <Core/Clock.h>
+#include <Skyborn/Utl/Vector.h>
+#include <Skyborn/Debug/Logger.h>
+#include <Skyborn/Core/Clock.h>
 
 using namespace sky;
 

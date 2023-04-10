@@ -7,30 +7,64 @@
 //    it under the terms of the GNU Lesser General Public License as
 //    published by the Free Software Foundation; either version 3 of the
 //    License, or (at your option) any later version.
-//
+//    
 //    This library is distributed in the hope that it will be useful,
 //    but WITHOUT ANY WARRANTY; without even the implied warranty of
 //    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 //    Lesser General Public License for more details.
-//
+//    
 //    You should have received a copy of the GNU Lesser General Public
 //    License along with this library; if not, see <http://www.gnu.org/licenses/>.
 //
-// File Name: Main.cpp
+// File Name: Application.h
 // Date File Created: 03/30/2023
 // Author: Matt
 //
 // ------------------------------------------------------------------------------
 
-#include <Skyborn/Skyborn.h>
-#include "SandboxGame.h"
+#pragma once
 
-//#pragma comment(lib, "Skyborn.lib")
+#include <string>
+#include <utility>
 
+#include "Skyborn/Common.h"
 
-using namespace sky;
-
-scope<app::game, memory_tag::game> create_game()
+namespace sky::app
 {
-    return scope<app::game, memory_tag::game>{create_scope<sandbox_game, memory_tag::game>(app::application_desc{ 300, 300, 1280, 720, "Skyborn Sandbox" }).release()};
+
+struct application_desc
+{
+    i16 pos_x{};
+    i16 pos_y{};
+    i16 width{};
+    i16 height{};
+
+    std::string name{};
+};
+
+
+class game
+{
+public:
+    explicit game(application_desc desc) : m_desc{ std::move(desc) }{}
+    virtual ~game() = default;
+
+    virtual bool initialize() = 0;
+    virtual bool update(f32 delta) = 0;
+    virtual bool render(f32 delta) = 0;
+
+    virtual void on_resize(i32 width, i32 height) = 0;
+
+    application_desc& desc() { return m_desc; }
+    [[nodiscard]] constexpr const application_desc& desc() const { return m_desc; }
+
+private:
+    application_desc m_desc{};
+};
+
+SAPI bool create(scope<game, memory_tag::game> game);
+SAPI bool run();
+
+void get_framebuffer_size(u32* width, u32* height);
+
 }

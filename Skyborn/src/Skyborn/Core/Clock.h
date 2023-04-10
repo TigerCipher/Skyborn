@@ -16,26 +16,47 @@
 //     You should have received a copy of the GNU Lesser General Public
 //     License along with this library; if not, see <http://www.gnu.org/licenses/>.
 //
-//  File Name: TestManager.h
-//  Date File Created: 04/09/2023
+//  File Name: Clock.h
+//  Date File Created: 04/01/2023
 //  Author: Matt
 //
 //  ------------------------------------------------------------------------------
 
 #pragma once
 
-#include <Skyborn/Defines.h>
+#include "Skyborn/Common.h"
 
-constexpr u8 bypass = 2;
-
-using func_test = u8 (*)();
-
-namespace test_manager
+namespace sky::core
 {
 
+class clock
+{
+public:
+    using high_res_clock = std::chrono::high_resolution_clock;
+    using duration       = std::chrono::duration<f64>;
+    using time_point     = high_res_clock::time_point;
 
-void register_test(func_test test, const char* desc);
+    SAPI constexpr clock() = default;
 
-void run_tests();
+    // Starts clock and resets elapsed time
+    SAPI void start();
 
-} // namespace test_manager
+    // Stops clock and resets start time but not elapsed time
+    SAPI void stop();
+
+    // Resets start and elapsed time to 0
+    SAPI void reset();
+
+    // Updates the clock. Should be called before checking elapsed time
+    SAPI void update();
+
+    // update() should be called first. This retrieves the elapsed time (current time - start_time)
+    SAPI [[nodiscard]] constexpr f64 elapsed() const { return m_elapsed; }
+
+private:
+    //time_point m_start_time{};
+    f64 m_start_time{};
+    f64        m_elapsed{};
+};
+
+} // namespace sky::core

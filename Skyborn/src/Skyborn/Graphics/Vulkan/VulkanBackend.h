@@ -16,21 +16,23 @@
 //    You should have received a copy of the GNU Lesser General Public
 //    License along with this library; if not, see <http://www.gnu.org/licenses/>.
 //
-// File Name: Main.cpp
-// Date File Created: 03/30/2023
+// File Name: VulkanBackend.h
+// Date File Created: 04/01/2023
 // Author: Matt
 //
 // ------------------------------------------------------------------------------
 
-#include <Skyborn/Skyborn.h>
-#include "SandboxGame.h"
+#pragma once
 
-//#pragma comment(lib, "Skyborn.lib")
+#include "Skyborn/Graphics/GraphicsBackend.h"
 
-
-using namespace sky;
-
-scope<app::game, memory_tag::game> create_game()
+namespace sky::graphics::vk
 {
-    return scope<app::game, memory_tag::game>{create_scope<sandbox_game, memory_tag::game>(app::application_desc{ 300, 300, 1280, 720, "Skyborn Sandbox" }).release()};
-}
+
+bool initialize(const char* app_name);
+void shutdown();
+void on_resized(u16 width, u16 height);
+bool begin_frame(f32 delta);
+bool end_frame(f32 delta);
+
+} // namespace sky::graphics::vk

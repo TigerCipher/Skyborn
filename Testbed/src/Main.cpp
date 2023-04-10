@@ -25,7 +25,7 @@
 #include "TestManager.h"
 #include "Memory/LinearAllocatorTests.h"
 
-#include <Debug/Logger.h>
+#include <Skyborn/Debug/Logger.h>
 
 using namespace sky;
 
@@ -33,7 +33,6 @@ int main(int argc, char* argv[])
 {
     // Tests to run
     register_linear_allocator_tests();
-
     LOG_DEBUG("Starting tests");
 
     test_manager::run_tests();
