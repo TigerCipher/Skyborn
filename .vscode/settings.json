@@ -1,0 +1,76 @@
+{
+    "todohighlight.isEnable": true,
+    "todohighlight.keywords": [
+        {
+            "text": "TODO:",
+            "color": "cyan",
+            "backgroundColor": "rgba(0,0,0,0)"
+        },
+        {
+            "text": "BUG:",
+            "color": "red",
+            "backgroundColor": "rgba(200,200,200,100)"
+        },
+        {
+            "text": "HACK:",
+            "color": "#ff6600",
+            "backgroundColor": "rgba(0,0,0,0)"
+        },
+        {
+            "text": "NOTE:",
+            "color": "green",
+            "backgroundColor": "rgba(0,0,0,0)"
+        }
+    ],
+    "todohighlight.defaultStyle": {
+        "color": "red",
+        "backgroundColor": "#ffab00",
+        "overviewRulerColor": "rgba(0,0,0,0)",
+        "isWholeLine": false,
+    },
+    "files.associations": {
+        "algorithm": "cpp",
+        "cmath": "cpp",
+        "atomic": "cpp",
+        "bit": "cpp",
+        "cctype": "cpp",
+        "clocale": "cpp",
+        "compare": "cpp",
+        "concepts": "cpp",
+        "cstddef": "cpp",
+        "cstdint": "cpp",
+        "cstdio": "cpp",
+        "cstdlib": "cpp",
+        "cstring": "cpp",
+        "ctime": "cpp",
+        "cwchar": "cpp",
+        "exception": "cpp",
+        "initializer_list": "cpp",
+        "ios": "cpp",
+        "iosfwd": "cpp",
+        "iostream": "cpp",
+        "istream": "cpp",
+        "iterator": "cpp",
+        "limits": "cpp",
+        "memory": "cpp",
+        "new": "cpp",
+        "ostream": "cpp",
+        "stdexcept": "cpp",
+        "streambuf": "cpp",
+        "system_error": "cpp",
+        "tuple": "cpp",
+        "type_traits": "cpp",
+        "typeinfo": "cpp",
+        "utility": "cpp",
+        "xfacet": "cpp",
+        "xiosbase": "cpp",
+        "xlocale": "cpp",
+        "xlocinfo": "cpp",
+        "xlocnum": "cpp",
+        "xmemory": "cpp",
+        "xstddef": "cpp",
+        "xstring": "cpp",
+        "xtr1common": "cpp",
+        "xutility": "cpp"
+    }
+}

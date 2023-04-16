@@ -1,0 +1,22 @@
+{
+    "tasks": [
+        {
+            "type": "shell",
+            "label": "Build Everything",
+            "windows": {
+                "command": "${workspaceFolder}\\scripts\\build-all.bat"
+            },
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        }
+    ],
+    "version": "2.0.0"
+}

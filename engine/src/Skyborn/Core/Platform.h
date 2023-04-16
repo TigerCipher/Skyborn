@@ -16,29 +16,28 @@
 //    You should have received a copy of the GNU Lesser General Public
 //    License along with this library; if not, see <http://www.gnu.org/licenses/>.
 //
-// File Name: Main.cpp
+// File Name: Platform.h
 // Date File Created: 04/16/2023
 // Author: Matt
 //
 // ------------------------------------------------------------------------------
 
-#include <Skyborn/Core/Platform.h>
+#pragma once
 
-using namespace sky;
+#include "Skyborn/Defines.h"
 
-int main(int argc, char** argv)
+namespace sky::platform
 {
-    platform::initialize("Sandbox", 300, 300, 1280, 720);
 
-    while (true)
-    {
-        if (!platform::pump_messages())
-        {
-            break;
-        }
-    }
+SAPI bool initialize(const char* app_name, i32 x, i32 y, u32 width, u32 height);
+SAPI void shutdown();
 
-    platform::shutdown();
+SAPI bool pump_messages();
 
-    return 0;
-}
+void write_message(const char* msg, u8 color);
+void write_error(const char* msg, u8 color);
+void reset_console();
+
+SAPI f64 get_time();
+
+} // namespace sky::platform
