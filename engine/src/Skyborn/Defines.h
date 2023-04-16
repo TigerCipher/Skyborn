@@ -26,7 +26,6 @@
 
 #include <concepts>
 #include <cstdint>
-#include <cassert>
 
 // Primitive types
 

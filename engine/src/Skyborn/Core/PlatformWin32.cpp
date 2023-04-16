@@ -28,6 +28,8 @@
     #error This file should only be compiled on Windows
 #endif
 
+#include "Skyborn/Debug/Logger.h"
+
 #include <Windows.h>
 #include <windowsx.h>
 #include <cstdlib>
@@ -50,6 +52,7 @@ enum colors : u8
     gray,
     blue,
     green,
+    cyan,
     light_red,
     purple,
     yellow,
@@ -60,7 +63,7 @@ enum colors : u8
 };
 
 // trace, debug, info, warn, error, fatal
-constexpr u8 levels[6]{ gray, light_gray, green, gold, light_red, red };
+constexpr u8 levels[6]{ gray, light_gray, green, gold, light_red, purple };
 
 struct platform_state
 {
@@ -186,6 +189,7 @@ LRESULT CALLBACK process_messages(HWND hwnd, u32 msg, WPARAM wparam, LPARAM lpar
 
 bool create_window(const char* app_name, i32 x, i32 y, u32 width, u32 height)
 {
+    LOG_INFO("Creating window");
     plat_state.hinst = GetModuleHandleA(nullptr);
     const HICON icon = LoadIcon(plat_state.hinst, IDI_APPLICATION);
     WNDCLASSA   wc{};
@@ -201,7 +205,7 @@ bool create_window(const char* app_name, i32 x, i32 y, u32 width, u32 height)
 
     if (!RegisterClassA(&wc))
     {
-        // LOG_FATAL("Window registration failed");
+        LOG_FATAL("Window registration failed");
         return false;
     }
 
@@ -235,7 +239,7 @@ bool create_window(const char* app_name, i32 x, i32 y, u32 width, u32 height)
 
     if (!handle)
     {
-        // LOG_FATAL("Window creation failed");
+        LOG_FATAL("Window creation failed");
         return false;
     }
     plat_state.hwnd = handle;
@@ -245,6 +249,7 @@ bool create_window(const char* app_name, i32 x, i32 y, u32 width, u32 height)
     ShowWindow(plat_state.hwnd, show_win_command_flags);
 
     setup_clock();
+    LOG_INFO("Window created");
 
     return true;
 }
@@ -253,19 +258,27 @@ bool create_window(const char* app_name, i32 x, i32 y, u32 width, u32 height)
 
 bool initialize(const char* app_name, i32 x, i32 y, u32 width, u32 height)
 {
+    LOG_INFO("Booting up Skyborn platform");
     CONSOLE_SCREEN_BUFFER_INFO console_info{};
     GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &console_info);
     original_console_state = console_info.wAttributes;
     GetConsoleScreenBufferInfo(GetStdHandle(STD_ERROR_HANDLE), &console_info);
     original_console_error_state = console_info.wAttributes;
 
-    write_message("Platform starting up", 2);
+    // for (u16 i = 1; i < 255; ++i) // up to 255
+    // {
+    //     SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), i);
+    //     std::string   str{ std::format("[{}]: Is this color\n", i) };
+    //     const LPDWORD written{ nullptr };
+    //     WriteConsoleA(GetStdHandle(STD_OUTPUT_HANDLE), str.c_str(), (DWORD) str.length(), written, nullptr);
+    // }
 
     return create_window(app_name, x, y, width, height);
 }
 
 void shutdown()
 {
+    LOG_INFO("Platform shutting down");
     if (plat_state.hwnd)
     {
         DestroyWindow(plat_state.hwnd);
@@ -289,7 +302,6 @@ bool pump_messages()
 
 void write_message(const char* msg, u8 color)
 {
-    assert(color < 6);
     const HANDLE console_handle{ GetStdHandle(STD_OUTPUT_HANDLE) };
     SetConsoleTextAttribute(console_handle, levels[color]);
 
@@ -301,7 +313,6 @@ void write_message(const char* msg, u8 color)
 
 void write_error(const char* msg, u8 color)
 {
-    assert(color < 6);
     const HANDLE console_handle{ GetStdHandle(STD_ERROR_HANDLE) };
     SetConsoleTextAttribute(console_handle, levels[color]);
 
