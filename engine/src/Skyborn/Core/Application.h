@@ -16,35 +16,57 @@
 //    You should have received a copy of the GNU Lesser General Public
 //    License along with this library; if not, see <http://www.gnu.org/licenses/>.
 //
-// File Name: Main.cpp
+// File Name: Application.h
 // Date File Created: 04/16/2023
 // Author: Matt
 //
 // ------------------------------------------------------------------------------
+#pragma once
 
-#include <Skyborn/Entrypoint.h>
+#include "Skyborn/Defines.h"
 
-#include "Game.h"
-
-using namespace sky;
-
-bool create_game(app::game* game_inst)
+namespace sky::app
 {
-    constexpr app::application_desc desc{ 100, 100, 1280, 720, "Skyborn Sandbox" };
-    game_inst->app_desc   = desc;
-    game_inst->initialize = sandbox::init;
-    game_inst->update     = sandbox::update;
-    game_inst->render     = sandbox::render;
-    game_inst->on_resize  = sandbox::on_resize;
+struct game;
 
-    game_inst->state = nullptr;
-
-    game_inst->app_state = nullptr;
-
-    return true;
-}
-
-void shutdown_game(app::game* game_inst)
+struct application_state
 {
-    game_inst->state = nullptr;
-}
+    game* game_inst{ nullptr };
+    bool  running{ false };
+    bool  suspended{ false };
+    u16   width{};
+    u16   height{};
+};
+
+struct application_desc
+{
+    i16 pos_x{};
+    i16 pos_y{};
+    u16 width{};
+    u16 height{};
+
+    const char* name{};
+};
+
+struct game
+{
+    application_desc app_desc{};
+
+    bool (*initialize)(game* game_inst);
+    bool (*update)(game* game_inst, f32 delta);
+    bool (*render)(game* game_inst, f32 delta);
+    void (*on_resize)(game* game_inst, u32 width, u32 height);
+
+    void* state;
+
+    ref<application_state> app_state;
+};
+
+SAPI bool create(game* game_inst);
+SAPI bool run();
+
+SAPI void        set_cwd(const char* cwd);
+SAPI const char* cwd();
+
+void get_framebuffer_size(u32* width, u32* height);
+} // namespace sky::app

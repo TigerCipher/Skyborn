@@ -23,3 +23,40 @@
 // ------------------------------------------------------------------------------
 
 #pragma once
+
+#include <Skyborn/Debug/Logger.h>
+
+#define expect_should_be(expected, actual)                                                                             \
+    if ((actual) != (expected))                                                                                        \
+    {                                                                                                                  \
+        LOG_ERROR("--> Expected {}, but got {} . File: {}:{}", expected, actual, __FILE__, __LINE__);                  \
+        return 0;                                                                                                      \
+    }
+
+#define expect_should_not_be(expected, actual)                                                                         \
+    if ((actual) == (expected))                                                                                        \
+    {                                                                                                                  \
+        LOG_ERROR("--> Expected {} != {} but they were ==. File: {}:{}", expected, actual, __FILE__, __LINE__);        \
+        return 0;                                                                                                      \
+    }
+
+// #define expect_float_to_equal(expected, actual)                                                                        \
+//     if (!sky::math::near_equal(expected, actual, 0.001f))                                                              \
+//     {                                                                                                                  \
+//         LOG_ERRORF("--> Expected {}, but got {} . File: {}:{}", expected, actual, __FILE__, __LINE__);                 \
+//         return 0;                                                                                                      \
+//     }
+
+#define expects_to_be_true(actual)                                                                                     \
+    if (!(actual))                                                                                                     \
+    {                                                                                                                  \
+        LOG_ERROR("--> Expected '{}' to be true, but it was false. File: {}:{}", #actual, __FILE__, __LINE__);         \
+        return 0;                                                                                                      \
+    }
+
+#define expects_to_be_false(actual)                                                                                    \
+    if ((actual))                                                                                                      \
+    {                                                                                                                  \
+        LOG_ERROR("--> Expected '{}' to be false, but it was true. File: {}:{}", #actual, __FILE__, __LINE__);         \
+        return 0;                                                                                                      \
+    }

@@ -16,35 +16,46 @@
 //    You should have received a copy of the GNU Lesser General Public
 //    License along with this library; if not, see <http://www.gnu.org/licenses/>.
 //
-// File Name: Main.cpp
+// File Name: Entrypoint.h
 // Date File Created: 04/16/2023
 // Author: Matt
 //
 // ------------------------------------------------------------------------------
 
-#include <Skyborn/Entrypoint.h>
+#pragma once
 
-#include "Game.h"
+#include "Skyborn/Defines.h"
+#include "Skyborn/Debug/Logger.h"
+#include "Skyborn/Core/Application.h"
 
-using namespace sky;
+extern bool create_game(sky::app::game* game_inst);
+extern void shutdown_game(sky::app::game* game_inst);
 
-bool create_game(app::game* game_inst)
+// Entry point
+int main(int argc, char** argv)
 {
-    constexpr app::application_desc desc{ 100, 100, 1280, 720, "Skyborn Sandbox" };
-    game_inst->app_desc   = desc;
-    game_inst->initialize = sandbox::init;
-    game_inst->update     = sandbox::update;
-    game_inst->render     = sandbox::render;
-    game_inst->on_resize  = sandbox::on_resize;
+    sky::app::set_cwd(argv[0]);
+    sky::app::game game_inst;
 
-    game_inst->state = nullptr;
+    if (!create_game(&game_inst))
+    {
+        LOG_FATAL("Failed to create game");
+        return -1;
+    }
 
-    game_inst->app_state = nullptr;
+    if (!sky::app::create(&game_inst))
+    {
+        LOG_FATAL("Failed to create application");
+        return 1;
+    }
 
-    return true;
-}
+    if (!sky::app::run())
+    {
+        LOG_FATAL("Application failed to shutdown properly");
+        return 2;
+    }
 
-void shutdown_game(app::game* game_inst)
-{
-    game_inst->state = nullptr;
+    shutdown_game(&game_inst);
+
+    return 0;
 }

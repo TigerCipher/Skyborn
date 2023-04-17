@@ -339,4 +339,5 @@ f64 get_time()
     return (f64) now_time.QuadPart * plat_state.clock_frequency;
 }
 
+
 } // namespace sky::platform

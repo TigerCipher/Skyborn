@@ -1,5 +1,5 @@
 
-set(SOURCE_FILES src/Main.cpp )
+set(SOURCE_FILES src/Game.cpp src/Main.cpp )
 
 add_executable(sandbox ${SOURCE_FILES})
 target_include_directories(sandbox PRIVATE ../engine/src)

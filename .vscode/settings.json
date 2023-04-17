@@ -86,6 +86,12 @@
         "xlocbuf": "cpp",
         "xlocmes": "cpp",
         "xlocmon": "cpp",
-        "xloctime": "cpp"
+        "xloctime": "cpp",
+        "chrono": "cpp",
+        "codecvt": "cpp",
+        "forward_list": "cpp",
+        "list": "cpp",
+        "filesystem": "cpp",
+        "optional": "cpp"
     }
 }

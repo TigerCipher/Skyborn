@@ -16,35 +16,25 @@
 //    You should have received a copy of the GNU Lesser General Public
 //    License along with this library; if not, see <http://www.gnu.org/licenses/>.
 //
-// File Name: Main.cpp
+// File Name: Game.h
 // Date File Created: 04/16/2023
 // Author: Matt
 //
 // ------------------------------------------------------------------------------
+#pragma once
 
-#include <Skyborn/Entrypoint.h>
+#include <Skyborn/Defines.h>
+#include <Skyborn/Core/Application.h>
 
-#include "Game.h"
-
-using namespace sky;
-
-bool create_game(app::game* game_inst)
+namespace sandbox
 {
-    constexpr app::application_desc desc{ 100, 100, 1280, 720, "Skyborn Sandbox" };
-    game_inst->app_desc   = desc;
-    game_inst->initialize = sandbox::init;
-    game_inst->update     = sandbox::update;
-    game_inst->render     = sandbox::render;
-    game_inst->on_resize  = sandbox::on_resize;
-
-    game_inst->state = nullptr;
-
-    game_inst->app_state = nullptr;
-
-    return true;
-}
-
-void shutdown_game(app::game* game_inst)
+struct game_state
 {
-    game_inst->state = nullptr;
-}
+    f32 delta;
+};
+
+bool init(sky::app::game* game_inst);
+bool update(sky::app::game* game_inst, f32 delta);
+bool render(sky::app::game* game_inst, f32 delta);
+void on_resize(sky::app::game* game_inst, u32 width, u32 height);
+} // namespace sandbox
