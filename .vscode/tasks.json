@@ -4,7 +4,7 @@
             "type": "shell",
             "label": "Build Everything",
             "windows": {
-                "command": "${workspaceFolder}\\scripts\\build-all.bat"
+                "command": "python ${workspaceFolder}\\scripts\\build_all.py"
             },
             "options": {
                 "cwd": "${workspaceFolder}"

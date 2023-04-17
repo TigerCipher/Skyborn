@@ -1,8 +1,9 @@
 import os
-
+import subprocess
+from sys import platform
 
 def search_src(project_root):
-    regenerate_cmake = False
+    regenerate_cmake = 0
     src_dir = "src"
     cmake_file = project_root + "/CMakeLists.txt"
     print(f"Looking for new source files in {project_root}/{src_dir}")
@@ -45,7 +46,7 @@ def search_src(project_root):
                 else:
                     f.write(line)
             print("Source files had been removed, adding everything to SOURCE_FILES.")
-            regenerate_cmake = True
+            regenerate_cmake = 1
     else:
         # Add any new cpp files to SOURCE_FILES
         new_files = cpp_files - source_files
@@ -59,16 +60,44 @@ def search_src(project_root):
                     else:
                         f.write(line)
                 print(f"Added {len(new_files)} new cpp file{'s' if len(new_files) > 1 else ''} to SOURCE_FILES.")
-                regenerate_cmake = True
+                regenerate_cmake = 1
         else:
             print("No new cpp files found.")
     return regenerate_cmake
 
+should_regenerate = 0
+should_regenerate += search_src("engine")
+should_regenerate += search_src("sandbox")
+# testbed += search_src("testbed")
 
-eng = search_src("engine")
-sand = search_src("sandbox")
-# testbed = search_src("testbed")
 
-# if eng or sand or testbed:
-if eng or sand:
-    exit(3)
+config_workspace_dir = "D:/Skyborn"
+
+ret_code = 0
+
+if should_regenerate > 0:
+    print(f"Running CMake...")
+    cmake_cmd = ["echo", "Failed to detect platform"]
+    if platform == "win32":
+        cmake_cmd = ["cmake", "--no-warn-unused-cli", "-DCMAKE_EXPORT_COMPILE_COMMANDS:BOOL=TRUE", "-DCMAKE_BUILD_TYPE:STRING=Debug", 
+                    "-DCMAKE_C_COMPILER:FILEPATH=C:\\Program Files\\LLVM\\bin\\clang.exe", "-DCMAKE_CXX_COMPILER:FILEPATH=C:\\Program Files\\LLVM\\bin\\clang++.exe", 
+                    f"-S{config_workspace_dir}", "-Bbuild", "-G", "Unix Makefiles"]
+    str = ""
+    for c in cmake_cmd:
+        str += c + " "
+    print(f"Running: {str}")
+    ret_code = subprocess.check_call(cmake_cmd, stderr=subprocess.STDOUT, shell=True)
+
+if ret_code == 0:
+    print(f"Building all...")
+    cmake_cmd = ["cmake", "--build", "build", "--config", "Debug", "--target", "all", "-j", f"{os.cpu_count() - 4}", "--"]
+    str = ""
+    for c in cmake_cmd:
+        str += c + " "
+    print(f"Running: {str}")
+    ret_code = subprocess.check_call(cmake_cmd, stderr=subprocess.STDOUT, shell=True)
+
+if ret_code != 0:
+    print(f"ERROR: {ret_code}")
+else:
+    print("Done.")

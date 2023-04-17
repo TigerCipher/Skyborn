@@ -31,7 +31,7 @@ namespace sandbox
 {
 bool init(game* game_inst)
 {
-    LOG_INFO("Sandbox game initialized");
+    LOG_WARN("Sandbox game initialized");
     return true;
 }
 
