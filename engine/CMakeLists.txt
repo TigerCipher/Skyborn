@@ -1,6 +1,6 @@
 
 # TODO: Make it so my python script doesn't add platform specific files here. Should be added separately in a conditinal statement
-set(SOURCE_FILES src/Skyborn/Core/Application.cpp src/Skyborn/Core/Event.cpp src/Skyborn/Core/PlatformWin32.cpp src/Skyborn/Debug/Logger.cpp )
+set(SOURCE_FILES src/Skyborn/Core/Application.cpp src/Skyborn/Core/Event.cpp src/Skyborn/Core/Input.cpp src/Skyborn/Core/PlatformWin32.cpp src/Skyborn/Debug/Logger.cpp )
 
 
 add_library(skyborn SHARED ${SOURCE_FILES})

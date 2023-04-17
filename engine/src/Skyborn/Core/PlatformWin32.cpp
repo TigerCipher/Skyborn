@@ -30,6 +30,7 @@
 
 #include "Skyborn/Debug/Logger.h"
 #include "Event.h"
+#include "Input.h"
 
 #include <Windows.h>
 #include <windowsx.h>
@@ -118,39 +119,39 @@ LRESULT CALLBACK process_messages(HWND hwnd, u32 msg, WPARAM wparam, LPARAM lpar
     case WM_KEYUP:
     case WM_SYSKEYUP:
     {
-        // const bool pressed{ msg == WM_KEYDOWN || msg == WM_SYSKEYDOWN };
-        // auto       k{ (input::key::code) wparam };
-        // const bool is_extended{ (HIWORD(lparam) & KF_EXTENDED) == KF_EXTENDED };
-        // if (wparam == VK_MENU)
-        // {
-        //     k = is_extended ? input::key::ralt : input::key::lalt;
-        // } else if (wparam == VK_SHIFT)
-        // {
-        //     const u32 left_shift{ MapVirtualKey(VK_LSHIFT, MAPVK_VK_TO_VSC) };
-        //     const u32 scancode{ (u32) ((lparam & (0xff << 16)) >> 16) };
-        //     k = scancode == left_shift ? input::key::lshift : input::key::rshift;
-        // } else if (wparam == VK_CONTROL)
-        // {
-        //     k = is_extended ? input::key::rcontrol : input::key::lcontrol;
-        // }
+        const bool pressed     = msg == WM_KEYDOWN || msg == WM_SYSKEYDOWN;
+        auto       k           = (input::key::code) wparam;
+        const bool is_extended = (HIWORD(lparam) & KF_EXTENDED) == KF_EXTENDED;
+        if (wparam == VK_MENU)
+        {
+            k = is_extended ? input::key::ralt : input::key::lalt;
+        } else if (wparam == VK_SHIFT)
+        {
+            const u32 left_shift = MapVirtualKey(VK_LSHIFT, MAPVK_VK_TO_VSC);
+            const u32 scancode   = (u32) ((lparam & (0xff << 16)) >> 16);
+            k                    = scancode == left_shift ? input::key::lshift : input::key::rshift;
+        } else if (wparam == VK_CONTROL)
+        {
+            k = is_extended ? input::key::rcontrol : input::key::lcontrol;
+        }
 
-        // input::process_key(k, pressed);
+        input::process_key(k, pressed);
     }
     break;
     case WM_MOUSEMOVE:
     {
-        // const i32 x_pos{ GET_X_LPARAM(lparam) };
-        // const i32 y_pos{ GET_Y_LPARAM(lparam) };
-        // input::process_mouse_move((i16) x_pos, (i16) y_pos);
+        const i32 x_pos = GET_X_LPARAM(lparam);
+        const i32 y_pos = GET_Y_LPARAM(lparam);
+        input::process_mouse_move((i16) x_pos, (i16) y_pos);
     }
     break;
     case WM_MOUSEWHEEL:
     {
-        // if (i32 delta{ GET_WHEEL_DELTA_WPARAM(wparam) }; delta != 0)
-        // {
-        //     delta = delta < 0 ? -1 : 1;
-        //     input::process_mouse_wheel((i8) delta);
-        // }
+        if (i32 delta = GET_WHEEL_DELTA_WPARAM(wparam); delta != 0)
+        {
+            delta = delta < 0 ? -1 : 1;
+            input::process_mouse_wheel((i8) delta);
+        }
     }
     break;
     case WM_LBUTTONDOWN:
@@ -160,24 +161,24 @@ LRESULT CALLBACK process_messages(HWND hwnd, u32 msg, WPARAM wparam, LPARAM lpar
     case WM_MBUTTONUP:
     case WM_RBUTTONUP:
     {
-        // const bool          pressed{ (msg == WM_LBUTTONDOWN || msg == WM_MBUTTONDOWN || msg == WM_RBUTTONDOWN) };
-        // input::button::code btn{ input::button::count };
+        const bool          pressed = (msg == WM_LBUTTONDOWN || msg == WM_MBUTTONDOWN || msg == WM_RBUTTONDOWN);
+        input::button::code btn{ input::button::max_buttons };
 
-        // switch (msg)
-        // {
-        // case WM_LBUTTONDOWN:
-        // case WM_LBUTTONUP: btn = input::button::left; break;
-        // case WM_RBUTTONDOWN:
-        // case WM_RBUTTONUP: btn = input::button::right; break;
-        // case WM_MBUTTONDOWN:
-        // case WM_MBUTTONUP: btn = input::button::middle; break;
-        // default: break;
-        // }
+        switch (msg)
+        {
+        case WM_LBUTTONDOWN:
+        case WM_LBUTTONUP: btn = input::button::left; break;
+        case WM_RBUTTONDOWN:
+        case WM_RBUTTONUP: btn = input::button::right; break;
+        case WM_MBUTTONDOWN:
+        case WM_MBUTTONUP: btn = input::button::middle; break;
+        default: break;
+        }
 
-        // if (btn != input::button::count)
-        // {
-        //     input::process_button(btn, pressed);
-        // }
+        if (btn != input::button::max_buttons)
+        {
+            input::process_button(btn, pressed);
+        }
     }
     break;
 

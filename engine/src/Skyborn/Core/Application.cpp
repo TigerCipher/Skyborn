@@ -26,6 +26,7 @@
 #include "Skyborn/Debug/Logger.h"
 #include "Platform.h"
 #include "Event.h"
+#include "Input.h"
 
 #include <filesystem>
 
@@ -48,6 +49,30 @@ bool on_event(u16 code, [[maybe_unused]] void* sender, [[maybe_unused]] void* li
         return true;
     default: return false;
     }
+}
+
+bool on_key(u16 code, [[maybe_unused]] void* sender, [[maybe_unused]] void* listener, events::context ctx)
+{
+    if (code == events::system_event::key_pressed)
+    {
+        const u16 key_code{ ctx.data.u16[0] };
+        if (key_code == input::key::escape)
+        {
+            const events::context c{};
+            events::fire(events::system_event::application_quit, nullptr, c);
+
+            return true;
+        }
+
+
+        LOG_TRACE("{} ({}) key was pressed in window", (char) key_code, key_code);
+    } else if (code == events::system_event::key_released)
+    {
+        const u16 key_code = ctx.data.u16[0];
+        LOG_TRACE("{} ({}) key was released in window", (char) key_code, key_code);
+    }
+
+    return false;
 }
 
 } // anonymous namespace
@@ -77,6 +102,8 @@ bool create(game* game_inst)
     }
 
     events::register_event(events::system_event::application_quit, nullptr, on_event);
+    events::register_event(events::system_event::key_pressed, nullptr, on_key);
+    events::register_event(events::system_event::key_released, nullptr, on_key);
 
     auto& [pos_x, pos_y, width, height, name] = game_inst->app_desc;
 
@@ -127,6 +154,8 @@ bool run()
     LOG_INFO("Shutting down...");
 
     events::unregister_event(events::system_event::application_quit, nullptr, on_event);
+    events::unregister_event(events::system_event::key_pressed, nullptr, on_key);
+    events::unregister_event(events::system_event::key_released, nullptr, on_key);
 
     events::shutdown();
     platform::shutdown();
