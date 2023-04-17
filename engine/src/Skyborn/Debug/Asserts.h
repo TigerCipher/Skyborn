@@ -37,7 +37,7 @@
 
 SAPI void report_assertion_failure(const char* expression, const char* message, const char* file, u32 line);
 
-    #define gassert(expr)                                                                                              \
+    #define sky_assert(expr)                                                                                           \
         {                                                                                                              \
             if (expr)                                                                                                  \
             {                                                                                                          \
@@ -48,7 +48,7 @@ SAPI void report_assertion_failure(const char* expression, const char* message, 
             }                                                                                                          \
         }
 
-    #define gassert_msg(expr, msg)                                                                                     \
+    #define assert_msg(expr, msg)                                                                                      \
         {                                                                                                              \
             if (expr)                                                                                                  \
             {                                                                                                          \
@@ -60,7 +60,7 @@ SAPI void report_assertion_failure(const char* expression, const char* message, 
         }
 
     #ifdef _DEBUG
-        #define gassert_dbg(expr)                                                                                      \
+        #define assert_dbg(expr)                                                                                       \
             {                                                                                                          \
                 if (expr)                                                                                              \
                 {                                                                                                      \
@@ -71,11 +71,11 @@ SAPI void report_assertion_failure(const char* expression, const char* message, 
                 }                                                                                                      \
             }
     #else
-        #define gassert_dbg(expr)
+        #define assert_dbg(expr)
     #endif
 
 #else
-    #define gassert(expr)
-    #define gassert_msg(expr, msg)
-    #define gassert_dbg(expr)
+    #define sky_assert(expr)
+    #define assert_msg(expr, msg)
+    #define assert_dbg(expr)
 #endif

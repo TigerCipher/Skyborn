@@ -25,6 +25,7 @@
 
 #include "Skyborn/Debug/Logger.h"
 #include "Platform.h"
+#include "Event.h"
 
 #include <filesystem>
 
@@ -35,6 +36,19 @@ namespace
 
 ref<application_state> app_state;
 const char*            current_working_directory;
+
+// Event listeners
+bool on_event(u16 code, [[maybe_unused]] void* sender, [[maybe_unused]] void* listener, events::context ctx)
+{
+    switch (code)
+    {
+    case events::system_event::application_quit:
+        LOG_INFO("application_quit event received. Shutting down application");
+        app_state->running = false;
+        return true;
+    default: return false;
+    }
+}
 
 } // anonymous namespace
 
@@ -56,7 +70,16 @@ bool create(game* game_inst)
     app_state->running   = false;
     app_state->suspended = false;
 
-    const auto& [pos_x, pos_y, width, height, name] = game_inst->app_desc;
+    if (!events::initialize())
+    {
+        LOG_FATAL("Event system failed to initialize");
+        return false;
+    }
+
+    events::register_event(events::system_event::application_quit, nullptr, on_event);
+
+    auto& [pos_x, pos_y, width, height, name] = game_inst->app_desc;
+
     if (!platform::initialize(name, pos_x, pos_y, width, height))
     {
         LOG_FATAL("Platform startup failed");
@@ -102,6 +125,10 @@ bool run()
     }
 
     LOG_INFO("Shutting down...");
+
+    events::unregister_event(events::system_event::application_quit, nullptr, on_event);
+
+    events::shutdown();
     platform::shutdown();
     return true;
 }

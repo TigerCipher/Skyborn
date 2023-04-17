@@ -29,6 +29,7 @@
 #endif
 
 #include "Skyborn/Debug/Logger.h"
+#include "Event.h"
 
 #include <Windows.h>
 #include <windowsx.h>
@@ -91,8 +92,8 @@ LRESULT CALLBACK process_messages(HWND hwnd, u32 msg, WPARAM wparam, LPARAM lpar
     case WM_ERASEBKGND: return 1;
     case WM_CLOSE:
     {
-        // constexpr events::context ctx{};
-        // events::fire(events::detail::system_event::application_quit, nullptr, ctx);
+        constexpr events::context ctx{};
+        events::fire(events::system_event::application_quit, nullptr, ctx);
         return 0;
     }
     case WM_DESTROY:
@@ -101,16 +102,15 @@ LRESULT CALLBACK process_messages(HWND hwnd, u32 msg, WPARAM wparam, LPARAM lpar
         return 0;
     case WM_SIZE:
     {
-        // RECT r{};
-        // GetClientRect(hwnd, &r);
-        // u32 w{ (u32) r.right - r.left };
-        // u32 h{ (u32) r.bottom - r.top };
+        RECT r{};
+        GetClientRect(hwnd, &r);
+        u32 w{ (u32) r.right - r.left };
+        u32 h{ (u32) r.bottom - r.top };
 
-        // events::context ctx{};
-        // ctx.data.u16[0] = (u16) w;
-        // ctx.data.u16[1] = (u16) h;
-        // events::fire(events::detail::system_event::resized, nullptr, ctx);
-        // Resize event
+        events::context ctx{};
+        ctx.data.u16[0] = (u16) w;
+        ctx.data.u16[1] = (u16) h;
+        events::fire(events::system_event::resized, nullptr, ctx);
     }
     break;
     case WM_KEYDOWN:
