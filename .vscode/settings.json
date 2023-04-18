@@ -92,6 +92,7 @@
         "forward_list": "cpp",
         "list": "cpp",
         "filesystem": "cpp",
-        "optional": "cpp"
+        "optional": "cpp",
+        "functional": "cpp"
     }
 }

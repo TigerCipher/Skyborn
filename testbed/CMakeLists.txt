@@ -1,5 +1,5 @@
 
-set(SOURCE_FILES src/Main.cpp src/TestManager.cpp src/Tests/HeapArrayTest.cpp src/Tests/VectorTest.cpp )
+set(SOURCE_FILES src/Main.cpp src/TestManager.cpp src/Tests/BitsTest.cpp src/Tests/HeapArrayTest.cpp src/Tests/VectorTest.cpp )
 
 add_executable(testbed ${SOURCE_FILES})
 target_include_directories(testbed PRIVATE ../engine/src src)

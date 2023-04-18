@@ -93,8 +93,7 @@ LRESULT CALLBACK process_messages(HWND hwnd, u32 msg, WPARAM wparam, LPARAM lpar
     case WM_ERASEBKGND: return 1;
     case WM_CLOSE:
     {
-        constexpr events::context ctx{};
-        events::fire(events::system_event::application_quit, nullptr, ctx);
+        events::fire(events::system_event::application_quit, nullptr, nullptr);
         return 0;
     }
     case WM_DESTROY:
@@ -108,10 +107,10 @@ LRESULT CALLBACK process_messages(HWND hwnd, u32 msg, WPARAM wparam, LPARAM lpar
         u32 w{ (u32) r.right - r.left };
         u32 h{ (u32) r.bottom - r.top };
 
-        events::context ctx{};
-        ctx.data.u16[0] = (u16) w;
-        ctx.data.u16[1] = (u16) h;
-        events::fire(events::system_event::resized, nullptr, ctx);
+        u32 data = 0;
+        SET_BITS(data, 1, 16, w);
+        SET_BITS(data, 17, 16, h);
+        events::fire(events::system_event::resized, nullptr, &data);
     }
     break;
     case WM_KEYDOWN:

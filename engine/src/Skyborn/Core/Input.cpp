@@ -88,9 +88,8 @@ void process_key(key::code key, bool pressed)
     current_keyboard.keys[key] = pressed; // update internal state
 
     // Invoke event for processing
-    events::context ctx{};
-    ctx.data.u16[0] = key;
-    events::fire(pressed ? events::system_event::key_pressed : events::system_event::key_released, nullptr, ctx);
+    u16 code = (u16) key;
+    events::fire(pressed ? events::system_event::key_pressed : events::system_event::key_released, nullptr, &code);
 }
 
 void process_button(button::code btn, bool pressed)
@@ -102,9 +101,9 @@ void process_button(button::code btn, bool pressed)
     current_mouse.buttons[btn] = pressed; // update internal state
 
     // Invoke event for processing
-    events::context ctx{};
-    ctx.data.u16[0] = btn;
-    events::fire(pressed ? events::system_event::button_pressed : events::system_event::button_released, nullptr, ctx);
+    u16 code = (u16) btn;
+    events::fire(pressed ? events::system_event::button_pressed : events::system_event::button_released, nullptr,
+                 &code);
 }
 
 void process_mouse_move(i16 x, i16 y)
@@ -122,17 +121,15 @@ void process_mouse_move(i16 x, i16 y)
     current_mouse.y = y;
 
     // Invoke event for processing
-    events::context ctx{};
-    ctx.data.u16[0] = x;
-    ctx.data.u16[1] = y;
-    events::fire(events::system_event::mouse_moved, nullptr, ctx);
+    u32 data = 0;
+    SET_BITS(data, 1, 16, x);
+    SET_BITS(data, 17, 16, y);
+    events::fire(events::system_event::mouse_moved, nullptr, &data);
 }
 
 void process_mouse_wheel(i8 delta)
 {
-    events::context ctx{};
-    ctx.data.u8[0] = delta;
-    events::fire(events::system_event::mouse_wheel, nullptr, ctx);
+    events::fire(events::system_event::mouse_wheel, nullptr, &delta);
 }
 
 bool key_down(key::code key)

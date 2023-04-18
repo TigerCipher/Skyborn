@@ -16,30 +16,12 @@
 //    You should have received a copy of the GNU Lesser General Public
 //    License along with this library; if not, see <http://www.gnu.org/licenses/>.
 //
-// File Name: Main.cpp
-// Date File Created: 04/17/2023
+// File Name: BitsTest.h
+// Date File Created: 04/18/2023
 // Author: Matt
 //
 // ------------------------------------------------------------------------------
 
-#include "TestManager.h"
+#pragma once
 
-#include "Tests/VectorTest.h"
-#include "Tests/HeapArrayTest.h"
-#include "Tests/BitsTest.h"
-
-
-#include <Skyborn/Debug/Logger.h>
-
-int main(int argc, char** argv)
-{
-    LOG_INFO("Starting unit tests");
-    register_vector_tests();
-    register_heap_array_tests();
-    register_bits_tests();
-
-
-    tests::run_tests();
-
-    return 0;
-}
+void register_bits_tests();

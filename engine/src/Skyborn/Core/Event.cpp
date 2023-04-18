@@ -118,7 +118,7 @@ bool unregister_event(u16 code, void* listener, func_on_event on_event)
     return false;
 }
 
-bool fire(u16 code, void* sender, context ctx)
+bool fire(u16 code, void* sender, void* data)
 {
     if (!is_initialized)
         return false;
@@ -126,7 +126,7 @@ bool fire(u16 code, void* sender, context ctx)
     utl::vector<registered_event>& events = registered[code].events;
     for (u64 i = 0; i < events.size(); ++i)
     {
-        if (auto [listener, callback]{ events[i] }; callback(code, sender, listener, ctx))
+        if (auto [listener, callback]{ events[i] }; callback(code, sender, listener, data))
         {
             // If a listener "handled" an event, don't let remaining listeners handle as well
             return true;

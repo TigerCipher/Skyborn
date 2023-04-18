@@ -41,7 +41,7 @@ ref<application_state> app_state;
 const char*            current_working_directory;
 
 // Event listeners
-bool on_event(u16 code, [[maybe_unused]] void* sender, [[maybe_unused]] void* listener, events::context ctx)
+bool on_event(u16 code, [[maybe_unused]] void* sender, [[maybe_unused]] void* listener, void* data)
 {
     switch (code)
     {
@@ -53,15 +53,14 @@ bool on_event(u16 code, [[maybe_unused]] void* sender, [[maybe_unused]] void* li
     }
 }
 
-bool on_key(u16 code, [[maybe_unused]] void* sender, [[maybe_unused]] void* listener, events::context ctx)
+bool on_key(u16 code, [[maybe_unused]] void* sender, [[maybe_unused]] void* listener, void* data)
 {
+    const u16 key_code = *(u16*) data;
     if (code == events::system_event::key_pressed)
     {
-        const u16 key_code{ ctx.data.u16[0] };
         if (key_code == input::key::escape)
         {
-            const events::context c{};
-            events::fire(events::system_event::application_quit, nullptr, c);
+            events::fire(events::system_event::application_quit, nullptr, nullptr);
 
             return true;
         }
@@ -70,7 +69,6 @@ bool on_key(u16 code, [[maybe_unused]] void* sender, [[maybe_unused]] void* list
         LOG_TRACE("{} ({}) key was pressed in window", (char) key_code, key_code);
     } else if (code == events::system_event::key_released)
     {
-        const u16 key_code = ctx.data.u16[0];
         LOG_TRACE("{} ({}) key was released in window", (char) key_code, key_code);
     }
 

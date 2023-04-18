@@ -70,29 +70,29 @@ struct system_event
     };
 };
 
-struct context
-{
-    union
-    {
-        i64 i64[2];
-        u64 u64[2];
-        f64 f64[2];
+// struct context
+// {
+//     union
+//     {
+//         i64 i64[2];
+//         u64 u64[2];
+//         f64 f64[2];
 
-        i32 i32[4];
-        u32 u32[4];
-        f32 f32[4];
+//         i32 i32[4];
+//         u32 u32[4];
+//         f32 f32[4];
 
-        i16 i16[8];
-        u16 u16[8];
+//         i16 i16[8];
+//         u16 u16[8];
 
-        i8 i8[16];
-        u8 u8[16];
+//         i8 i8[16];
+//         u8 u8[16];
 
-        char c[16];
-    } data;
-};
+//         char c[16];
+//     } data;
+// };
 
-using func_on_event = bool (*)(u16 code, void* sender, void* listener, context ctx);
+using func_on_event = bool (*)(u16 code, void* sender, void* listener, void* data);
 
 bool initialize();
 void shutdown();
@@ -120,9 +120,9 @@ SAPI bool unregister_event(u16 code, void* listener, func_on_event on_event);
  * Fires an event to all listeners of the said event. If handled, it should not be passed to any further listeners
  * @param code The event code to fire
  * @param sender A pointer to the sender. Can be null
- * @param ctx The event context data
+ * @param data Event data
  * @return true if handled, false otherwise
  */
-SAPI bool fire(u16 code, void* sender, context ctx);
+SAPI bool fire(u16 code, void* sender, void* data);
 
 } // namespace sky::events

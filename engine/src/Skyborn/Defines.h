@@ -86,6 +86,39 @@ constexpr u64 u64_max{ 0xffff'ffff'ffff'ffffui64 };
 
 // Macro helpers / Misc
 
+/**
+ * @brief Extracts a range of bits from the given number
+ * @param number The number to extract from
+ * @param p The bit position to pull from, inclusive. Starts from least significant bit as position 1. See note.
+ * @param n The number of bits to extract
+ * 
+ * @note Example usage:
+ * @note u8 num = 46; // 0010 1110
+ * @note u8 extracted = EXTRACT_BITS(num, 1, 4); // Extracts 1110 == 14
+ * @note extracted = EXTRACT_BITS(num, 1, 8); // Extracts 0010 1110 == 46
+ * @note extracted = EXTRACT_BITS(num, 5, 4); // Extracts 0000 0010 == 2
+ */
+#define EXTRACT_BITS(number, p, n) (((1 << (n)) - 1) & ((number) >> ((p) -1)))
+
+/**
+ * @brief Sets a range of bits of the given number
+ * @param number The number to modify
+ * @param p The bit position to set from, inclusive. Starts from least significant bit as position 1. See note.
+ * @param n The number of bits to set
+ * 
+ * @note Example usage:
+ * @note u8 num = 46; // 0010 1110
+ * @note SET_BITS(num, 1, 4, 5); // num becomes 0010 0101 == 37
+ * @note SET_BITS(num, 1, 8, 23); // num(37) becomes 0001 0111 == 23
+ * @note SET_BITS(num, 5, 4, 7); // num(23) becomes 0111 0111 == 119
+ */
+#define SET_BITS(number, p, n, value)                                                                                  \
+    {                                                                                                                  \
+        typeof(number) mask = ((1 << (n)) - 1) << ((p) -1);                                                            \
+        number &= ~mask;                                                                                               \
+        number |= ((value) << ((p) -1)) & mask;                                                                        \
+    }
+
 #define STRINGIFY_(x) #x
 #define STRINGIFY(x)  STRINGIFY_(x)
 #define BIT(x)        (1 << (x))
