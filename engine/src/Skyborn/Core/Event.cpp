@@ -88,7 +88,7 @@ bool register_event(u16 code, void* listener, func_on_event on_event)
     {
         if (registered[code].events[i].listener == listener)
         {
-            // warn
+            LOG_WARN("Attempted to register a duplicate {} event", event_names[code - 1]);
             return false;
         }
     }
