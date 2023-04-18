@@ -27,6 +27,8 @@
 #include "Platform.h"
 #include "Event.h"
 #include "Input.h"
+#include "Clock.h"
+#include "Skyborn/Util/Util.h"
 
 #include <filesystem>
 
@@ -90,10 +92,18 @@ bool create(game* game_inst)
 
     LOG_INFO("Starting up application");
     game_inst->app_state = create_ref<application_state>();
-    app_state            = ref<application_state>(game_inst->app_state.get());
+    // app_state            = ref<application_state>(game_inst->app_state.get());
+    // app_state            = create_ref<application_state>();
+    app_state            = game_inst->app_state;
     app_state->game_inst = game_inst;
     app_state->running   = false;
     app_state->suspended = false;
+
+    if (!input::initialize())
+    {
+        LOG_FATAL("Input system failed to initialize");
+        return false;
+    }
 
     if (!events::initialize())
     {
@@ -126,6 +136,15 @@ bool create(game* game_inst)
 bool run()
 {
     app_state->running = true;
+    core::clock clock{};
+    core::clock fps_clock{};
+    fps_clock.start();
+    clock.start();
+    clock.update();
+    f64 last_time = clock.elapsed();
+    u16 fps{};
+
+    constexpr f64 target_frame_time = 1.0 / 60.0;
 
     while (app_state->running)
     {
@@ -135,19 +154,52 @@ bool run()
         }
         if (!app_state->suspended)
         {
-            if (!app_state->game_inst->update(app_state->game_inst, 0.f))
+            clock.update();
+            const f64 current_time     = clock.elapsed();
+            const f64 delta            = current_time - last_time;
+            const f64 frame_start_time = platform::get_time();
+            if (!app_state->game_inst->update(app_state->game_inst, (f32) delta))
             {
                 LOG_FATAL("Game tick failed. Aborting...");
                 app_state->running = false;
                 break;
             }
 
-            if (!app_state->game_inst->render(app_state->game_inst, 0.f))
+            if (!app_state->game_inst->render(app_state->game_inst, (f32) delta))
             {
                 LOG_FATAL("Game render failed. Aborting...");
                 app_state->running = false;
                 break;
             }
+
+            // render packet
+            // draw frame
+            ++fps;
+
+            const f64 frame_end_time     = platform::get_time();
+            const f64 frame_elapsed_time = frame_end_time - frame_start_time;
+
+            if (const f64 remaining_seconds = target_frame_time - frame_elapsed_time; remaining_seconds > 0.0)
+            {
+                const u64      remaining_ms = (u64) (remaining_seconds * 1000.0);
+                constexpr bool limit_frames = false; // TODO
+                if (remaining_ms > 0 && limit_frames)
+                {
+                    utl::sleep((u32) remaining_ms);
+                }
+            }
+
+            input::update(delta);
+
+            fps_clock.update();
+            if (fps_clock.elapsed() >= 1.0)
+            {
+                LOG_DEBUG("FPS: {}", fps);
+                fps = 0;
+                fps_clock.start();
+            }
+
+            last_time = current_time;
         }
     }
 
@@ -158,6 +210,7 @@ bool run()
     events::unregister_event(events::system_event::key_released, nullptr, on_key);
 
     events::shutdown();
+    input::shutdown();
     platform::shutdown();
     return true;
 }

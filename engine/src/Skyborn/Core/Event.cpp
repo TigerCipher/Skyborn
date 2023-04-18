@@ -23,11 +23,20 @@
 // ------------------------------------------------------------------------------
 #include "Event.h"
 #include "Skyborn/Util/Vector.h"
+#include "Skyborn/Debug/Logger.h"
 
 namespace sky::events
 {
 namespace
 {
+
+constexpr const char* event_names[] = {
+    "application_quit", "key_pressed", "key_released", "button_pressed",
+    "button_released",  "mouse_moved", "mouse_wheel",  "resized",
+};
+
+static_assert(_countof(event_names) == system_event::count - 1);
+
 constexpr u32 max_message_codes = 2 << 13; // random magic number stuffs
 
 bool is_initialized = false;
@@ -53,6 +62,7 @@ bool initialize()
         return false;
 
     is_initialized = true;
+    LOG_INFO("Events submodule initialized");
     return true;
 }
 
@@ -65,6 +75,7 @@ void shutdown()
             registered[i].events.clear();
         }
     }
+    LOG_INFO("Events submodule shutdown");
 }
 
 bool register_event(u16 code, void* listener, func_on_event on_event)
@@ -84,6 +95,7 @@ bool register_event(u16 code, void* listener, func_on_event on_event)
 
     const registered_event evt{ listener, on_event };
     registered[code].events.push_back(evt);
+    LOG_TRACE("Registered event {}", event_names[code - 1]);
     return true;
 }
 
@@ -97,6 +109,7 @@ bool unregister_event(u16 code, void* listener, func_on_event on_event)
     {
         if (auto [lsn, callback]{ events[i] }; lsn == listener && callback == on_event)
         {
+            LOG_TRACE("Unregistered event {}", event_names[code - 1]);
             events.erase_unordered(i);
             return true;
         }

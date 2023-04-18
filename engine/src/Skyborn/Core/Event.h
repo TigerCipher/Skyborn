@@ -65,6 +65,7 @@ struct system_event
          */
         resized,
 
+        count,
         max_code = 0xff
     };
 };

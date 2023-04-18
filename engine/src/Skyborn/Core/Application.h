@@ -24,6 +24,7 @@
 #pragma once
 
 #include "Skyborn/Defines.h"
+#include "Skyborn/Debug/Logger.h"
 
 namespace sky::app
 {

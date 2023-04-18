@@ -282,11 +282,13 @@ void shutdown()
     LOG_INFO("Platform shutting down");
     if (plat_state.hwnd)
     {
+        LOG_TRACE("Destroying win32 handle");
         DestroyWindow(plat_state.hwnd);
         plat_state.hwnd = nullptr;
     }
 
     reset_console();
+    LOG_INFO("Platform has shutdown");
 }
 
 bool pump_messages()

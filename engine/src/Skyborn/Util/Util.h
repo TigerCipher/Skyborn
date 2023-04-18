@@ -16,47 +16,28 @@
 //    You should have received a copy of the GNU Lesser General Public
 //    License along with this library; if not, see <http://www.gnu.org/licenses/>.
 //
-// File Name: Entrypoint.h
-// Date File Created: 04/16/2023
+// File Name: Util.h
+// Date File Created: 04/17/2023
 // Author: Matt
 //
 // ------------------------------------------------------------------------------
 
-#pragma once
-
 #include "Skyborn/Defines.h"
-#include "Skyborn/Debug/Logger.h"
-#include "Skyborn/Core/Application.h"
 
-extern bool create_game(sky::app::game* game_inst);
-extern void shutdown_game(sky::app::game* game_inst);
+#include <thread>
 
-// Entry point
-int main(int argc, char** argv)
+namespace sky::utl
 {
-    sky::app::set_cwd(argv[0]);
-    sky::app::game game_inst;
 
-    if (!create_game(&game_inst))
-    {
-        LOG_FATAL("Failed to create game");
-        return -1;
-    }
-
-    if (!sky::app::create(&game_inst))
-    {
-        LOG_FATAL("Failed to create application");
-        return 1;
-    }
-
-    if (!sky::app::run())
-    {
-        LOG_FATAL("Application failed to shutdown properly");
-        return 2;
-    }
-
-    shutdown_game(&game_inst);
-    LOG_INFO("Done shutting down. Exiting program");
-
-    return 0;
+// For comparing c - strings.I can 't help but see `strcmp(str0, str1) == 0` and think it means they aren' t equal, when they are
+inline bool string_compare(const char* str1, const char* str2)
+{
+    return strcmp(str1, str2) == 0;
 }
+
+inline void sleep(u32 milliseconds)
+{
+    std::this_thread::sleep_for(std::chrono::milliseconds{ milliseconds });
+}
+
+} // namespace sky::utl
