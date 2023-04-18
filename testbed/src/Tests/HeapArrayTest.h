@@ -16,26 +16,11 @@
 //    You should have received a copy of the GNU Lesser General Public
 //    License along with this library; if not, see <http://www.gnu.org/licenses/>.
 //
-// File Name: Main.cpp
+// File Name: HeapArrayTest.h
 // Date File Created: 04/17/2023
 // Author: Matt
 //
 // ------------------------------------------------------------------------------
+#pragma once
 
-#include "TestManager.h"
-
-#include "Tests/VectorTest.h"
-#include "Tests/HeapArrayTest.h"
-#include <Skyborn/Debug/Logger.h>
-
-int main(int argc, char** argv)
-{
-    LOG_INFO("Starting unit tests");
-    register_vector_tests();
-    register_heap_array_tests();
-
-
-    tests::run_tests();
-
-    return 0;
-}
+void register_heap_array_tests();

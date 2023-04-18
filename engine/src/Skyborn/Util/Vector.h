@@ -49,7 +49,7 @@ public:
         o.reset();
     }
 
-    ~vector() { destroy(); }
+    constexpr ~vector() { destroy(); }
 
     constexpr vector& operator=(const vector& o)
     {
