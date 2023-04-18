@@ -24,6 +24,7 @@
 #include "Logger.h"
 
 #include "Skyborn/Core/Platform.h"
+#include "Asserts.h"
 
 #include <iomanip>
 #include <ctime>

@@ -14,6 +14,17 @@
             "cwd": "${fileDirname}",
             "environment": [],
             "console": "integratedTerminal"
+        },
+        {
+            "name": "UNIT TESTS",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "${workspaceRoot}/build/bin/testbed.exe",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${fileDirname}",
+            "environment": [],
+            "console": "integratedTerminal"
         }
     ]
 }

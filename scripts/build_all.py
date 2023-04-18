@@ -68,7 +68,7 @@ def search_src(project_root):
 should_regenerate = 0
 should_regenerate += search_src("engine")
 should_regenerate += search_src("sandbox")
-# testbed += search_src("testbed")
+should_regenerate += search_src("testbed")
 
 
 config_workspace_dir = "D:/Skyborn"

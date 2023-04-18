@@ -4,6 +4,8 @@
             "name": "Win32",
             "includePath": [
                 "${workspaceFolder}/engine/src/**",
+                "${workspaceFolder}/sandbox/src/**",
+                "${workspaceFolder}/testbed/src/**",
                 "${VULKAN_SDK}/include"
             ],
             "defines": [
