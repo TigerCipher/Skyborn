@@ -49,13 +49,21 @@ bool on_event(u16 code, [[maybe_unused]] void* sender, [[maybe_unused]] void* li
         LOG_INFO("application_quit event received. Shutting down application");
         app_state->running = false;
         return true;
+    case events::system_event::mouse_moved:
+    {
+        u16 mx = MOUSE_X(data);
+        u16 my = MOUSE_Y(data);
+        LOG_TRACE("Mouse: ({}, {})", mx, my);
+    }
+    break;
     default: return false;
     }
+    return false;
 }
 
 bool on_key(u16 code, [[maybe_unused]] void* sender, [[maybe_unused]] void* listener, void* data)
 {
-    const u16 key_code = *(u16*) data;
+    const u16 key_code = KEY_CODE(data);
     if (code == events::system_event::key_pressed)
     {
         if (key_code == input::key::escape)
@@ -110,6 +118,7 @@ bool create(game* game_inst)
     }
 
     events::register_event(events::system_event::application_quit, nullptr, on_event);
+    events::register_event(events::system_event::mouse_moved, nullptr, on_event);
     events::register_event(events::system_event::key_pressed, nullptr, on_key);
     events::register_event(events::system_event::key_released, nullptr, on_key);
 
@@ -204,6 +213,7 @@ bool run()
     LOG_INFO("Shutting down...");
 
     events::unregister_event(events::system_event::application_quit, nullptr, on_event);
+    events::unregister_event(events::system_event::mouse_moved, nullptr, on_event);
     events::unregister_event(events::system_event::key_pressed, nullptr, on_key);
     events::unregister_event(events::system_event::key_released, nullptr, on_key);
 

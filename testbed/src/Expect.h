@@ -25,6 +25,7 @@
 #pragma once
 
 #include <Skyborn/Debug/Logger.h>
+#include <Skyborn/Util/Maths.h>
 
 #define expect_should_be(expected, actual)                                                                             \
     if ((actual) != (expected))                                                                                        \
@@ -40,12 +41,12 @@
         return 0;                                                                                                      \
     }
 
-// #define expect_float_to_equal(expected, actual)                                                                        \
-//     if (!sky::math::near_equal(expected, actual, 0.001f))                                                              \
-//     {                                                                                                                  \
-//         LOG_ERRORF("--> Expected {}, but got {} . File: {}:{}", expected, actual, __FILE__, __LINE__);                 \
-//         return 0;                                                                                                      \
-//     }
+#define expect_float_to_equal(expected, actual)                                                                        \
+    if (!sky::math::near_equal(expected, actual, 0.001f))                                                              \
+    {                                                                                                                  \
+        LOG_ERROR("--> Expected {}, but got {} . File: {}:{}", expected, actual, __FILE__, __LINE__);                  \
+        return 0;                                                                                                      \
+    }
 
 #define expects_to_be_true(actual)                                                                                     \
     if (!(actual))                                                                                                     \

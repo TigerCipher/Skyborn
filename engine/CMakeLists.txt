@@ -5,5 +5,5 @@ set(SOURCE_FILES src/Skyborn/Core/Application.cpp src/Skyborn/Core/Clock.cpp src
 
 add_library(skyborn SHARED ${SOURCE_FILES})
 target_include_directories(skyborn PRIVATE src)
-add_compile_definitions(_DEBUG SKY_EXPORT _CRT_SECURE_NO_WARNINGS)
-add_compile_options(-Wall -g -fdeclspec)
+# add_compile_definitions(_DEBUG SKY_EXPORT _CRT_SECURE_NO_WARNINGS)
+target_compile_definitions(skyborn PRIVATE _DEBUG SKY_EXPORT _CRT_SECURE_NO_WARNINGS)

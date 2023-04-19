@@ -25,6 +25,12 @@
 
 #include "Skyborn/Defines.h"
 
+#define MOUSE_X(data) EXTRACT_BITS(*(u32*) (data), 1, 16)
+#define MOUSE_Y(data) EXTRACT_BITS(*(u32*) (data), 17, 16)
+
+#define KEY_CODE(data)    *(u16*) (data)
+#define MOUSE_WHEEL(data) *(i8*) (data);
+
 namespace sky::input
 {
 struct button
