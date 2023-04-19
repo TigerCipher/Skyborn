@@ -24,6 +24,8 @@
 
 #include "Skyborn/Defines.h"
 
+#include <format>
+
 #ifndef SKY_USE_SIMD
     #define SKY_USE_SIMD 1
 #endif
@@ -1434,3 +1436,92 @@ using vec3 = sky::math::vector3;
 using vec4 = sky::math::vector4;
 using quat = sky::math::vector4;
 using mat4 = sky::math::matrix;
+
+// Formatting
+
+template<>
+struct std::formatter<vec2> : std::formatter<string_view>
+{
+    auto format(const vec2& obj, std::format_context& ctx)
+    {
+        std::string temp;
+        std::format_to(std::back_inserter(temp), "<{:.4f}, {:.4f}>", obj.x, obj.y);
+
+        return std::formatter<string_view>::format(temp, ctx);
+    }
+};
+
+template<>
+struct std::formatter<vec3> : std::formatter<string_view>
+{
+    auto format(const vec3& obj, std::format_context& ctx)
+    {
+        std::string temp;
+        std::format_to(std::back_inserter(temp), "<");
+
+        for (u32 i = 0; i < 2; ++i)
+        {
+            std::format_to(std::back_inserter(temp), "{:.4f}, ", obj.elements[i]);
+        }
+
+        std::format_to(std::back_inserter(temp), "{:.4f}>", obj.elements[2]);
+
+        return std::formatter<string_view>::format(temp, ctx);
+    }
+};
+
+template<>
+struct std::formatter<vec4> : std::formatter<string_view>
+{
+    auto format(const vec4& obj, std::format_context& ctx)
+    {
+        std::string temp;
+        std::format_to(std::back_inserter(temp), "<");
+
+        for (u32 i = 0; i < 3; ++i)
+        {
+            std::format_to(std::back_inserter(temp), "{:.4f}, ", obj.elements[i]);
+        }
+
+        std::format_to(std::back_inserter(temp), "{:.4f}>", obj.elements[3]);
+
+        return std::formatter<string_view>::format(temp, ctx);
+    }
+};
+
+template<>
+struct std::formatter<mat4> : std::formatter<string_view>
+{
+    auto format(const mat4& obj, std::format_context& ctx)
+    {
+        std::string temp;
+        std::format_to(std::back_inserter(temp), "[ ");
+
+        for (u32 i = 0; i < 4; ++i)
+        {
+            for (u32 j = 0; j < 4; ++j)
+            {
+                if (j == 0)
+                {
+                    std::format_to(std::back_inserter(temp), "<{:.4f}, ", obj.elements[i][j]);
+                } else if (j == 3)
+                {
+                    if (i != 3)
+                    {
+                        std::format_to(std::back_inserter(temp), "{:.4f}> // ", obj.elements[i][j]);
+                    } else
+                    {
+                        std::format_to(std::back_inserter(temp), "{:.4f}> ", obj.elements[i][j]);
+                    }
+                } else
+                {
+                    std::format_to(std::back_inserter(temp), "{:.4f}, ", obj.elements[i][j]);
+                }
+            }
+        }
+
+        std::format_to(std::back_inserter(temp), " ]");
+
+        return std::formatter<string_view>::format(temp, ctx);
+    }
+};

@@ -48,6 +48,7 @@ u8 vector_mult_should_be_correct()
         vec4 b{ 3.f, 3.f, 2.f, 3.f };
         vec4 c = a * b;
         vec4 d{ 6.f, 6.f, 6.f, 6.f };
+        LOG_TRACE("Vector b: {}", b);
         expects_to_be_true(d == c);
     }
     return pass;
@@ -110,6 +111,8 @@ u8 matrix_mult()
     ab.m[15] = 169;
 
     mat4 actual_ab = a * b;
+
+    LOG_TRACE("actual_ab = {}", actual_ab);
 
     for (u32 i = 0; i < 16; ++i)
     {
