@@ -34,7 +34,6 @@
 
 int main(int argc, char** argv)
 {
-    u64 a = 32344;
     LOG_INFO("Starting unit tests");
     register_vector_tests();
     register_heap_array_tests();

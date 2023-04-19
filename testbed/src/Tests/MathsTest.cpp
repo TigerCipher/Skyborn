@@ -27,6 +27,8 @@
 #include "Expect.h"
 #include "TestManager.h"
 
+using namespace sky;
+
 u8 vector_mult_should_be_correct()
 {
     {
@@ -122,8 +124,64 @@ u8 matrix_mult()
     return pass;
 }
 
+u8 matrix_inverse()
+{
+    mat4 a{};
+    a.m[0] = 1;
+    a.m[1] = 1;
+    a.m[2] = 1;
+    a.m[3] = 0;
+
+    a.m[4] = 0;
+    a.m[5] = 3;
+    a.m[6] = 1;
+    a.m[7] = 2;
+
+    a.m[8]  = 1;
+    a.m[9]  = 0;
+    a.m[10] = 2;
+    a.m[11] = 1;
+
+    a.m[12] = 2;
+    a.m[13] = 3;
+    a.m[14] = 1;
+    a.m[15] = 0;
+
+    LOG_DEBUG("Before inverse: {}", a);
+
+    mat4 inversed{};
+    inversed.m[0]  = -3;
+    inversed.m[1]  = -0.5f;
+    inversed.m[2]  = 1;
+    inversed.m[3]  = 1.5f;
+    inversed.m[4]  = 1;
+    inversed.m[5]  = 0.25f;
+    inversed.m[6]  = -0.5f;
+    inversed.m[7]  = -0.25f;
+    inversed.m[8]  = 3;
+    inversed.m[9]  = 0.25f;
+    inversed.m[10] = -0.5f;
+    inversed.m[11] = -1.25f;
+    inversed.m[12] = -3;
+    inversed.m[13] = 0;
+    inversed.m[14] = 1;
+    inversed.m[15] = 1;
+
+    mat4 b = math::inverse(a);
+    LOG_DEBUG("Inversed: {}", b);
+
+    for (u32 i = 0; i < 16; ++i)
+    {
+        expect_float_to_equal(inversed.m[i], b.m[i]);
+    }
+
+
+    return pass;
+}
+
 void register_math_tests()
 {
     tests::register_test(vector_mult_should_be_correct, "Vector multiplication should be correct");
     tests::register_test(matrix_mult, "Matrix should multiply correctly");
+    tests::register_test(matrix_inverse, "Matrix should calculate its inverse correctly");
 }
