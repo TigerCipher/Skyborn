@@ -23,6 +23,10 @@
 // ------------------------------------------------------------------------------
 #include "VkCore.h"
 
+#include "Skyborn/Util/Util.h"
+#include "Skyborn/Util/Vector.h"
+#include "Skyborn/Util/HeapArray.h"
+
 namespace sky::graphics::vk::core
 {
 
@@ -33,6 +37,34 @@ struct vk_context
     VkInstance             instance;
     VkAllocationCallbacks* allocator{ nullptr };
 } context;
+
+#ifdef _DEBUG
+VkDebugUtilsMessengerEXT debug_messenger{};
+#endif
+
+
+// Debug callback
+VKAPI_ATTR VkBool32 VKAPI_CALL debug_callback(VkDebugUtilsMessageSeverityFlagBitsEXT      message_severity,
+                                              VkDebugUtilsMessageTypeFlagsEXT             message_types,
+                                              const VkDebugUtilsMessengerCallbackDataEXT* callback_data,
+                                              void*                                       user_data)
+{
+    switch (message_severity) // NOLINT(clang-diagnostic-switch-enum)
+    {
+    case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT: LOG_ERROR("Vulkan Error: {}", callback_data->pMessage); break;
+    case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT:
+        LOG_WARN("Vulkan Warning: {}", callback_data->pMessage);
+        break;
+    case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT: LOG_INFO("Vulkan Info: {}", callback_data->pMessage); break;
+    case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT:
+        LOG_TRACE("Vulkan Verbose Info: {}", callback_data->pMessage);
+        break;
+    default: break;
+    }
+
+    return VK_FALSE;
+}
+
 } // anonymous namespace
 
 bool initialize(const char* app_name)
@@ -47,15 +79,87 @@ bool initialize(const char* app_name)
     app_info.engineVersion      = VK_MAKE_VERSION(1, 0, 0);
 
     VkInstanceCreateInfo create_info{ VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO };
-    create_info.pApplicationInfo        = &app_info;
-    create_info.enabledExtensionCount   = 0;
-    create_info.ppEnabledExtensionNames = 0;
-    create_info.enabledLayerCount       = 0;
-    create_info.ppEnabledLayerNames     = 0;
+    create_info.pApplicationInfo = &app_info;
+
+    utl::vector<const char*> required_extensions{};
+    required_extensions.push_back(VK_KHR_SURFACE_EXTENSION_NAME);
+#if SKY_PLATFORM_WINDOWS
+    required_extensions.push_back("VK_KHR_win32_surface");
+#endif
+
+#ifdef _DEBUG
+    required_extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
+    LOG_DEBUG("Required vulkan extensions:");
+    for (const auto& ext : required_extensions)
+    {
+        LOG_DEBUG("{}", ext);
+    }
+#endif
+
+    create_info.enabledExtensionCount   = (u32) required_extensions.size();
+    create_info.ppEnabledExtensionNames = required_extensions.data();
+
+    utl::vector<const char*> validation_layers{};
+
+#ifdef _DEBUG
+    LOG_DEBUG("Validation layers enabled");
+    validation_layers.push_back("VK_LAYER_KHRONOS_validation");
+
+    u32 available_layer_count{};
+    VK_CALL(vkEnumerateInstanceLayerProperties(&available_layer_count, nullptr));
+    utl::heap_array<VkLayerProperties> available_layers{ available_layer_count };
+    VK_CALL(vkEnumerateInstanceLayerProperties(&available_layer_count, available_layers.data()));
+
+    for (const auto& required_layer : validation_layers)
+    {
+        LOG_DEBUG("Searching for layer: {}...", required_layer);
+        bool found = false;
+        for (u32 i = 0; i < available_layer_count; ++i)
+        {
+            if (utl::string_compare(required_layer, available_layers[i].layerName))
+            {
+                found = true;
+                LOG_DEBUG("Found.");
+                break;
+            }
+        }
+        if (!found)
+        {
+            LOG_FATAL("Required validation layer is missing: {}", required_layer);
+            return false;
+        }
+    }
+
+    LOG_DEBUG("All required validation layers are present");
+
+#endif
+
+    create_info.enabledLayerCount   = (u32) validation_layers.size();
+    create_info.ppEnabledLayerNames = validation_layers.data();
 
     VK_CALL(vkCreateInstance(&create_info, context.allocator, &context.instance));
     LOG_INFO("Vulkan instance created");
-    // ...
+
+// Debugger
+#ifdef _DEBUG
+    LOG_DEBUG("Creating Vulkan debugger");
+    constexpr u32 log_severity{ VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT |
+                                VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT |
+                                VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT };
+    // | VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT
+    VkDebugUtilsMessengerCreateInfoEXT debug_create_info{ VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT };
+    debug_create_info.messageSeverity = log_severity;
+    debug_create_info.messageType     = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT |
+                                    VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT |
+                                    VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT;
+    debug_create_info.pfnUserCallback = debug_callback;
+
+    const auto func =
+        (PFN_vkCreateDebugUtilsMessengerEXT) vkGetInstanceProcAddr(context.instance, "vkCreateDebugUtilsMessengerEXT");
+    assert_msg(func, "Failed to create vulkan debug messenger");
+    VK_CALL(func(context.instance, &debug_create_info, context.allocator, &debug_messenger));
+    LOG_DEBUG("Vulkan debugger created");
+#endif
 
     LOG_INFO("Vulkan backend initialized");
     return true;
@@ -63,7 +167,20 @@ bool initialize(const char* app_name)
 
 void shutdown()
 {
+    // NOTE: Resources should be destroyed in reverse order of creation
+
     LOG_INFO("Shutting Vulkan backend down...");
+
+
+#ifdef _DEBUG
+    LOG_DEBUG("Destroying Vulkan debugger");
+    if (debug_messenger)
+    {
+        const auto func = (PFN_vkDestroyDebugUtilsMessengerEXT) vkGetInstanceProcAddr(
+            context.instance, "vkDestroyDebugUtilsMessengerEXT");
+        func(context.instance, debug_messenger, context.allocator);
+    }
+#endif
 
     LOG_DEBUG("Destroying Vulkan instance");
     vkDestroyInstance(context.instance, context.allocator);
