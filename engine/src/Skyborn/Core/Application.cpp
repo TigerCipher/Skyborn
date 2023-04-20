@@ -32,6 +32,13 @@
 
 #include <filesystem>
 
+// TODO: Move
+#ifndef SKY_USE_SIMD
+    #pragma message("NOTICE: To enable SIMD support, compile with SKY_USE_SIMD definition")
+#else
+    #pragma message("NOTICE: To disable SIMD support, remove the SKY_USE_SIMD definition from compile options")
+#endif
+
 namespace sky::app
 {
 namespace

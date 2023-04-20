@@ -28,6 +28,8 @@
 
 #ifndef SKY_USE_SIMD
     #define SKY_USE_SIMD 0
+#else
+    #define SKY_USE_SIMD 1
 #endif
 
 #if SKY_USE_SIMD
