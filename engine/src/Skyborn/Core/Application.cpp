@@ -29,6 +29,7 @@
 #include "Input.h"
 #include "Clock.h"
 #include "Skyborn/Util/Util.h"
+#include "Skyborn/Graphics/Renderer.h"
 
 #include <filesystem>
 
@@ -56,13 +57,6 @@ bool on_event(u16 code, [[maybe_unused]] void* sender, [[maybe_unused]] void* li
         LOG_INFO("application_quit event received. Shutting down application");
         app_state->running = false;
         return true;
-    case events::system_event::mouse_moved:
-    {
-        u16 mx = MOUSE_X(data);
-        u16 my = MOUSE_Y(data);
-        LOG_TRACE("Mouse: ({}, {})", mx, my);
-    }
-    break;
     default: return false;
     }
     return false;
@@ -125,7 +119,6 @@ bool create(game* game_inst)
     }
 
     events::register_event(events::system_event::application_quit, nullptr, on_event);
-    events::register_event(events::system_event::mouse_moved, nullptr, on_event);
     events::register_event(events::system_event::key_pressed, nullptr, on_key);
     events::register_event(events::system_event::key_released, nullptr, on_key);
 
@@ -137,6 +130,11 @@ bool create(game* game_inst)
         return false;
     }
 
+    if (!graphics::initialize(graphics::backend_api::vulkan, game_inst->app_desc.name))
+    {
+        LOG_FATAL("Failed to initialize renderer. Aborting...");
+        return false;
+    }
     if (!game_inst->initialize(game_inst))
     {
         LOG_FATAL("Failed to initialize game");
@@ -186,8 +184,8 @@ bool run()
                 break;
             }
 
-            // render packet
-            // draw frame
+            graphics::render_packet packet{ (f32) delta };
+            graphics::draw_frame(packet);
             ++fps;
 
             const f64 frame_end_time     = platform::get_time();
@@ -220,12 +218,12 @@ bool run()
     LOG_INFO("Shutting down...");
 
     events::unregister_event(events::system_event::application_quit, nullptr, on_event);
-    events::unregister_event(events::system_event::mouse_moved, nullptr, on_event);
     events::unregister_event(events::system_event::key_pressed, nullptr, on_key);
     events::unregister_event(events::system_event::key_released, nullptr, on_key);
 
     events::shutdown();
     input::shutdown();
+    graphics::shutdown();
     platform::shutdown();
     return true;
 }

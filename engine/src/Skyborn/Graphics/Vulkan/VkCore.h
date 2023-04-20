@@ -24,7 +24,7 @@
 
 #pragma once
 
-#include "Skyborn/Defines.h"
+#include "VkCommon.h"
 
 namespace sky::graphics::vk::core
 {
