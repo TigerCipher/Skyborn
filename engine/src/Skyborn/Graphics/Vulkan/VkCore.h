@@ -25,12 +25,38 @@
 #pragma once
 
 #include "VkCommon.h"
+#include "Skyborn/Util/Vector.h"
+#include "Skyborn/Util/HeapArray.h"
 
 namespace sky::graphics::vk::core
 {
+
+struct swapchain_support_info
+{
+    VkSurfaceCapabilitiesKHR        capabilities{};
+    utl::vector<VkSurfaceFormatKHR> formats{};
+    utl::vector<VkPresentModeKHR>   present_modes{};
+};
+
+struct vk_device
+{
+    VkPhysicalDevice                 physical_device{};
+    VkDevice                         logical_device{};
+    swapchain_support_info           swapchain_support{};
+    i32                              graphics_queue_index{};
+    i32                              present_queue_index{};
+    i32                              transfer_queue_index{};
+    VkPhysicalDeviceProperties       properties{};
+    VkPhysicalDeviceFeatures         features{};
+    VkPhysicalDeviceMemoryProperties memory{};
+};
+
 bool initialize(const char* app_name);
 void shutdown();
 void resized(u16 width, u16 height);
 bool begin_frame(f32 delta);
 bool end_frame(f32 delta);
+
+vk_device& device();
+
 } // namespace sky::graphics::vk::core

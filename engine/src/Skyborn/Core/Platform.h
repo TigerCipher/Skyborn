@@ -26,8 +26,19 @@
 
 #include "Skyborn/Defines.h"
 
+#ifdef _WIN64
+    #ifndef WIN32_LEAN_AND_MEAN
+        #define WIN32_LEAN_AND_MEAN
+    #endif
+    #include <Windows.h>
+#endif
+
 namespace sky::platform
 {
+#ifdef _WIN64
+using window_handle   = HWND;
+using window_instance = HINSTANCE;
+#endif
 
 SAPI bool initialize(const char* app_name, i32 x, i32 y, u32 width, u32 height);
 SAPI void shutdown();
@@ -39,5 +50,8 @@ void write_error(const char* msg, u8 color);
 void reset_console();
 
 SAPI f64 get_time();
+
+window_handle   get_window_handle();
+window_instance get_window_instance();
 
 } // namespace sky::platform

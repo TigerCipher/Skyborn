@@ -69,10 +69,10 @@ constexpr u8 levels[6]{ gray, light_gray, green, gold, light_red, purple };
 
 struct platform_state
 {
-    HINSTANCE     hinst;
-    HWND          hwnd;
-    f64           clock_frequency;
-    LARGE_INTEGER start_time;
+    window_instance hinst;
+    window_handle   hwnd;
+    f64             clock_frequency;
+    LARGE_INTEGER   start_time;
 } plat_state;
 
 u16 original_console_state;
@@ -339,6 +339,16 @@ f64 get_time()
     LARGE_INTEGER now_time{};
     QueryPerformanceCounter(&now_time);
     return (f64) now_time.QuadPart * plat_state.clock_frequency;
+}
+
+window_handle get_window_handle()
+{
+    return plat_state.hwnd;
+}
+
+window_instance get_window_instance()
+{
+    return plat_state.hinst;
 }
 
 
