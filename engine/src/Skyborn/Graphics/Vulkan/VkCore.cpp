@@ -341,11 +341,85 @@ bool create_device()
     {
         return false;
     }
+
+    LOG_INFO("Creating logical device");
+    const bool present_shares_graphics_queue =
+        context.main_device.graphics_queue_index == context.main_device.present_queue_index;
+    const bool transfer_shares_graphics_queue =
+        context.main_device.graphics_queue_index == context.main_device.transfer_queue_index;
+    utl::vector<u32> indices{};
+    indices.push_back(context.main_device.graphics_queue_index);
+    if (!present_shares_graphics_queue)
+    {
+        indices.push_back(context.main_device.present_queue_index);
+    }
+    if (!transfer_shares_graphics_queue)
+    {
+        indices.push_back(context.main_device.transfer_queue_index);
+    }
+
+    utl::heap_array<VkDeviceQueueCreateInfo> queue_create_infos{ indices.size() };
+
+    for (u32 i = 0; i < indices.size(); ++i)
+    {
+        auto& [sType, pNext, flags, queueFamilyIndex, queueCount, pQueuePriorities]{ queue_create_infos[i] };
+        sType            = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+        queueFamilyIndex = indices[i];
+        queueCount       = 1;
+        if (indices[i] == context.main_device.graphics_queue_index)
+        {
+            queueCount = 2;
+        }
+
+        flags = 0;
+        pNext = nullptr;
+        f32 queue_priority[2]{ 1.0f, 1.0f };
+        pQueuePriorities = queue_priority;
+    }
+
+    // TODO: Make configurable
+    VkPhysicalDeviceFeatures device_features{};
+    device_features.samplerAnisotropy = VK_TRUE;
+
+    VkDeviceCreateInfo create_info{ VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO };
+    create_info.queueCreateInfoCount = indices.size();
+    create_info.pQueueCreateInfos    = queue_create_infos.data();
+
+    create_info.pEnabledFeatures        = &device_features;
+    create_info.enabledExtensionCount   = 1;
+    auto ext_names                      = VK_KHR_SWAPCHAIN_EXTENSION_NAME;
+    create_info.ppEnabledExtensionNames = &ext_names;
+
+    // Explicitly zeroing deprecated items
+    create_info.enabledLayerCount   = 0;
+    create_info.ppEnabledLayerNames = nullptr;
+
+    VK_CALL(vkCreateDevice(context.main_device.physical_device, &create_info, context.allocator,
+                           &context.main_device.logical_device));
+    LOG_INFO("Logical device created");
+    vkGetDeviceQueue(context.main_device.logical_device, context.main_device.graphics_queue_index, 0,
+                     &context.main_device.graphics_queue);
+    vkGetDeviceQueue(context.main_device.logical_device, context.main_device.present_queue_index, 0,
+                     &context.main_device.present_queue);
+    vkGetDeviceQueue(context.main_device.logical_device, context.main_device.transfer_queue_index, 0,
+                     &context.main_device.transfer_queue);
+    LOG_INFO("Obtained device queues");
+
     return true;
 }
 
 void destroy_device()
 {
+    LOG_INFO("Destroying logical device");
+    context.main_device.graphics_queue = nullptr;
+    context.main_device.present_queue  = nullptr;
+    context.main_device.transfer_queue = nullptr;
+    if (context.main_device.logical_device)
+    {
+        vkDestroyDevice(context.main_device.logical_device, context.allocator);
+        context.main_device.logical_device = nullptr;
+    }
+
     LOG_INFO("Releasing physical device resources");
     context.main_device.physical_device = nullptr;
     context.main_device.swapchain_support.formats.clear();
