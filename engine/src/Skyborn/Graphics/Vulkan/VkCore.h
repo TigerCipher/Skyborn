@@ -25,8 +25,6 @@
 #pragma once
 
 #include "VkCommon.h"
-#include "Skyborn/Util/Vector.h"
-#include "Skyborn/Util/HeapArray.h"
 
 namespace sky::graphics::vk::core
 {
@@ -38,6 +36,7 @@ struct swapchain_support_info
     utl::vector<VkPresentModeKHR>   present_modes{};
 };
 
+// TODO: Might move device stuff to its own file - and maybe as a class?
 struct vk_device
 {
     VkPhysicalDevice                 physical_device{};
@@ -52,6 +51,7 @@ struct vk_device
     VkPhysicalDeviceProperties       properties{};
     VkPhysicalDeviceFeatures         features{};
     VkPhysicalDeviceMemoryProperties memory{};
+    VkFormat                         depth_format{};
 };
 
 bool initialize(const char* app_name);
@@ -59,7 +59,20 @@ void shutdown();
 void resized(u16 width, u16 height);
 bool begin_frame(f32 delta);
 bool end_frame(f32 delta);
+bool detect_depth_format();
+void query_swapchain_support(VkPhysicalDevice pd);
 
-vk_device& device();
+vk_device&             device();
+VkPhysicalDevice       physical_device();
+VkDevice               logical_device();
+VkAllocationCallbacks* allocator();
+VkSurfaceKHR           surface();
+
+u32 find_memory_index(u32 type_filter, u32 property_flags);
+
+u32 framebuffer_width();
+u32 framebuffer_height();
+
+void set_current_frame(u32 frame);
 
 } // namespace sky::graphics::vk::core

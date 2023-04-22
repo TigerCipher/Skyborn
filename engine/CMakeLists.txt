@@ -1,6 +1,6 @@
 
 # TODO: Make it so my python script doesn't add platform specific files here. Should be added separately in a conditinal statement
-set(SOURCE_FILES src/Skyborn/Core/Application.cpp src/Skyborn/Core/Clock.cpp src/Skyborn/Core/Event.cpp src/Skyborn/Core/Input.cpp src/Skyborn/Core/PlatformWin32.cpp src/Skyborn/Debug/Logger.cpp src/Skyborn/Graphics/Renderer.cpp src/Skyborn/Graphics/Vulkan/VkCore.cpp src/Skyborn/Graphics/Vulkan/VkInterface.cpp )
+set(SOURCE_FILES src/Skyborn/Core/Application.cpp src/Skyborn/Core/Clock.cpp src/Skyborn/Core/Event.cpp src/Skyborn/Core/Input.cpp src/Skyborn/Core/PlatformWin32.cpp src/Skyborn/Debug/Logger.cpp src/Skyborn/Graphics/Renderer.cpp src/Skyborn/Graphics/Vulkan/VkCore.cpp src/Skyborn/Graphics/Vulkan/VkImage.cpp src/Skyborn/Graphics/Vulkan/VkInterface.cpp src/Skyborn/Graphics/Vulkan/VkSwapchain.cpp )
 
 
 add_library(skyborn SHARED ${SOURCE_FILES})

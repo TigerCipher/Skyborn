@@ -25,6 +25,7 @@
 
 #include "Skyborn/Util/Util.h"
 #include "Skyborn/Core/Platform.h"
+#include "VkSwapchain.h"
 
 #ifdef _WIN64
     #include <vulkan/vulkan_win32.h>
@@ -40,8 +41,16 @@ struct vk_context
     VkInstance             instance;
     VkAllocationCallbacks* allocator{ nullptr };
     vk_device              main_device{};
+    vk_swapchain           swapchain{};
     VkSurfaceKHR           surface{};
+
+    // TODO: Reorganize. Given this (and the above) is needed in so many places
+    u32  framebuffer_width{};
+    u32  framebuffer_height{};
+    bool recreating_swapchain{};
+    u32  current_frame{};
 } context;
+
 
 #ifdef _DEBUG
 VkDebugUtilsMessengerEXT debug_messenger{};
@@ -65,37 +74,6 @@ struct physical_device_queue_family_indices
     u32 compute{};
     u32 transfer{};
 };
-
-void query_swapchain_support(VkPhysicalDevice pd)
-{
-    auto& swapchain = context.main_device.swapchain_support;
-    VK_CALL(vkGetPhysicalDeviceSurfaceCapabilitiesKHR(pd, context.surface, &swapchain.capabilities));
-
-    u32 format_count{};
-    VK_CALL(vkGetPhysicalDeviceSurfaceFormatsKHR(pd, context.surface, &format_count, nullptr));
-
-    if (format_count)
-    {
-        if (swapchain.formats.empty())
-        {
-            swapchain.formats.resize(format_count);
-        }
-
-        VK_CALL(vkGetPhysicalDeviceSurfaceFormatsKHR(pd, context.surface, &format_count, swapchain.formats.data()));
-    }
-
-    u32 present_modes_count{};
-    VK_CALL(vkGetPhysicalDeviceSurfacePresentModesKHR(pd, context.surface, &present_modes_count, nullptr));
-    if (present_modes_count)
-    {
-        if (swapchain.present_modes.empty())
-        {
-            swapchain.present_modes.resize(present_modes_count);
-        }
-        VK_CALL(vkGetPhysicalDeviceSurfacePresentModesKHR(pd, context.surface, &present_modes_count,
-                                                          swapchain.present_modes.data()));
-    }
-}
 
 bool physical_device_meets_requirements(VkPhysicalDevice physical_device, const VkPhysicalDeviceProperties& properties,
                                         const VkPhysicalDeviceFeatures&       features,
@@ -429,11 +407,6 @@ void destroy_device()
     context.main_device.transfer_queue_index = -1;
 }
 
-bool detect_depth_format()
-{
-    return true;
-}
-
 
 } // anonymous namespace
 
@@ -546,6 +519,8 @@ bool initialize(const char* app_name)
         return false;
     }
 
+    context.swapchain.create(context.framebuffer_width, context.framebuffer_height);
+
     LOG_INFO("Vulkan backend initialized");
     return true;
 }
@@ -555,7 +530,7 @@ void shutdown()
     // NOTE: Resources should be destroyed in reverse order of creation
 
     LOG_INFO("Shutting Vulkan backend down...");
-
+    context.swapchain.destroy();
     destroy_device();
 
     if (context.surface)
@@ -591,9 +566,117 @@ bool end_frame(f32 delta)
     return true;
 }
 
+bool detect_depth_format()
+{
+    constexpr u8 candidate_count{ 3 };
+    VkFormat     candidates[candidate_count]{
+        VK_FORMAT_D32_SFLOAT,
+        VK_FORMAT_D32_SFLOAT_S8_UINT,
+        VK_FORMAT_D24_UNORM_S8_UINT,
+    };
+
+    constexpr u32 flags{ VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT };
+
+    for (const auto& candidate : candidates)
+    {
+        VkFormatProperties props{};
+        vkGetPhysicalDeviceFormatProperties(context.main_device.physical_device, candidate, &props);
+
+        if ((props.linearTilingFeatures & flags) == flags || (props.optimalTilingFeatures & flags) == flags)
+        {
+            context.main_device.depth_format = candidate;
+            return true;
+        }
+    }
+
+    return false;
+}
+
+void query_swapchain_support(VkPhysicalDevice pd)
+{
+    auto& swapchain = context.main_device.swapchain_support;
+    VK_CALL(vkGetPhysicalDeviceSurfaceCapabilitiesKHR(pd, context.surface, &swapchain.capabilities));
+
+    u32 format_count{};
+    VK_CALL(vkGetPhysicalDeviceSurfaceFormatsKHR(pd, context.surface, &format_count, nullptr));
+
+    if (format_count)
+    {
+        if (swapchain.formats.empty())
+        {
+            swapchain.formats.resize(format_count);
+        }
+
+        VK_CALL(vkGetPhysicalDeviceSurfaceFormatsKHR(pd, context.surface, &format_count, swapchain.formats.data()));
+    }
+
+    u32 present_modes_count{};
+    VK_CALL(vkGetPhysicalDeviceSurfacePresentModesKHR(pd, context.surface, &present_modes_count, nullptr));
+    if (present_modes_count)
+    {
+        if (swapchain.present_modes.empty())
+        {
+            swapchain.present_modes.resize(present_modes_count);
+        }
+        VK_CALL(vkGetPhysicalDeviceSurfacePresentModesKHR(pd, context.surface, &present_modes_count,
+                                                          swapchain.present_modes.data()));
+    }
+}
+
 vk_device& device()
 {
     return context.main_device;
+}
+
+VkPhysicalDevice physical_device()
+{
+    return context.main_device.physical_device;
+}
+
+VkDevice logical_device()
+{
+    return context.main_device.logical_device;
+}
+
+VkAllocationCallbacks* allocator()
+{
+    return context.allocator;
+}
+
+VkSurfaceKHR surface()
+{
+    return context.surface;
+}
+
+u32 framebuffer_width()
+{
+    return context.framebuffer_width;
+}
+
+void set_current_frame(u32 frame)
+{
+    context.current_frame = frame;
+}
+
+u32 framebuffer_height()
+{
+    return context.framebuffer_height;
+}
+
+u32 find_memory_index(u32 type_filter, u32 property_flags)
+{
+    VkPhysicalDeviceMemoryProperties props{};
+    vkGetPhysicalDeviceMemoryProperties(context.main_device.physical_device, &props);
+    for (u32 i = 0; i < props.memoryTypeCount; ++i)
+    {
+        if (type_filter & (1 << i) && (props.memoryTypes[i].propertyFlags & property_flags) == property_flags)
+        {
+            return i;
+        }
+    }
+
+    LOG_WARN("Unable to find a suitable memory type");
+    return u32_invalid;
 }
 
 } // namespace sky::graphics::vk::core

@@ -94,5 +94,6 @@
         "filesystem": "cpp",
         "optional": "cpp",
         "functional": "cpp"
-    }
+    },
+    "cmake.configureOnOpen": false
 }

@@ -28,6 +28,8 @@
 #include "Skyborn/Debug/Logger.h"
 #include "Skyborn/Debug/Asserts.h"
 #include "Skyborn/Graphics/Renderer.h"
+#include "Skyborn/Util/Vector.h"
+#include "Skyborn/Util/HeapArray.h"
 
 #include <vulkan/vulkan.h>
 
