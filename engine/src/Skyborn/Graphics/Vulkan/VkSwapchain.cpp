@@ -23,7 +23,6 @@
 // ------------------------------------------------------------------------------
 #include "VkSwapchain.h"
 #include "VkCore.h"
-#include "Skyborn/Util/Maths.h"
 #include "Skyborn/Core/Platform.h"
 
 namespace sky::graphics::vk

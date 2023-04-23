@@ -30,6 +30,7 @@
 #include "Skyborn/Graphics/Renderer.h"
 #include "Skyborn/Util/Vector.h"
 #include "Skyborn/Util/HeapArray.h"
+#include "Skyborn/Util/Maths.h"
 
 #include <vulkan/vulkan.h>
 
@@ -53,4 +54,41 @@ struct swapchain_support_info
     utl::vector<VkSurfaceFormatKHR> formats{};
     utl::vector<VkPresentModeKHR>   present_modes{};
 };
+
+struct vk_renderpass
+{
+    enum state : u32
+    {
+        ready,
+        recording,
+        in_render_pass,
+        recording_ended,
+        submitted,
+        not_allocated,
+    };
+
+    VkRenderPass handle{};
+    vec4         render_area{};
+    vec4         clear_color{};
+    f32          depth{};
+    u32          stencil{};
+    state        current_state{};
+};
+
+struct vk_command_buffer
+{
+    enum state : u32
+    {
+        ready,
+        recording,
+        in_render_pass,
+        recording_ended,
+        submitted,
+        not_allocated,
+    };
+
+    VkCommandBuffer handle{};
+    state           current_state{};
+};
+
 } // namespace sky::graphics::vk

@@ -16,49 +16,20 @@
 //    You should have received a copy of the GNU Lesser General Public
 //    License along with this library; if not, see <http://www.gnu.org/licenses/>.
 //
-// File Name: VkSurface.h
-// Date File Created: 04/22/2023
+// File Name: VkRenderpass.h
+// Date File Created: 04/23/2023
 // Author: Matt
 //
 // ------------------------------------------------------------------------------
+#pragma once
 
 #include "VkCommon.h"
-#include "VkSwapchain.h"
 
-namespace sky::graphics::vk
+namespace sky::graphics::vk::renderpass
 {
-class vk_surface
-{
-public:
-    constexpr vk_surface() = default;
-
-    ~vk_surface()
-    {
-        if (m_surface)
-        {
-            destroy();
-        }
-    }
-
-    bool create();
-    void destroy();
-
-    void present(VkQueue graphics_queue, VkQueue present_queue, VkSemaphore render_complete_semaphore);
-
-    constexpr VkSurfaceKHR handle() const { return m_surface; }
-
-    const vk_swapchain& swapchain() const { return m_swapchain; }
-
-    constexpr const vk_renderpass& renderpass() const { return m_renderpass; }
-
-private:
-    bool create_surface();
-
-    VkSurfaceKHR  m_surface{};
-    vk_swapchain  m_swapchain{};
-    vk_renderpass m_renderpass{};
-    u32           m_image_index{};
-    u32           m_frame_index{};
-    bool          m_recreating{};
-};
-} // namespace sky::graphics::vk
+vk_renderpass create(VkSurfaceFormatKHR swapchain_image_format, VkFormat depth_format, vec4 render_area,
+                     vec4 clear_color, f32 depth, u32 stencil);
+void          destroy(vk_renderpass& renderpass);
+void          begin(const vk_renderpass& renderpass, vk_command_buffer& cmd_buffer, VkFramebuffer framebuffer);
+void          end(vk_renderpass& renderpass, vk_command_buffer& cmd_buffer);
+} // namespace sky::graphics::vk::renderpass

@@ -23,6 +23,7 @@
 // ------------------------------------------------------------------------------
 #include "VkSurface.h"
 #include "VkCore.h"
+#include "VkRenderpass.h"
 #include "Skyborn/Core/Platform.h"
 
 #ifdef _WIN64
@@ -45,11 +46,16 @@ bool vk_surface::create()
     }
     LOG_INFO("Creating swapchain");
     m_swapchain.create(platform::get_window_width(), platform::get_window_height(), m_surface);
+    m_renderpass =
+        renderpass::create(m_swapchain.image_format(), core::device().depth_format,
+                           { 0.0f, 0.0f, (f32) platform::get_window_width(), (f32) platform::get_window_height() },
+                           { 0, 0, 0, 1 }, 1.0f, 0.0f);
     return true;
 }
 
 void vk_surface::destroy()
 {
+    renderpass::destroy(m_renderpass);
     LOG_INFO("Destroying swapchain");
     m_swapchain.destroy();
     if (m_surface)
