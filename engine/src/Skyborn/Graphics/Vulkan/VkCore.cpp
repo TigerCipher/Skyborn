@@ -42,8 +42,6 @@ struct vk_context
     VkAllocationCallbacks* allocator{ nullptr };
     vk_device              main_device{};
     vk_surface             surface{};
-
-    framebuffer_info framebuffer_info{};
 } context;
 
 
@@ -584,11 +582,6 @@ VkInstance instance()
 VkSurfaceKHR surface()
 {
     return context.surface.handle();
-}
-
-framebuffer_info& framebuffer()
-{
-    return context.framebuffer_info;
 }
 
 u32 find_memory_index(u32 type_filter, u32 property_flags)

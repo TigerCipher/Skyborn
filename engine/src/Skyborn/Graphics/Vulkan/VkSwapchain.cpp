@@ -90,7 +90,7 @@ void vk_swapchain::create(u32 width, u32 height)
 
     swapchain_info(image_count, present_mode, swapchain_extent);
 
-    core::framebuffer().current_frame = 0; // TODO: Replace
+    // core::framebuffer().current_frame = 0; // TODO: Replace
 
     create_images();
     create_views();

@@ -48,13 +48,6 @@ struct vk_device
     VkFormat                         depth_format{};
 };
 
-struct framebuffer_info
-{
-    // u32 width{};
-    // u32 height{};
-    u32 current_frame{};
-};
-
 bool initialize(const char* app_name);
 
 void shutdown();
@@ -73,6 +66,5 @@ VkSurfaceKHR           surface();
 
 u32 find_memory_index(u32 type_filter, u32 property_flags);
 
-framebuffer_info& framebuffer();
 
 } // namespace sky::graphics::vk::core
