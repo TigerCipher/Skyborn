@@ -24,18 +24,26 @@
 #include "VkSwapchain.h"
 #include "VkCore.h"
 #include "Skyborn/Util/Maths.h"
+#include "Skyborn/Core/Platform.h"
 
 namespace sky::graphics::vk
 {
-
+void vk_swapchain::create(u32 width, u32 height, VkSurfaceKHR surface)
+{
+    m_surface = surface;
+    create(width, height);
+}
 
 void vk_swapchain::create(u32 width, u32 height)
 {
+    sky_assert(m_surface);
+    // core::query_swapchain_support(core::physical_device(), m_info);
+    m_info = get_swapchain_support_info(core::physical_device(), m_surface);
     VkExtent2D swapchain_extent{ width, height };
     m_max_frames_in_flight = 2;
 
     bool found = false;
-    for (const auto& format : core::device().swapchain_support.formats)
+    for (const auto& format : m_info.formats)
     {
         if (format.format == VK_FORMAT_B8G8R8A8_UNORM && format.colorSpace == VK_COLORSPACE_SRGB_NONLINEAR_KHR)
         {
@@ -47,11 +55,11 @@ void vk_swapchain::create(u32 width, u32 height)
 
     if (!found)
     {
-        m_image_format = core::device().swapchain_support.formats[0];
+        m_image_format = m_info.formats[0];
     }
 
     VkPresentModeKHR present_mode = VK_PRESENT_MODE_FIFO_KHR;
-    for (const auto& mode : core::device().swapchain_support.present_modes)
+    for (const auto& mode : m_info.present_modes)
     {
         if (mode == VK_PRESENT_MODE_MAILBOX_KHR)
         {
@@ -60,9 +68,9 @@ void vk_swapchain::create(u32 width, u32 height)
         }
     }
 
-    core::query_swapchain_support(core::physical_device());
+    // core::query_swapchain_support(core::physical_device(), m_info);
 
-    const auto& capabilities = core::device().swapchain_support.capabilities;
+    const auto& capabilities = m_info.capabilities;
 
     if (capabilities.currentExtent.width != u32_max)
     {
@@ -82,7 +90,7 @@ void vk_swapchain::create(u32 width, u32 height)
 
     swapchain_info(image_count, present_mode, swapchain_extent);
 
-    core::set_current_frame(0);
+    core::framebuffer().current_frame = 0; // TODO: Replace
 
     create_images();
     create_views();
@@ -117,13 +125,14 @@ void vk_swapchain::destroy()
     }
 
     vkDestroySwapchainKHR(core::logical_device(), m_handle, core::allocator());
+    m_handle = nullptr;
 
     m_images.clear();
     m_views.clear();
 }
 
 bool vk_swapchain::acquire_next_image_index(u64 timeout, VkSemaphore image_available_semaphore, VkFence fence,
-                                            u32& image_index)
+                                            u32 width, u32 height, u32& image_index)
 {
     const VkResult result = vkAcquireNextImageKHR(core::logical_device(), m_handle, timeout, image_available_semaphore,
                                                   fence, &image_index);
@@ -131,7 +140,7 @@ bool vk_swapchain::acquire_next_image_index(u64 timeout, VkSemaphore image_avail
     if (result == VK_ERROR_OUT_OF_DATE_KHR)
     {
         // Recreate swapchain and return out of render loop
-        recreate(core::framebuffer_width(), core::framebuffer_height());
+        recreate(width, height);
         return false;
     }
 
@@ -157,7 +166,8 @@ void vk_swapchain::present(VkQueue graphics_queue, VkQueue present_queue, VkSema
     if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR)
     {
         // Recreate swapchain because it is either out of date, sub optimal, or a framebuffer resize occurred
-        recreate(core::framebuffer_width(), core::framebuffer_height());
+        // recreate(core::framebuffer().width, core::framebuffer().height);
+        recreate(platform::get_window_width(), platform::get_window_height());
     } else if (result != VK_SUCCESS)
     {
         LOG_FATAL("Failed to present swapchain image");
@@ -191,7 +201,7 @@ void vk_swapchain::swapchain_info(u32 image_count, VkPresentModeKHR present_mode
         create_info.pQueueFamilyIndices   = nullptr;
     }
 
-    create_info.preTransform   = core::device().swapchain_support.capabilities.currentTransform;
+    create_info.preTransform   = m_info.capabilities.currentTransform;
     create_info.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
     create_info.presentMode    = present_mode;
     create_info.clipped        = VK_TRUE;
@@ -233,5 +243,38 @@ void vk_swapchain::create_views()
 
         VK_CALL(vkCreateImageView(core::logical_device(), &view_info, core::allocator(), &m_views[i]));
     }
+}
+
+swapchain_support_info get_swapchain_support_info(VkPhysicalDevice pd, VkSurfaceKHR surface)
+{
+    swapchain_support_info swapchain{};
+    VK_CALL(vkGetPhysicalDeviceSurfaceCapabilitiesKHR(pd, surface, &swapchain.capabilities));
+
+    u32 format_count{};
+    VK_CALL(vkGetPhysicalDeviceSurfaceFormatsKHR(pd, surface, &format_count, nullptr));
+
+    if (format_count)
+    {
+        if (swapchain.formats.empty())
+        {
+            swapchain.formats.resize(format_count);
+        }
+
+        VK_CALL(vkGetPhysicalDeviceSurfaceFormatsKHR(pd, surface, &format_count, swapchain.formats.data()));
+    }
+
+    u32 present_modes_count{};
+    VK_CALL(vkGetPhysicalDeviceSurfacePresentModesKHR(pd, surface, &present_modes_count, nullptr));
+    if (present_modes_count)
+    {
+        if (swapchain.present_modes.empty())
+        {
+            swapchain.present_modes.resize(present_modes_count);
+        }
+        VK_CALL(vkGetPhysicalDeviceSurfacePresentModesKHR(pd, surface, &present_modes_count,
+                                                          swapchain.present_modes.data()));
+    }
+
+    return swapchain;
 }
 } // namespace sky::graphics::vk

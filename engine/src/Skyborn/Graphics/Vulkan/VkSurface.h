@@ -16,45 +16,46 @@
 //    You should have received a copy of the GNU Lesser General Public
 //    License along with this library; if not, see <http://www.gnu.org/licenses/>.
 //
-// File Name: Platform.h
-// Date File Created: 04/16/2023
+// File Name: VkSurface.h
+// Date File Created: 04/22/2023
 // Author: Matt
 //
 // ------------------------------------------------------------------------------
 
-#pragma once
+#include "VkCommon.h"
+#include "VkSwapchain.h"
 
-#include "Skyborn/Defines.h"
-
-#ifdef _WIN64
-    #ifndef WIN32_LEAN_AND_MEAN
-        #define WIN32_LEAN_AND_MEAN
-    #endif
-    #include <Windows.h>
-#endif
-
-namespace sky::platform
+namespace sky::graphics::vk
 {
-#ifdef _WIN64
-using window_handle   = HWND;
-using window_instance = HINSTANCE;
-#endif
+class vk_surface
+{
+public:
+    constexpr vk_surface() = default;
 
-SAPI bool initialize(const char* app_name, i32 x, i32 y, u32 width, u32 height);
-SAPI void shutdown();
+    ~vk_surface()
+    {
+        if (m_surface)
+        {
+            destroy();
+        }
+    }
 
-SAPI bool pump_messages();
+    bool create();
+    void destroy();
 
-void write_message(const char* msg, u8 color);
-void write_error(const char* msg, u8 color);
-void reset_console();
+    void present(VkQueue graphics_queue, VkQueue present_queue, VkSemaphore render_complete_semaphore);
 
-SAPI f64 get_time();
+    constexpr VkSurfaceKHR handle() const { return m_surface; }
 
-window_handle   get_window_handle();
-window_instance get_window_instance();
+    const vk_swapchain& swapchain() const { return m_swapchain; }
 
-SAPI u32 get_window_width();
-SAPI u32 get_window_height();
+private:
+    bool create_surface();
 
-} // namespace sky::platform
+    VkSurfaceKHR m_surface{};
+    vk_swapchain m_swapchain{};
+    u32          m_image_index{};
+    u32          m_frame_index{};
+    bool         m_recreating{};
+};
+} // namespace sky::graphics::vk

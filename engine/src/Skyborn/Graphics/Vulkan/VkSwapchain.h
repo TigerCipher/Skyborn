@@ -34,12 +34,23 @@ class vk_swapchain
 {
 public:
     constexpr vk_swapchain() = default;
-    ~vk_swapchain()          = default;
 
+    constexpr vk_swapchain(VkSurfaceKHR surface) : m_surface{ surface } {}
+
+    ~vk_swapchain()
+    {
+        if (m_handle)
+        {
+            destroy();
+        }
+    }
+
+    void create(u32 width, u32 height, VkSurfaceKHR surface);
     void create(u32 width, u32 height);
     void recreate(u32 width, u32 height);
     void destroy();
-    bool acquire_next_image_index(u64 timeout, VkSemaphore image_available_semaphore, VkFence fence, u32& image_index);
+    bool acquire_next_image_index(u64 timeout, VkSemaphore image_available_semaphore, VkFence fence, u32 width,
+                                  u32 height, u32& image_index);
     void present(VkQueue graphics_queue, VkQueue present_queue, VkSemaphore render_complete_semaphore,
                  u32 present_image_index);
 
@@ -60,11 +71,15 @@ private:
     void create_images();
     void create_views();
 
+    swapchain_support_info   m_info{};
     VkSwapchainKHR           m_handle{};
+    VkSurfaceKHR             m_surface{};
     VkSurfaceFormatKHR       m_image_format{};
     u8                       m_max_frames_in_flight{};
     utl::vector<VkImage>     m_images{};
     utl::vector<VkImageView> m_views{};
     vk_image                 m_depth_attachment{};
 };
+
+swapchain_support_info get_swapchain_support_info(VkPhysicalDevice pd, VkSurfaceKHR surface);
 } // namespace sky::graphics::vk

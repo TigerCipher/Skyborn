@@ -29,19 +29,13 @@
 namespace sky::graphics::vk::core
 {
 
-struct swapchain_support_info
-{
-    VkSurfaceCapabilitiesKHR        capabilities{};
-    utl::vector<VkSurfaceFormatKHR> formats{};
-    utl::vector<VkPresentModeKHR>   present_modes{};
-};
 
 // TODO: Might move device stuff to its own file - and maybe as a class?
 struct vk_device
 {
-    VkPhysicalDevice                 physical_device{};
-    VkDevice                         logical_device{};
-    swapchain_support_info           swapchain_support{};
+    VkPhysicalDevice physical_device{};
+    VkDevice         logical_device{};
+    // swapchain_support_info           swapchain_support{};
     i32                              graphics_queue_index{};
     i32                              present_queue_index{};
     i32                              transfer_queue_index{};
@@ -54,14 +48,23 @@ struct vk_device
     VkFormat                         depth_format{};
 };
 
+struct framebuffer_info
+{
+    // u32 width{};
+    // u32 height{};
+    u32 current_frame{};
+};
+
 bool initialize(const char* app_name);
+
 void shutdown();
 void resized(u16 width, u16 height);
 bool begin_frame(f32 delta);
 bool end_frame(f32 delta);
 bool detect_depth_format();
-void query_swapchain_support(VkPhysicalDevice pd);
+bool create_device(VkSurfaceKHR surface);
 
+VkInstance             instance();
 vk_device&             device();
 VkPhysicalDevice       physical_device();
 VkDevice               logical_device();
@@ -70,9 +73,6 @@ VkSurfaceKHR           surface();
 
 u32 find_memory_index(u32 type_filter, u32 property_flags);
 
-u32 framebuffer_width();
-u32 framebuffer_height();
-
-void set_current_frame(u32 frame);
+framebuffer_info& framebuffer();
 
 } // namespace sky::graphics::vk::core

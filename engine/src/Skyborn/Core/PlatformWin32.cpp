@@ -73,6 +73,8 @@ struct platform_state
     window_handle   hwnd;
     f64             clock_frequency;
     LARGE_INTEGER   start_time;
+    u32             width;
+    u32             height;
 } plat_state;
 
 u16 original_console_state;
@@ -106,6 +108,8 @@ LRESULT CALLBACK process_messages(HWND hwnd, u32 msg, WPARAM wparam, LPARAM lpar
         GetClientRect(hwnd, &r);
         u32 w{ (u32) r.right - r.left };
         u32 h{ (u32) r.bottom - r.top };
+        plat_state.width  = w;
+        plat_state.height = w;
 
         u32 data = 0;
         SET_BITS(data, 1, 16, w);
@@ -233,7 +237,8 @@ bool create_window(const char* app_name, i32 x, i32 y, u32 width, u32 height)
     winy += border_rect.top;
     win_width += border_rect.right - border_rect.left;
     win_height += border_rect.bottom - border_rect.top;
-
+    plat_state.width  = win_width;
+    plat_state.height = win_height;
     const HWND handle{ CreateWindowExA(win_ex_style, "skyborn_window_class", app_name, win_style, winx, winy, win_width,
                                        win_height, nullptr, nullptr, plat_state.hinst, nullptr) };
 
@@ -351,5 +356,14 @@ window_instance get_window_instance()
     return plat_state.hinst;
 }
 
+u32 get_window_width()
+{
+    return plat_state.width;
+}
+
+u32 get_window_height()
+{
+    return plat_state.height;
+}
 
 } // namespace sky::platform

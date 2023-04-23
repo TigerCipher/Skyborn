@@ -25,7 +25,7 @@
 
 #include "Skyborn/Util/Util.h"
 #include "Skyborn/Core/Platform.h"
-#include "VkSwapchain.h"
+#include "VkSurface.h"
 
 #ifdef _WIN64
     #include <vulkan/vulkan_win32.h>
@@ -41,14 +41,9 @@ struct vk_context
     VkInstance             instance;
     VkAllocationCallbacks* allocator{ nullptr };
     vk_device              main_device{};
-    vk_swapchain           swapchain{};
-    VkSurfaceKHR           surface{};
+    vk_surface             surface{};
 
-    // TODO: Reorganize. Given this (and the above) is needed in so many places
-    u32  framebuffer_width{};
-    u32  framebuffer_height{};
-    bool recreating_swapchain{};
-    u32  current_frame{};
+    framebuffer_info framebuffer_info{};
 } context;
 
 
@@ -78,11 +73,11 @@ struct physical_device_queue_family_indices
 bool physical_device_meets_requirements(VkPhysicalDevice physical_device, const VkPhysicalDeviceProperties& properties,
                                         const VkPhysicalDeviceFeatures&       features,
                                         const physcial_device_requirements&   requirements,
-                                        physical_device_queue_family_indices& queue_info)
+                                        physical_device_queue_family_indices& queue_info, VkSurfaceKHR surface)
 {
     queue_info.compute = queue_info.graphics = queue_info.present = queue_info.transfer = -1;
 
-    swapchain_support_info& swapchain_support = context.main_device.swapchain_support;
+    swapchain_support_info swapchain_support{};
 
     if (requirements.discrete_gpu && properties.deviceType != VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU)
     {
@@ -121,7 +116,7 @@ bool physical_device_meets_requirements(VkPhysicalDevice physical_device, const 
         }
 
         VkBool32 supports_present{ VK_FALSE };
-        VK_CALL(vkGetPhysicalDeviceSurfaceSupportKHR(physical_device, i, context.surface, &supports_present));
+        VK_CALL(vkGetPhysicalDeviceSurfaceSupportKHR(physical_device, i, surface, &supports_present));
         if (supports_present)
         {
             queue_info.present = i;
@@ -141,7 +136,8 @@ bool physical_device_meets_requirements(VkPhysicalDevice physical_device, const 
         LOG_TRACE("Compute family index: {}", queue_info.compute);
         LOG_TRACE("Transfer family index: {}", queue_info.transfer);
 
-        query_swapchain_support(physical_device);
+        swapchain_support = get_swapchain_support_info(physical_device, surface);
+        // query_swapchain_support(physical_device, swapchain_support);
         if (swapchain_support.formats.empty() || swapchain_support.present_modes.empty())
         {
             swapchain_support.formats.clear();
@@ -195,7 +191,7 @@ bool physical_device_meets_requirements(VkPhysicalDevice physical_device, const 
     return false;
 }
 
-bool select_physical_device()
+bool select_physical_device(VkSurfaceKHR surface)
 {
     u32 physical_device_count{};
     VK_CALL(vkEnumeratePhysicalDevices(context.instance, &physical_device_count, nullptr));
@@ -224,7 +220,7 @@ bool select_physical_device()
 
         physical_device_queue_family_indices queue_info{};
 
-        if (physical_device_meets_requirements(pd, props, feats, pdr, queue_info))
+        if (physical_device_meets_requirements(pd, props, feats, pdr, queue_info, surface))
         {
             LOG_INFO("Selected device: {}", props.deviceName);
             switch (props.deviceType)
@@ -298,94 +294,6 @@ VKAPI_ATTR VkBool32 VKAPI_CALL debug_callback(VkDebugUtilsMessageSeverityFlagBit
     return VK_FALSE;
 }
 
-bool create_surface()
-{
-    VkWin32SurfaceCreateInfoKHR create_info{ VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR };
-    create_info.hinstance = platform::get_window_instance();
-    create_info.hwnd      = platform::get_window_handle();
-
-    if (vkCreateWin32SurfaceKHR(context.instance, &create_info, context.allocator, &context.surface) != VK_SUCCESS)
-    {
-        LOG_FATAL("Vulkan surface creation failed");
-        return false;
-    }
-
-    return true;
-}
-
-bool create_device()
-{
-    if (!select_physical_device())
-    {
-        return false;
-    }
-
-    LOG_INFO("Creating logical device");
-    const bool present_shares_graphics_queue =
-        context.main_device.graphics_queue_index == context.main_device.present_queue_index;
-    const bool transfer_shares_graphics_queue =
-        context.main_device.graphics_queue_index == context.main_device.transfer_queue_index;
-    utl::vector<u32> indices{};
-    indices.push_back(context.main_device.graphics_queue_index);
-    if (!present_shares_graphics_queue)
-    {
-        indices.push_back(context.main_device.present_queue_index);
-    }
-    if (!transfer_shares_graphics_queue)
-    {
-        indices.push_back(context.main_device.transfer_queue_index);
-    }
-
-    utl::heap_array<VkDeviceQueueCreateInfo> queue_create_infos{ indices.size() };
-
-    for (u32 i = 0; i < indices.size(); ++i)
-    {
-        auto& [sType, pNext, flags, queueFamilyIndex, queueCount, pQueuePriorities]{ queue_create_infos[i] };
-        sType            = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-        queueFamilyIndex = indices[i];
-        queueCount       = 1;
-        if (indices[i] == context.main_device.graphics_queue_index)
-        {
-            queueCount = 2;
-        }
-
-        flags = 0;
-        pNext = nullptr;
-        f32 queue_priority[2]{ 1.0f, 1.0f };
-        pQueuePriorities = queue_priority;
-    }
-
-    // TODO: Make configurable
-    VkPhysicalDeviceFeatures device_features{};
-    device_features.samplerAnisotropy = VK_TRUE;
-
-    VkDeviceCreateInfo create_info{ VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO };
-    create_info.queueCreateInfoCount = indices.size();
-    create_info.pQueueCreateInfos    = queue_create_infos.data();
-
-    create_info.pEnabledFeatures        = &device_features;
-    create_info.enabledExtensionCount   = 1;
-    auto ext_names                      = VK_KHR_SWAPCHAIN_EXTENSION_NAME;
-    create_info.ppEnabledExtensionNames = &ext_names;
-
-    // Explicitly zeroing deprecated items
-    create_info.enabledLayerCount   = 0;
-    create_info.ppEnabledLayerNames = nullptr;
-
-    VK_CALL(vkCreateDevice(context.main_device.physical_device, &create_info, context.allocator,
-                           &context.main_device.logical_device));
-    LOG_INFO("Logical device created");
-    vkGetDeviceQueue(context.main_device.logical_device, context.main_device.graphics_queue_index, 0,
-                     &context.main_device.graphics_queue);
-    vkGetDeviceQueue(context.main_device.logical_device, context.main_device.present_queue_index, 0,
-                     &context.main_device.present_queue);
-    vkGetDeviceQueue(context.main_device.logical_device, context.main_device.transfer_queue_index, 0,
-                     &context.main_device.transfer_queue);
-    LOG_INFO("Obtained device queues");
-
-    return true;
-}
-
 void destroy_device()
 {
     LOG_INFO("Destroying logical device");
@@ -400,8 +308,8 @@ void destroy_device()
 
     LOG_INFO("Releasing physical device resources");
     context.main_device.physical_device = nullptr;
-    context.main_device.swapchain_support.formats.clear();
-    context.main_device.swapchain_support.present_modes.clear();
+    // context.main_device.swapchain_support.formats.clear();
+    // context.main_device.swapchain_support.present_modes.clear();
     context.main_device.graphics_queue_index = -1;
     context.main_device.present_queue_index  = -1;
     context.main_device.transfer_queue_index = -1;
@@ -504,22 +412,8 @@ bool initialize(const char* app_name)
     LOG_DEBUG("Vulkan debugger created");
 #endif
 
-    // Surface
-    LOG_INFO("Creating Vulkan surface");
-    if (!create_surface())
-    {
-        LOG_ERROR("Failed to create Vulkan surface");
-        return false;
-    }
-
-    // Device
-    if (!create_device())
-    {
-        LOG_ERROR("Failed to create Vulkan device");
-        return false;
-    }
-
-    context.swapchain.create(context.framebuffer_width, context.framebuffer_height);
+    // Surface (and device)
+    context.surface.create();
 
     LOG_INFO("Vulkan backend initialized");
     return true;
@@ -528,16 +422,13 @@ bool initialize(const char* app_name)
 void shutdown()
 {
     // NOTE: Resources should be destroyed in reverse order of creation
+    // This is not a hard requirement, but does help ensure nothing is destroyed that is still in use
 
     LOG_INFO("Shutting Vulkan backend down...");
-    context.swapchain.destroy();
-    destroy_device();
 
-    if (context.surface)
-    {
-        vkDestroySurfaceKHR(context.instance, context.surface, context.allocator);
-        context.surface = nullptr;
-    }
+    context.surface.destroy();
+
+    destroy_device();
 
 
 #ifdef _DEBUG
@@ -552,6 +443,79 @@ void shutdown()
 
     LOG_DEBUG("Destroying Vulkan instance");
     vkDestroyInstance(context.instance, context.allocator);
+}
+
+bool create_device(VkSurfaceKHR surface)
+{
+    if (!select_physical_device(surface))
+    {
+        return false;
+    }
+
+    LOG_INFO("Creating logical device");
+    const bool present_shares_graphics_queue =
+        context.main_device.graphics_queue_index == context.main_device.present_queue_index;
+    const bool transfer_shares_graphics_queue =
+        context.main_device.graphics_queue_index == context.main_device.transfer_queue_index;
+    utl::vector<u32> indices{};
+    indices.push_back(context.main_device.graphics_queue_index);
+    if (!present_shares_graphics_queue)
+    {
+        indices.push_back(context.main_device.present_queue_index);
+    }
+    if (!transfer_shares_graphics_queue)
+    {
+        indices.push_back(context.main_device.transfer_queue_index);
+    }
+
+    utl::heap_array<VkDeviceQueueCreateInfo> queue_create_infos{ indices.size() };
+
+    for (u32 i = 0; i < indices.size(); ++i)
+    {
+        auto& [sType, pNext, flags, queueFamilyIndex, queueCount, pQueuePriorities]{ queue_create_infos[i] };
+        sType            = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+        queueFamilyIndex = indices[i];
+        queueCount       = 1;
+        if (indices[i] == context.main_device.graphics_queue_index)
+        {
+            queueCount = 2;
+        }
+
+        flags = 0;
+        pNext = nullptr;
+        f32 queue_priority[2]{ 1.0f, 1.0f };
+        pQueuePriorities = queue_priority;
+    }
+
+    // TODO: Make configurable
+    VkPhysicalDeviceFeatures device_features{};
+    device_features.samplerAnisotropy = VK_TRUE;
+
+    VkDeviceCreateInfo create_info{ VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO };
+    create_info.queueCreateInfoCount = indices.size();
+    create_info.pQueueCreateInfos    = queue_create_infos.data();
+
+    create_info.pEnabledFeatures        = &device_features;
+    create_info.enabledExtensionCount   = 1;
+    auto ext_names                      = VK_KHR_SWAPCHAIN_EXTENSION_NAME;
+    create_info.ppEnabledExtensionNames = &ext_names;
+
+    // Explicitly zeroing deprecated items
+    create_info.enabledLayerCount   = 0;
+    create_info.ppEnabledLayerNames = nullptr;
+
+    VK_CALL(vkCreateDevice(context.main_device.physical_device, &create_info, context.allocator,
+                           &context.main_device.logical_device));
+    LOG_INFO("Logical device created");
+    vkGetDeviceQueue(context.main_device.logical_device, context.main_device.graphics_queue_index, 0,
+                     &context.main_device.graphics_queue);
+    vkGetDeviceQueue(context.main_device.logical_device, context.main_device.present_queue_index, 0,
+                     &context.main_device.present_queue);
+    vkGetDeviceQueue(context.main_device.logical_device, context.main_device.transfer_queue_index, 0,
+                     &context.main_device.transfer_queue);
+    LOG_INFO("Obtained device queues");
+
+    return true;
 }
 
 void resized(u16 width, u16 height) {}
@@ -592,37 +556,6 @@ bool detect_depth_format()
     return false;
 }
 
-void query_swapchain_support(VkPhysicalDevice pd)
-{
-    auto& swapchain = context.main_device.swapchain_support;
-    VK_CALL(vkGetPhysicalDeviceSurfaceCapabilitiesKHR(pd, context.surface, &swapchain.capabilities));
-
-    u32 format_count{};
-    VK_CALL(vkGetPhysicalDeviceSurfaceFormatsKHR(pd, context.surface, &format_count, nullptr));
-
-    if (format_count)
-    {
-        if (swapchain.formats.empty())
-        {
-            swapchain.formats.resize(format_count);
-        }
-
-        VK_CALL(vkGetPhysicalDeviceSurfaceFormatsKHR(pd, context.surface, &format_count, swapchain.formats.data()));
-    }
-
-    u32 present_modes_count{};
-    VK_CALL(vkGetPhysicalDeviceSurfacePresentModesKHR(pd, context.surface, &present_modes_count, nullptr));
-    if (present_modes_count)
-    {
-        if (swapchain.present_modes.empty())
-        {
-            swapchain.present_modes.resize(present_modes_count);
-        }
-        VK_CALL(vkGetPhysicalDeviceSurfacePresentModesKHR(pd, context.surface, &present_modes_count,
-                                                          swapchain.present_modes.data()));
-    }
-}
-
 vk_device& device()
 {
     return context.main_device;
@@ -643,24 +576,19 @@ VkAllocationCallbacks* allocator()
     return context.allocator;
 }
 
+VkInstance instance()
+{
+    return context.instance;
+}
+
 VkSurfaceKHR surface()
 {
-    return context.surface;
+    return context.surface.handle();
 }
 
-u32 framebuffer_width()
+framebuffer_info& framebuffer()
 {
-    return context.framebuffer_width;
-}
-
-void set_current_frame(u32 frame)
-{
-    context.current_frame = frame;
-}
-
-u32 framebuffer_height()
-{
-    return context.framebuffer_height;
+    return context.framebuffer_info;
 }
 
 u32 find_memory_index(u32 type_filter, u32 property_flags)

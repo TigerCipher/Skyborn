@@ -44,3 +44,13 @@
 #else
     #define VK_CALL(expr) expr
 #endif
+
+namespace sky::graphics::vk
+{
+struct swapchain_support_info
+{
+    VkSurfaceCapabilitiesKHR        capabilities{};
+    utl::vector<VkSurfaceFormatKHR> formats{};
+    utl::vector<VkPresentModeKHR>   present_modes{};
+};
+} // namespace sky::graphics::vk
