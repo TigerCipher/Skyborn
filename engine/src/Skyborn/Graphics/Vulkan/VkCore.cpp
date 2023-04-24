@@ -44,6 +44,7 @@ struct vk_context
     vk_surface             surface{};
 } context;
 
+utl::vector<vk_command_buffer> command_buffers{};
 
 #ifdef _DEBUG
 VkDebugUtilsMessengerEXT debug_messenger{};
@@ -298,6 +299,10 @@ void destroy_device()
     context.main_device.graphics_queue = nullptr;
     context.main_device.present_queue  = nullptr;
     context.main_device.transfer_queue = nullptr;
+
+    LOG_INFO("Destroying command pools");
+    vkDestroyCommandPool(context.main_device.logical_device, context.main_device.command_pool, context.allocator);
+
     if (context.main_device.logical_device)
     {
         vkDestroyDevice(context.main_device.logical_device, context.allocator);
@@ -512,6 +517,13 @@ bool create_device(VkSurfaceKHR surface)
     vkGetDeviceQueue(context.main_device.logical_device, context.main_device.transfer_queue_index, 0,
                      &context.main_device.transfer_queue);
     LOG_INFO("Obtained device queues");
+
+    VkCommandPoolCreateInfo pool_info{ VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO };
+    pool_info.queueFamilyIndex = context.main_device.graphics_queue_index;
+    pool_info.flags            = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+
+    VK_CALL(vkCreateCommandPool(context.main_device.logical_device, &pool_info, context.allocator,
+                                &context.main_device.command_pool));
 
     return true;
 }

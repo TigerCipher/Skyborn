@@ -46,6 +46,7 @@ struct vk_device
     VkPhysicalDeviceFeatures         features{};
     VkPhysicalDeviceMemoryProperties memory{};
     VkFormat                         depth_format{};
+    VkCommandPool                    command_pool{};
 };
 
 bool initialize(const char* app_name);

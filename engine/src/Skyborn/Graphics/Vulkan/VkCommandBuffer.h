@@ -16,29 +16,23 @@
 //    You should have received a copy of the GNU Lesser General Public
 //    License along with this library; if not, see <http://www.gnu.org/licenses/>.
 //
-// File Name: Util.h
-// Date File Created: 04/17/2023
+// File Name: VkCommandBuffer.h
+// Date File Created: 04/23/2023
 // Author: Matt
 //
 // ------------------------------------------------------------------------------
 #pragma once
 
-#include "Skyborn/Defines.h"
+#include "VkCommon.h"
 
-#include <thread>
-
-namespace sky::utl
+namespace sky::graphics::vk::commands
 {
-
-// For comparing c - strings.I can 't help but see `strcmp(str0, str1) == 0` and think it means they aren' t equal, when they are
-inline bool string_compare(const char* str1, const char* str2)
-{
-    return strcmp(str1, str2) == 0;
-}
-
-inline void sleep(u32 milliseconds)
-{
-    std::this_thread::sleep_for(std::chrono::milliseconds{ milliseconds });
-}
-
-} // namespace sky::utl
+vk_command_buffer allocate_buffer(VkCommandPool pool, bool is_primary);
+void              free_buffer(VkCommandPool pool, vk_command_buffer& buffer);
+void begin(vk_command_buffer& buffer, bool is_single_use, bool is_renderpass_continue, bool is_simultaneous_use);
+void end(vk_command_buffer& buffer);
+void update_submitted(vk_command_buffer& buffer);
+void reset(vk_command_buffer& buffer);
+vk_command_buffer allocate_buffer_begin_single_use(VkCommandPool pool, vk_command_buffer& buffer);
+void              end_single_use(VkCommandPool pool, vk_command_buffer& buffer, VkQueue queue);
+} // namespace sky::graphics::vk::commands

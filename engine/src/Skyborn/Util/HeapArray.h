@@ -21,7 +21,7 @@
 // Author: Matt
 //
 // ------------------------------------------------------------------------------
-
+#pragma once
 #include "Skyborn/Defines.h"
 
 #include "Skyborn/Debug/Asserts.h"
