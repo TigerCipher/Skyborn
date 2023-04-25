@@ -71,7 +71,13 @@ void shutdown()
 
 void on_resized(u16 width, u16 height)
 {
-    gfx.resized(width, height);
+    if (gfx.platform == (backend_api) -1)
+    {
+        LOG_WARN("Graphics platform not initialized");
+    } else
+    {
+        gfx.resized(width, height);
+    }
 }
 
 bool draw_frame(const render_packet& packet)

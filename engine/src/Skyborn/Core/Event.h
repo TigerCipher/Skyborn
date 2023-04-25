@@ -21,8 +21,9 @@
 // Author: Matt
 //
 // ------------------------------------------------------------------------------
-
+#pragma  once
 #include "Skyborn/Defines.h"
+
 
 namespace sky::events
 {

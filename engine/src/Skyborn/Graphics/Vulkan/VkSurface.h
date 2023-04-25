@@ -28,6 +28,12 @@
 
 namespace sky::graphics::vk
 {
+
+namespace surface
+{
+bool was_framebuffer_resized();
+}
+
 class vk_surface
 {
 public:
@@ -47,11 +53,24 @@ public:
     void present(VkQueue graphics_queue, VkQueue present_queue, VkSemaphore render_complete_semaphore);
     void on_resized(u32 width, u32 height);
 
-    constexpr VkSurfaceKHR handle() const { return m_surface; }
+    bool recreate_swapchain();
+    void set_viewport_and_scissor(const vk_command_buffer& cmd_buffer);
+    bool swapchain_acquire_next_image(u64 timeout, VkSemaphore image_available_semaphore, VkFence fence);
+    void begin_renderpass(vk_command_buffer& cmd_buffer);
 
-    const vk_swapchain& swapchain() const { return m_swapchain; }
+    [[nodiscard]] constexpr VkSurfaceKHR handle() const { return m_surface; }
 
-    constexpr const vk_renderpass& renderpass() const { return m_renderpass; }
+    [[nodiscard]] const vk_swapchain& swapchain() const { return m_swapchain; }
+
+    [[nodiscard]] constexpr const vk_renderpass& renderpass() const { return m_renderpass; }
+
+    [[nodiscard]] vk_renderpass& renderpass() { return m_renderpass; }
+
+    [[nodiscard]] constexpr bool recreating() const { return m_recreating; }
+
+    [[nodiscard]] constexpr u32 image_index() const { return m_image_index; }
+
+    [[nodiscard]] constexpr u32 frame_index() const { return m_frame_index; }
 
 private:
     bool create_surface();

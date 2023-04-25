@@ -32,6 +32,8 @@
 #include "Skyborn/Util/HeapArray.h"
 #include "Skyborn/Util/Maths.h"
 
+#include "VkHelpers.h"
+
 #include <vulkan/vulkan.h>
 
 #ifdef _DEBUG

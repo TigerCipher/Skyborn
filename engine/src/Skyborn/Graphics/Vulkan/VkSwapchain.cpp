@@ -26,13 +26,13 @@
 
 namespace sky::graphics::vk
 {
-void vk_swapchain::create(u32 width, u32 height, VkSurfaceKHR surface)
+void vk_swapchain::create(u32 width, u32 height, u32& frame_index, VkSurfaceKHR surface)
 {
     m_surface = surface;
-    create(width, height);
+    create(width, height, frame_index);
 }
 
-void vk_swapchain::create(u32 width, u32 height)
+void vk_swapchain::create(u32 width, u32 height, u32& frame_index)
 {
     sky_assert(m_surface);
     // core::query_swapchain_support(core::physical_device(), m_info);
@@ -87,7 +87,7 @@ void vk_swapchain::create(u32 width, u32 height)
 
     swapchain_info(image_count, present_mode, swapchain_extent);
 
-    // core::framebuffer().current_frame = 0; // TODO: Replace
+    frame_index = 0;
 
     create_images();
     create_views();
@@ -106,14 +106,16 @@ void vk_swapchain::create(u32 width, u32 height)
     LOG_INFO("Swapchain created");
 }
 
-void vk_swapchain::recreate(u32 width, u32 height)
+void vk_swapchain::recreate(u32 width, u32 height, u32& frame_index)
 {
     destroy();
-    create(width, height);
+    create(width, height, frame_index);
 }
 
 void vk_swapchain::destroy()
 {
+    vkDeviceWaitIdle(core::logical_device());
+
     LOG_INFO("Destroying swapchain");
     m_depth_attachment.destroy();
 
@@ -130,7 +132,7 @@ void vk_swapchain::destroy()
 }
 
 bool vk_swapchain::acquire_next_image_index(u64 timeout, VkSemaphore image_available_semaphore, VkFence fence,
-                                            u32 width, u32 height, u32& image_index)
+                                            u32 width, u32 height, u32& image_index, u32& frame_index)
 {
     const VkResult result = vkAcquireNextImageKHR(core::logical_device(), m_handle, timeout, image_available_semaphore,
                                                   fence, &image_index);
@@ -138,7 +140,7 @@ bool vk_swapchain::acquire_next_image_index(u64 timeout, VkSemaphore image_avail
     if (result == VK_ERROR_OUT_OF_DATE_KHR)
     {
         // Recreate swapchain and return out of render loop
-        recreate(width, height);
+        recreate(width, height, frame_index);
         return false;
     }
 
@@ -158,6 +160,7 @@ void vk_swapchain::present(VkQueue graphics_queue, VkQueue present_queue, VkSema
     present_info.waitSemaphoreCount = 1;
     present_info.pWaitSemaphores    = &render_complete_semaphore;
     present_info.swapchainCount     = 1;
+    present_info.pSwapchains        = &m_handle;
     present_info.pImageIndices      = &present_image_index;
     present_info.pResults           = nullptr;
 
@@ -166,7 +169,7 @@ void vk_swapchain::present(VkQueue graphics_queue, VkQueue present_queue, VkSema
     {
         // Recreate swapchain because it is either out of date, sub optimal, or a framebuffer resize occurred
         // recreate(core::framebuffer().width, core::framebuffer().height);
-        recreate(width, height);
+        recreate(width, height, frame_index);
     } else if (result != VK_SUCCESS)
     {
         LOG_FATAL("Failed to present swapchain image");

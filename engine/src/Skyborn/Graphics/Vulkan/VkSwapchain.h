@@ -45,12 +45,12 @@ public:
         }
     }
 
-    void create(u32 width, u32 height, VkSurfaceKHR surface);
-    void create(u32 width, u32 height);
-    void recreate(u32 width, u32 height);
+    void create(u32 width, u32 height, u32& frame_index, VkSurfaceKHR surface);
+    void create(u32 width, u32 height, u32& frame_index);
+    void recreate(u32 width, u32 height, u32& frame_index);
     void destroy();
     bool acquire_next_image_index(u64 timeout, VkSemaphore image_available_semaphore, VkFence fence, u32 width,
-                                  u32 height, u32& image_index);
+                                  u32 height, u32& image_index, u32& frame_index);
     void present(VkQueue graphics_queue, VkQueue present_queue, VkSemaphore render_complete_semaphore,
                  u32 present_image_index, u32 width, u32 height, u32& frame_index);
 
@@ -69,6 +69,8 @@ public:
     [[nodiscard]] constexpr const utl::heap_array<vk_framebuffer>& framebuffers() const { return m_framebuffers; }
 
     [[nodiscard]] utl::heap_array<vk_framebuffer>& framebuffers() { return m_framebuffers; }
+
+    constexpr void set_info(swapchain_support_info info) { m_info = info; }
 
 private:
     void swapchain_info(u32 image_count, VkPresentModeKHR present_mode, VkExtent2D swapchain_extent);

@@ -84,6 +84,37 @@ bool on_key(u16 code, [[maybe_unused]] void* sender, [[maybe_unused]] void* list
     return false;
 }
 
+bool on_resized(u16 code, [[maybe_unused]] void* sender, [[maybe_unused]] void* listener, void* data)
+{
+    const u16 width  = WINDOW_WIDTH(data);
+    const u16 height = WINDOW_HEIGHT(data);
+
+    if(width != app_state->width || height != app_state->height)
+    {
+        app_state->game_inst->app_desc.width = width;
+        app_state->game_inst->app_desc.height = height;
+        app_state->width = width;
+        app_state->height = height;
+
+        if(width == 0 || height == 0)
+        {
+            LOG_INFO("Window minimized. Suspending system");
+            app_state->suspended = true;
+            return true;
+        }
+
+        if(app_state->suspended)
+        {
+            LOG_INFO("Window restored. Resuming system");
+            app_state->suspended = false;
+        }
+
+        app_state->game_inst->on_resize(app_state->game_inst, width, height);
+        graphics::on_resized(width, height);
+    }
+    return false;
+}
+
 } // anonymous namespace
 
 bool create(game* game_inst)
@@ -121,6 +152,7 @@ bool create(game* game_inst)
     events::register_event(events::system_event::application_quit, nullptr, on_event);
     events::register_event(events::system_event::key_pressed, nullptr, on_key);
     events::register_event(events::system_event::key_released, nullptr, on_key);
+    events::register_event(events::system_event::resized, nullptr, on_resized);
 
     auto& [pos_x, pos_y, width, height, name] = game_inst->app_desc;
 
@@ -220,6 +252,7 @@ bool run()
     events::unregister_event(events::system_event::application_quit, nullptr, on_event);
     events::unregister_event(events::system_event::key_pressed, nullptr, on_key);
     events::unregister_event(events::system_event::key_released, nullptr, on_key);
+    events::unregister_event(events::system_event::resized, nullptr, on_resized);
 
     events::shutdown();
     input::shutdown();
