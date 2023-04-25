@@ -120,7 +120,7 @@ void vk_surface::on_resized(u32 width, u32 height)
     LOG_TRACE("Vulkan resized; ({}, {}) .. Generation: {}", width, height, framebuffer_size_generation);
 }
 
-bool vk_surface::recreate_swapchain()
+bool vk_surface::recreate_swapchain(commands::vk_command* cmd)
 {
     if (m_recreating)
     {
@@ -132,10 +132,10 @@ bool vk_surface::recreate_swapchain()
         return false;
     }
 
-    m_recreating = true;
 
     vkDeviceWaitIdle(core::logical_device());
-    core::nullify_inflight_images();
+    m_recreating = true;
+    cmd->nullify_inflight_images();
 
     m_swapchain.set_info(get_swapchain_support_info(core::physical_device(), m_surface));
     core::detect_depth_format();
@@ -153,7 +153,7 @@ bool vk_surface::recreate_swapchain()
 
     for (u32 i = 0; i < m_swapchain.images().size(); ++i)
     {
-        core::free_command_buffer(i);
+        cmd->free_command_buffer(i);
         framebuffer::destroy(m_swapchain.framebuffers()[i]);
     }
 
@@ -164,34 +164,13 @@ bool vk_surface::recreate_swapchain()
 
     recreate_framebuffers();
 
-    core::create_command_buffers();
+    cmd->create_command_buffers();
 
     m_recreating = false;
 
     return true;
 }
 
-void vk_surface::set_viewport_and_scissor(const vk_command_buffer& cmd_buffer)
-{
-    VkViewport viewport{};
-    viewport.x        = 0.0f;
-    viewport.y        = (f32) m_framebuffer_height;
-    viewport.width    = (f32) m_framebuffer_width;
-    viewport.height   = -(f32) m_framebuffer_height;
-    viewport.minDepth = 0.0f;
-    viewport.maxDepth = 1.0f;
-
-    VkRect2D scissor{};
-    scissor.offset.x = scissor.offset.y = 0;
-    scissor.extent.width                = m_framebuffer_width;
-    scissor.extent.height               = m_framebuffer_height;
-
-    vkCmdSetViewport(cmd_buffer.handle, 0, 1, &viewport);
-    vkCmdSetScissor(cmd_buffer.handle, 0, 1, &scissor);
-
-    m_renderpass.render_area.z = (f32) m_framebuffer_width;
-    m_renderpass.render_area.w = (f32) m_framebuffer_height;
-}
 
 bool vk_surface::swapchain_acquire_next_image(u64 timeout, VkSemaphore image_available_semaphore, VkFence fence)
 {

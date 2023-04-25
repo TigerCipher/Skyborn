@@ -47,13 +47,7 @@ struct vk_context
     vk_surface             surface{};
 } context;
 
-utl::vector<vk_command_buffer> command_buffers{};
-
-utl::vector<VkSemaphore> image_available_semaphores{};
-utl::vector<VkSemaphore> queue_complete_semaphores{};
-utl::vector<vk_fence>    inflight_fences{};
-utl::vector<vk_fence*>   images_in_flight{};
-u32                      inflight_fence_count{};
+commands::vk_command gfx_command;
 
 #ifdef _DEBUG
 VkDebugUtilsMessengerEXT debug_messenger{};
@@ -169,9 +163,9 @@ bool physical_device_meets_requirements(VkPhysicalDevice physical_device, const 
                 {
                     LOG_INFO("Searching for extension '{}'...", extension_name);
                     bool found{ false };
-                    for (u32 i = 0; i < available_extensions.size(); ++i)
+                    for (const auto& available_extension : available_extensions)
                     {
-                        if (utl::string_compare(extension_name, available_extensions[i].extensionName))
+                        if (utl::string_compare(extension_name, available_extension.extensionName))
                         {
                             found = true;
                             LOG_INFO("Found.");
@@ -309,9 +303,6 @@ void destroy_device()
     context.main_device.present_queue  = nullptr;
     context.main_device.transfer_queue = nullptr;
 
-    LOG_INFO("Destroying command pools");
-    vkDestroyCommandPool(context.main_device.logical_device, context.main_device.command_pool, context.allocator);
-
     if (context.main_device.logical_device)
     {
         vkDestroyDevice(context.main_device.logical_device, context.allocator);
@@ -327,6 +318,18 @@ void destroy_device()
     context.main_device.transfer_queue_index = -1;
 }
 
+
+bool create_graphics_command()
+{
+    if (gfx_command.pool())
+        return true;
+    sky_assert(!gfx_command.pool());
+
+    new (&gfx_command) commands::vk_command{ context.surface, (u32) context.main_device.graphics_queue_index };
+    if (!gfx_command.pool())
+        return false;
+    return true;
+}
 
 } // anonymous namespace
 
@@ -427,25 +430,11 @@ bool initialize(const char* app_name)
     // Surface (and device)
     context.surface.create();
 
-    create_command_buffers();
-
-
-    // Sync objects
-    image_available_semaphores.resize(context.surface.swapchain().max_frames_in_flight());
-    queue_complete_semaphores.resize(context.surface.swapchain().max_frames_in_flight());
-    inflight_fences.resize(context.surface.swapchain().max_frames_in_flight());
-
-    for (u8 i = 0; i < context.surface.swapchain().max_frames_in_flight(); ++i)
+    if(!create_graphics_command())
     {
-        VkSemaphoreCreateInfo sem_info{ VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO };
-        vkCreateSemaphore(context.main_device.logical_device, &sem_info, context.allocator,
-                          &image_available_semaphores[i]);
-        vkCreateSemaphore(context.main_device.logical_device, &sem_info, context.allocator,
-                          &queue_complete_semaphores[i]);
-        inflight_fences[i] = fence::create(true);
+        LOG_ERROR("Failed to create graphics command");
+        return false;
     }
-
-    images_in_flight.resize(context.surface.swapchain().images().size());
 
     LOG_INFO("Vulkan backend initialized");
     return true;
@@ -459,35 +448,7 @@ void shutdown()
 
     LOG_INFO("Shutting Vulkan backend down...");
 
-    // Sync objects
-    for (u8 i = 0; i < context.surface.swapchain().max_frames_in_flight(); ++i)
-    {
-        if (image_available_semaphores[i])
-        {
-            vkDestroySemaphore(context.main_device.logical_device, image_available_semaphores[i], context.allocator);
-        }
-
-        if (queue_complete_semaphores[i])
-        {
-            vkDestroySemaphore(context.main_device.logical_device, queue_complete_semaphores[i], context.allocator);
-        }
-        fence::destroy(inflight_fences[i]);
-    }
-
-    image_available_semaphores.clear();
-    queue_complete_semaphores.clear();
-    inflight_fences.clear();
-
-    for (auto& command_buffer : command_buffers)
-    {
-        if (command_buffer.handle)
-        {
-            commands::free_buffer(context.main_device.command_pool, command_buffer);
-            command_buffer.handle = nullptr;
-        }
-    }
-    command_buffers.clear();
-
+    gfx_command.destroy();
 
     context.surface.destroy();
 
@@ -578,13 +539,6 @@ bool create_device(VkSurfaceKHR surface)
                      &context.main_device.transfer_queue);
     LOG_INFO("Obtained device queues");
 
-    VkCommandPoolCreateInfo pool_info{ VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO };
-    pool_info.queueFamilyIndex = context.main_device.graphics_queue_index;
-    pool_info.flags            = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
-
-    VK_CALL(vkCreateCommandPool(context.main_device.logical_device, &pool_info, context.allocator,
-                                &context.main_device.command_pool));
-
     return true;
 }
 
@@ -595,100 +549,15 @@ void resized(u16 width, u16 height)
 
 bool begin_frame(f32 delta)
 {
-    const vk_device& dev = context.main_device;
-
-    if (context.surface.recreating())
-    {
-        const VkResult res = vkDeviceWaitIdle(dev.logical_device);
-        if (!was_success(res))
-        {
-            LOG_ERROR("Vulkan vkDeviceWaitIdle in begin_frame failed - {}", get_result_string(res, true));
-            return false;
-        }
-        LOG_DEBUG("Recreating swapchain...");
-        return false;
-    }
-
-    if (surface::was_framebuffer_resized())
-    {
-        const VkResult res = vkDeviceWaitIdle(dev.logical_device);
-        if (!was_success(res))
-        {
-            LOG_ERROR("Vulkan vkDeviceWaitIdle in begin_frame failed - {}", get_result_string(res, true));
-            return false;
-        }
-
-        if (!context.surface.recreate_swapchain())
-        {
-            return false;
-        }
-
-        LOG_DEBUG("Resized...");
-        return false;
-    }
-
-    //VkResult res{vkWaitForFences(context.device.logical, 1, &context.in_flight_fences[context.current_frame].handle, true, u64_max)};
-    if (!fence::wait(inflight_fences[context.surface.frame_index()], u64_max))
-    {
-        LOG_ERROR("Inflight fence wait failed");
-        return false;
-    }
-
-    if (!context.surface.swapchain_acquire_next_image(
-            u64_max, image_available_semaphores[context.surface.frame_index()], nullptr))
-    {
-        return false;
-    }
-
-    vk_command_buffer& cmd_buffer = command_buffers[context.surface.image_index()];
-    commands::reset(cmd_buffer);
-    commands::begin(cmd_buffer, false, false, false);
-
-    context.surface.set_viewport_and_scissor(cmd_buffer);
-
-    context.surface.begin_renderpass(cmd_buffer);
-
-    return true;
+    return gfx_command.begin_frame(context.surface, delta);
 }
 
 bool end_frame(f32 delta)
 {
-    vk_command_buffer& cmd_buffer = command_buffers[context.surface.image_index()];
-    renderpass::end(context.surface.renderpass(), cmd_buffer);
-    commands::end(cmd_buffer);
-
-    if (images_in_flight[context.surface.image_index()] != VK_NULL_HANDLE)
-    {
-        fence::wait(*images_in_flight[context.surface.image_index()], u64_max);
-    }
-
-    images_in_flight[context.surface.image_index()] = &inflight_fences[context.surface.frame_index()];
-
-    fence::reset(inflight_fences[context.surface.frame_index()]);
-
-    VkSubmitInfo submit_info{ VK_STRUCTURE_TYPE_SUBMIT_INFO };
-    submit_info.commandBufferCount   = 1;
-    submit_info.pCommandBuffers      = &cmd_buffer.handle;
-    submit_info.signalSemaphoreCount = 1;
-    submit_info.pSignalSemaphores    = &queue_complete_semaphores[context.surface.frame_index()];
-    submit_info.waitSemaphoreCount   = 1;
-    submit_info.pWaitSemaphores      = &image_available_semaphores[context.surface.frame_index()];
-
-    constexpr VkPipelineStageFlags flags{ VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
-    submit_info.pWaitDstStageMask = &flags;
-
-    VkResult res = vkQueueSubmit(context.main_device.graphics_queue, 1, &submit_info, inflight_fences[context.surface.frame_index()].handle);
-    if(res != VK_SUCCESS)
-    {
-        LOG_ERROR("vkQueueSubmit failed - {}", get_result_string(res, true));
-        return false;
-    }
-
-    commands::update_submitted(cmd_buffer);
-    context.surface.present(context.main_device.graphics_queue, context.main_device.present_queue, queue_complete_semaphores[context.surface.frame_index()]);
-
-    return true;
+    return gfx_command.end_frame(context.surface, delta);
 }
+
+
 
 bool detect_depth_format()
 {
@@ -714,38 +583,6 @@ bool detect_depth_format()
     }
 
     return false;
-}
-
-void create_command_buffers()
-{
-    if (command_buffers.empty())
-    {
-        command_buffers.resize(context.surface.swapchain().images().size());
-    }
-
-    for (u32 i = 0; i < command_buffers.size(); ++i)
-    {
-        if (command_buffers[i].handle)
-        {
-            commands::free_buffer(context.main_device.command_pool, command_buffers[i]);
-        }
-        command_buffers[i] = commands::allocate_buffer(context.main_device.command_pool, true);
-    }
-
-    LOG_INFO("Vulkan command buffers created");
-}
-
-void nullify_inflight_images()
-{
-    for (auto& iff : images_in_flight)
-    {
-        iff = VK_NULL_HANDLE;
-    }
-}
-
-void free_command_buffer(u32 index)
-{
-    commands::free_buffer(context.main_device.command_pool, command_buffers[index]);
 }
 
 vk_device& device()

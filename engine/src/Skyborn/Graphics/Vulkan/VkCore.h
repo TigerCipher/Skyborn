@@ -46,7 +46,6 @@ struct vk_device
     VkPhysicalDeviceFeatures         features{};
     VkPhysicalDeviceMemoryProperties memory{};
     VkFormat                         depth_format{};
-    VkCommandPool                    command_pool{};
 };
 
 bool initialize(const char* app_name);
@@ -57,10 +56,6 @@ bool begin_frame(f32 delta);
 bool end_frame(f32 delta);
 bool detect_depth_format();
 bool create_device(VkSurfaceKHR surface);
-
-void create_command_buffers();
-void nullify_inflight_images();
-void free_command_buffer(u32 index);
 
 VkInstance             instance();
 vk_device&             device();

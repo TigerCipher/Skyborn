@@ -28,6 +28,10 @@
 
 namespace sky::graphics::vk
 {
+namespace commands
+{
+class vk_command;
+}
 
 namespace surface
 {
@@ -53,8 +57,7 @@ public:
     void present(VkQueue graphics_queue, VkQueue present_queue, VkSemaphore render_complete_semaphore);
     void on_resized(u32 width, u32 height);
 
-    bool recreate_swapchain();
-    void set_viewport_and_scissor(const vk_command_buffer& cmd_buffer);
+    bool recreate_swapchain(commands::vk_command* cmd);
     bool swapchain_acquire_next_image(u64 timeout, VkSemaphore image_available_semaphore, VkFence fence);
     void begin_renderpass(vk_command_buffer& cmd_buffer);
 
@@ -71,6 +74,9 @@ public:
     [[nodiscard]] constexpr u32 image_index() const { return m_image_index; }
 
     [[nodiscard]] constexpr u32 frame_index() const { return m_frame_index; }
+
+    [[nodiscard]] constexpr u32 width() const { return m_framebuffer_width; }
+    [[nodiscard]] constexpr u32 height() const { return m_framebuffer_height; }
 
 private:
     bool create_surface();
