@@ -26,6 +26,8 @@
 #include "Skyborn/Util/Util.h"
 #include "Skyborn/Core/Platform.h"
 #include "VkSurface.h"
+#include "VkCommandBuffer.h"
+#include "VkFence.h"
 
 #ifdef _WIN64
     #include <vulkan/vulkan_win32.h>
@@ -45,6 +47,12 @@ struct vk_context
 } context;
 
 utl::vector<vk_command_buffer> command_buffers{};
+
+utl::vector<VkSemaphore> image_available_semaphores{};
+utl::vector<VkSemaphore> queue_complete_semaphores{};
+utl::vector<vk_fence>    inflight_fences{};
+utl::vector<vk_fence*>   images_in_flight{};
+u32                      inflight_fence_count{};
 
 #ifdef _DEBUG
 VkDebugUtilsMessengerEXT debug_messenger{};
@@ -318,6 +326,25 @@ void destroy_device()
     context.main_device.transfer_queue_index = -1;
 }
 
+void create_command_buffers()
+{
+    if (command_buffers.empty())
+    {
+        command_buffers.resize(context.surface.swapchain().images().size());
+    }
+
+    for (u32 i = 0; i < command_buffers.size(); ++i)
+    {
+        if (command_buffers[i].handle)
+        {
+            commands::free_buffer(context.main_device.command_pool, command_buffers[i]);
+        }
+        command_buffers[i] = commands::allocate_buffer(context.main_device.command_pool, true);
+    }
+
+    LOG_INFO("Vulkan command buffers created");
+}
+
 
 } // anonymous namespace
 
@@ -418,16 +445,67 @@ bool initialize(const char* app_name)
     // Surface (and device)
     context.surface.create();
 
+    create_command_buffers();
+
+
+    // Sync objects
+    image_available_semaphores.resize(context.surface.swapchain().max_frames_in_flight());
+    queue_complete_semaphores.resize(context.surface.swapchain().max_frames_in_flight());
+    inflight_fences.resize(context.surface.swapchain().max_frames_in_flight());
+
+    for (u8 i = 0; i < context.surface.swapchain().max_frames_in_flight(); ++i)
+    {
+        VkSemaphoreCreateInfo sem_info{ VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO };
+        vkCreateSemaphore(context.main_device.logical_device, &sem_info, context.allocator,
+                          &image_available_semaphores[i]);
+        vkCreateSemaphore(context.main_device.logical_device, &sem_info, context.allocator,
+                          &queue_complete_semaphores[i]);
+        inflight_fences[i] = fence::create(true);
+    }
+
+    images_in_flight.resize(context.surface.swapchain().images().size());
+
     LOG_INFO("Vulkan backend initialized");
     return true;
 }
 
 void shutdown()
 {
+    vkDeviceWaitIdle(context.main_device.logical_device);
     // NOTE: Resources should be destroyed in reverse order of creation
     // This is not a hard requirement, but does help ensure nothing is destroyed that is still in use
 
     LOG_INFO("Shutting Vulkan backend down...");
+
+    // Sync objects
+    for (u8 i = 0; i < context.surface.swapchain().max_frames_in_flight(); ++i)
+    {
+        if(image_available_semaphores[i])
+        {
+            vkDestroySemaphore(context.main_device.logical_device, image_available_semaphores[i], context.allocator);
+        }
+
+        if(queue_complete_semaphores[i])
+        {
+            vkDestroySemaphore(context.main_device.logical_device, queue_complete_semaphores[i], context.allocator);
+        }
+        fence::destroy(inflight_fences[i]);
+    }
+
+    image_available_semaphores.clear();
+    queue_complete_semaphores.clear();
+    inflight_fences.clear();
+
+    for (auto& command_buffer : command_buffers)
+    {
+        if (command_buffer.handle)
+        {
+            commands::free_buffer(context.main_device.command_pool, command_buffer);
+            command_buffer.handle = nullptr;
+        }
+    }
+    command_buffers.clear();
+
 
     context.surface.destroy();
 
@@ -479,7 +557,7 @@ bool create_device(VkSurfaceKHR surface)
         sType            = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
         queueFamilyIndex = indices[i];
         queueCount       = 1;
-        if (indices[i] == context.main_device.graphics_queue_index)
+        if (indices[i] == (u32) context.main_device.graphics_queue_index)
         {
             queueCount = 2;
         }
@@ -528,7 +606,10 @@ bool create_device(VkSurfaceKHR surface)
     return true;
 }
 
-void resized(u16 width, u16 height) {}
+void resized(u16 width, u16 height)
+{
+    context.surface.on_resized(width, height);
+}
 
 bool begin_frame(f32 delta)
 {

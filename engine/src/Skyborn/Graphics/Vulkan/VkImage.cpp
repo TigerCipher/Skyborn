@@ -47,7 +47,7 @@ void vk_image::create(VkImageType type, u32 width, u32 height, VkFormat format, 
     create_info.samples       = VK_SAMPLE_COUNT_1_BIT;     // TODO: Make configurable
     create_info.sharingMode   = VK_SHARING_MODE_EXCLUSIVE; // TODO: Make configurable
 
-    VkDevice logical_device = core::logical_device();
+    const VkDevice logical_device = core::logical_device();
 
     VK_CALL(vkCreateImage(logical_device, &create_info, core::allocator(), &m_handle));
 

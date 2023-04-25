@@ -23,7 +23,6 @@
 // ------------------------------------------------------------------------------
 #include "VkSwapchain.h"
 #include "VkCore.h"
-#include "Skyborn/Core/Platform.h"
 
 namespace sky::graphics::vk
 {
@@ -39,7 +38,6 @@ void vk_swapchain::create(u32 width, u32 height)
     // core::query_swapchain_support(core::physical_device(), m_info);
     m_info = get_swapchain_support_info(core::physical_device(), m_surface);
     VkExtent2D swapchain_extent{ width, height };
-    m_max_frames_in_flight = 2;
 
     bool found = false;
     for (const auto& format : m_info.formats)
@@ -93,6 +91,7 @@ void vk_swapchain::create(u32 width, u32 height)
 
     create_images();
     create_views();
+    m_framebuffers.initialize(m_images.size());
 
     if (!core::detect_depth_format())
     {
@@ -118,9 +117,9 @@ void vk_swapchain::destroy()
     LOG_INFO("Destroying swapchain");
     m_depth_attachment.destroy();
 
-    for (u32 i = 0; i < m_views.size(); ++i)
+    for (const auto& view : m_views)
     {
-        vkDestroyImageView(core::logical_device(), m_views[i], core::allocator());
+        vkDestroyImageView(core::logical_device(), view, core::allocator());
     }
 
     vkDestroySwapchainKHR(core::logical_device(), m_handle, core::allocator());
@@ -148,11 +147,12 @@ bool vk_swapchain::acquire_next_image_index(u64 timeout, VkSemaphore image_avail
         LOG_FATAL("Failed to acquire swapchain image");
         return false;
     }
+
     return true;
 }
 
 void vk_swapchain::present(VkQueue graphics_queue, VkQueue present_queue, VkSemaphore render_complete_semaphore,
-                           u32 present_image_index)
+                           u32 present_image_index, u32 width, u32 height, u32& frame_index)
 {
     VkPresentInfoKHR present_info{ VK_STRUCTURE_TYPE_PRESENT_INFO_KHR };
     present_info.waitSemaphoreCount = 1;
@@ -166,11 +166,13 @@ void vk_swapchain::present(VkQueue graphics_queue, VkQueue present_queue, VkSema
     {
         // Recreate swapchain because it is either out of date, sub optimal, or a framebuffer resize occurred
         // recreate(core::framebuffer().width, core::framebuffer().height);
-        recreate(platform::get_window_width(), platform::get_window_height());
+        recreate(width, height);
     } else if (result != VK_SUCCESS)
     {
         LOG_FATAL("Failed to present swapchain image");
     }
+
+    frame_index = (frame_index + 1) % m_max_frames_in_flight;
 }
 
 void vk_swapchain::swapchain_info(u32 image_count, VkPresentModeKHR present_mode, VkExtent2D swapchain_extent)

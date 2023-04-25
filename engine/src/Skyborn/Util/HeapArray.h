@@ -92,6 +92,8 @@ public:
         }
     }
 
+    constexpr void clear() { destroy(); }
+
     [[nodiscard]] constexpr u64 size() const { return m_size; }
 
     [[nodiscard]] constexpr u64 capacity() const { return m_size * sizeof(T); }

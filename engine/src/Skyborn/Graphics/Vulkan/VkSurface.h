@@ -21,6 +21,7 @@
 // Author: Matt
 //
 // ------------------------------------------------------------------------------
+#pragma once
 
 #include "VkCommon.h"
 #include "VkSwapchain.h"
@@ -44,6 +45,7 @@ public:
     void destroy();
 
     void present(VkQueue graphics_queue, VkQueue present_queue, VkSemaphore render_complete_semaphore);
+    void on_resized(u32 width, u32 height);
 
     constexpr VkSurfaceKHR handle() const { return m_surface; }
 
@@ -53,6 +55,7 @@ public:
 
 private:
     bool create_surface();
+    void recreate_framebuffers();
 
     VkSurfaceKHR  m_surface{};
     vk_swapchain  m_swapchain{};
@@ -60,5 +63,8 @@ private:
     u32           m_image_index{};
     u32           m_frame_index{};
     bool          m_recreating{};
+    u32           m_framebuffer_width{};
+    u32           m_framebuffer_height{};
 };
+
 } // namespace sky::graphics::vk

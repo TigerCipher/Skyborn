@@ -35,7 +35,7 @@ class vk_swapchain
 public:
     constexpr vk_swapchain() = default;
 
-    constexpr vk_swapchain(VkSurfaceKHR surface) : m_surface{ surface } {}
+    explicit constexpr vk_swapchain(VkSurfaceKHR surface) : m_surface{ surface } {}
 
     ~vk_swapchain()
     {
@@ -52,33 +52,38 @@ public:
     bool acquire_next_image_index(u64 timeout, VkSemaphore image_available_semaphore, VkFence fence, u32 width,
                                   u32 height, u32& image_index);
     void present(VkQueue graphics_queue, VkQueue present_queue, VkSemaphore render_complete_semaphore,
-                 u32 present_image_index);
+                 u32 present_image_index, u32 width, u32 height, u32& frame_index);
 
-    constexpr VkSwapchainKHR handle() const { return m_handle; }
+    [[nodiscard]] constexpr VkSwapchainKHR handle() const { return m_handle; }
 
-    constexpr VkSurfaceFormatKHR image_format() const { return m_image_format; }
+    [[nodiscard]] constexpr VkSurfaceFormatKHR image_format() const { return m_image_format; }
 
-    constexpr u8 max_frames_in_flight() const { return m_max_frames_in_flight; }
+    [[nodiscard]] constexpr u8 max_frames_in_flight() const { return m_max_frames_in_flight; }
 
-    constexpr utl::vector<VkImage> images() const { return m_images; }
+    [[nodiscard]] constexpr const utl::vector<VkImage>& images() const { return m_images; }
 
-    constexpr utl::vector<VkImageView> views() const { return m_views; }
+    [[nodiscard]] constexpr const utl::vector<VkImageView>& views() const { return m_views; }
 
-    const vk_image& depth_attachment() const { return m_depth_attachment; }
+    [[nodiscard]] const vk_image& depth_attachment() const { return m_depth_attachment; }
+
+    [[nodiscard]] constexpr const utl::heap_array<vk_framebuffer>& framebuffers() const { return m_framebuffers; }
+
+    [[nodiscard]] utl::heap_array<vk_framebuffer>& framebuffers() { return m_framebuffers; }
 
 private:
     void swapchain_info(u32 image_count, VkPresentModeKHR present_mode, VkExtent2D swapchain_extent);
     void create_images();
     void create_views();
 
-    swapchain_support_info   m_info{};
-    VkSwapchainKHR           m_handle{};
-    VkSurfaceKHR             m_surface{};
-    VkSurfaceFormatKHR       m_image_format{};
-    u8                       m_max_frames_in_flight{};
-    utl::vector<VkImage>     m_images{};
-    utl::vector<VkImageView> m_views{};
-    vk_image                 m_depth_attachment{};
+    swapchain_support_info          m_info{};
+    VkSwapchainKHR                  m_handle{};
+    VkSurfaceKHR                    m_surface{};
+    VkSurfaceFormatKHR              m_image_format{};
+    u8                              m_max_frames_in_flight{ 2 };
+    utl::vector<VkImage>            m_images{};
+    utl::vector<VkImageView>        m_views{};
+    vk_image                        m_depth_attachment{};
+    utl::heap_array<vk_framebuffer> m_framebuffers{};
 };
 
 swapchain_support_info get_swapchain_support_info(VkPhysicalDevice pd, VkSurfaceKHR surface);

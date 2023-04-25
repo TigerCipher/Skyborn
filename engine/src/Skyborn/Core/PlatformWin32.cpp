@@ -337,7 +337,7 @@ void reset_console()
 
 f64 get_time()
 {
-    if (!plat_state.clock_frequency)
+    if (plat_state.clock_frequency == 0.0)
     {
         setup_clock();
     }

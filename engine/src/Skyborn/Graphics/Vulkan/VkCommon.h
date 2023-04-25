@@ -91,4 +91,17 @@ struct vk_command_buffer
     state           current_state{};
 };
 
+struct vk_framebuffer
+{
+    VkFramebuffer                handle{};
+    vk_renderpass*               renderpass{};
+    utl::heap_array<VkImageView> attachments{};
+};
+
+struct vk_fence
+{
+    VkFence handle{};
+    bool    is_signaled{};
+};
+
 } // namespace sky::graphics::vk
