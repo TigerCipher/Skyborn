@@ -1,7 +1,11 @@
 /bin
 /obj
-/.vs
 /x64
 *.filters
 *.user
 /build
+
+# Ignore .vs but keep tasks.vs.json
+!.vs/
+.vs/*
+!.vs/tasks.vs.json

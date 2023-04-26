@@ -1,0 +1,11 @@
+{
+  "version": "0.2.1",
+  "tasks": [
+    {
+        "appliesTo": "/",
+        "command": "${workspaceRoot}/scripts/postbuild.bat",
+        "taskLabel": "Copy Assets",
+        "type": "default"
+    }
+  ]
+}
