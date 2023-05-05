@@ -23,6 +23,7 @@
 // ------------------------------------------------------------------------------
 
 #include <Skyborn/Entrypoint.h>
+#include <Skyborn/Util/FileSystem.h>
 
 #include "Game.h"
 
@@ -30,6 +31,30 @@ using namespace sky;
 
 bool create_game(app::game* game_inst)
 {
+    using namespace utl;
+
+    fs::file_handle test_file{};
+
+    //if (fs::open("./test.txt", fs::file_modes::write, false, test_file))
+    //{
+    //    fs::write_line(test_file, "This is a newly added line");
+    //    fs::close(test_file);
+    //}
+    if(fs::open("./test.txt", fs::file_modes::append | fs::file_modes::read, false, test_file))
+    {
+        std::string line;
+        fs::write_line(test_file, "This is a newly added line 5");
+        fs::write_line(test_file, "This is a newly added line 6");
+        fs::seek(FILE_BEGIN, test_file);
+        while(fs::read_line_trim(test_file, line))
+        {
+            LOG_DEBUG("Line: {}", line);
+        }
+
+        fs::close(test_file);
+    }
+
+
     constexpr app::application_desc desc{ 100, 100, 1280, 720, "Skyborn Sandbox" };
     game_inst->app_desc   = desc;
     game_inst->initialize = sandbox::init;

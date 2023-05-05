@@ -6,7 +6,7 @@ if(WIN32)
     set(SOURCE_FILES ${SOURCE_FILES} src/Skyborn/Core/PlatformWin32.cpp)
 endif()
 
-add_library(skyborn SHARED ${SOURCE_FILES} "src/Skyborn/Graphics/Vulkan/VkHelpers.cpp")
+add_library(skyborn SHARED ${SOURCE_FILES} "src/Skyborn/Graphics/Vulkan/VkHelpers.cpp" "src/Skyborn/Util/FileSystem.h" "src/Skyborn/Util/FileSystem.cpp")
 target_include_directories(skyborn PRIVATE src $ENV{VULKAN_SDK}/Include)
 target_link_directories(skyborn PUBLIC $ENV{VULKAN_SDK}/Lib)
 target_link_libraries(skyborn vulkan-1)
